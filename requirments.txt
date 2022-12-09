@@ -1,0 +1,6 @@
+bs4
+requests
+python-mpv
+lxml
+pySmartDL
+hpcomt
