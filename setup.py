@@ -1,5 +1,6 @@
 from setuptools import find_packages, setup
-    
+import os
+
 setup(
     name="aw-cli",
 <<<<<<< HEAD
@@ -21,8 +22,12 @@ setup(
 >>>>>>> 400b07f (Update setup.py)
 =======
     packages=find_packages(include=["awcli"]),
+<<<<<<< HEAD
 >>>>>>> 46c4374 (Update setup.py)
     version="1.0",
+=======
+    version="1.1",
+>>>>>>> 4d011ad (Update setup.py)
     python_requires=">3.10",
     description="guarda anime dal terminale e molto altro!",
     author="fexh10",
@@ -35,7 +40,9 @@ setup(
         "lxml",
         "pySmartDL",
         "hpcomt",
+        "wheel",
     ],
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -56,5 +63,7 @@ setup(
 >>>>>>> 400b07f (Update setup.py)
 
 >>>>>>> d6df4ff (Update setup.py)
+=======
+    entry_points="[console_scripts]\naw-cli=awcli.run:main",
+>>>>>>> 4d011ad (Update setup.py)
 )
-
