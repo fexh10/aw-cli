@@ -4,12 +4,16 @@ setup(
     name="aw-cli",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     py_modules=['aw-cli'],
 >>>>>>> b274f43 (Update setup.py)
 =======
     packages=find_packages(include=["aw-cli"]),
 >>>>>>> d6df4ff (Update setup.py)
+=======
+    packages=find_packages(include=["aw_cli"]),
+>>>>>>> 80a9cd3 (Update setup.py)
     version="1.0",
     python_requires=">3.10",
     description="guarda anime dal terminale e molto altro!",
