@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
     
 setup(
     name="aw-cli",
-    packages=find_packages(include=["aw_cli"]),
+    packages=find_packages(include=["aw-cli"]),
     version="1.0",
     python_requires=">3.10",
     description="guarda anime dal terminale e molto altro!",
@@ -17,7 +17,7 @@ setup(
         "pySmartDL",
         "hpcomt",
     ],
-    entry_points="[console_scripts]\aw-cli=aw_cli.run_aw_cli:main",
+    entry_points="[console_scripts]\aw-cli=aw-cli.run:main",
 
 )
 
