@@ -460,4 +460,5 @@ def main():
 nome_os = hpcomt.Name()
 # classe
 a = Anime()
-
+if __name__ == "__main__":
+    main()
