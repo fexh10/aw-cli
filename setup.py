@@ -5,6 +5,7 @@ setup(
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     py_modules=['aw-cli'],
 >>>>>>> b274f43 (Update setup.py)
@@ -14,6 +15,9 @@ setup(
 =======
     packages=find_packages(include=["aw_cli"]),
 >>>>>>> 80a9cd3 (Update setup.py)
+=======
+    packages=find_packages(include=["aw-cli"]),
+>>>>>>> 400b07f (Update setup.py)
     version="1.0",
     python_requires=">3.10",
     description="guarda anime dal terminale e molto altro!",
@@ -30,6 +34,7 @@ setup(
     ],
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
      entry_points="[console_scripts]aw-cli=aw-cli:main",
      py_modules=['aw-cli'],
 
@@ -38,6 +43,9 @@ setup(
 >>>>>>> b274f43 (Update setup.py)
 =======
     entry_points="[console_scripts]\aw-cli=aw_cli.run_aw_cli:main",
+=======
+    entry_points="[console_scripts]\aw-cli=aw-cli.run:main",
+>>>>>>> 400b07f (Update setup.py)
 
 >>>>>>> d6df4ff (Update setup.py)
 )
