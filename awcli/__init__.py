@@ -1,1 +1,1 @@
-import awcli.run
+import awcli.__main__
