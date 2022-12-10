@@ -1,1 +1,1 @@
-from run_aw_cli import main
+from aw_cli import main
