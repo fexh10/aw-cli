@@ -1,9 +1,6 @@
 from setuptools import find_packages, setup
 import os
 
-os.system('doskey aw-cli=python3 -m awcli.run' if os.name == 'nt' else 'alias aw-cli=python3 -m awcli.run')
-
-
 setup(
     name="aw-cli",
     packages=find_packages(include=["awcli"]),
