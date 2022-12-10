@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="aw-cli",
-    packages=find_packages(include=["aw-_cli"]),
+    py_modules=['aw-cli'],
     version="1.0",
     python_requires=">3.10",
     description="guarda anime dal terminale e molto altro!",
