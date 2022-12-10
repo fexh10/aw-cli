@@ -72,10 +72,20 @@ def serverInes(url_ep):
                 return tutti_url[i]
             j+=1
 
+def chiediSeAprireDownload():
+    while True:
+            aprire_ora = input("\033[1;35;40mAprire ora il player con gli episodi scaricati? (S/n)\n> \033[1;37;40m")
+            if aprire_ora.lower() == 's' or aprire_ora == "": 
+                openDownloadedVideos()
+            elif aprire_ora.lower() == 'n':        
+                exit()
+            else:
+                print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
+
 #la funzione utilizza la libreria PySmartDL
 #per scaricare gli ep e gli salva in una cartella.
 #se l'ep è già presente nella cartella non lo riscarica
-def scaricaEpisodi(ep_iniziale, ep_finale, url_server):
+def scaricaEpisodi(ep_iniziale, ep_finale, url_server, url_episodi):
     cont = 0
     for i in range(len(url_server)):
         response = requests.head(str(url_server[i]))
@@ -106,25 +116,17 @@ def scaricaEpisodi(ep_iniziale, ep_finale, url_server):
             print("\033[1;33;40mEpisodio già scaricato, skippo... \033[1;37;40m")
             gia_scaricato += 1
     if (gia_scaricato == len(url_server)):
-        exit()
+        chiediSeAprireDownload()
     if nome_os == "Android":
         print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Downloads\033[1;37;40m")
         exit()
     else:
         print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Video, dentro la cartella Anime\033[1;37;40m")
-        while True:
-            aprire_ora = input("\033[1;35;40mAprire ora il player con gli episodi scaricati? (S/n)\n> \033[1;37;40m")
-            if aprire_ora.lower() == 's' or aprire_ora == "": 
-                openDownloadedVideos(url_server)
-                break
-            elif aprire_ora.lower() == 'n':        
-                exit()
-            else:
-                print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
+        chiediSeAprireDownload()
         
 #la funzione fa scegliere gli ep 
 #da guardare all'utente
-def scegliEpisodi(syncpl, download):
+def scegliEpisodi(syncpl, download, url_episodi):
     # faccio decire all'utente il range di ep, se l'anime contiene solo 1 ep sarà riprodotto automaticamente
     os.system('cls' if os.name == 'nt' else 'clear')
     print("\033[1;37;40m" + a.name + "\033[1;37;40m ")
@@ -178,19 +180,20 @@ def scegliEpisodi(syncpl, download):
     if syncpl:
         return ep_iniziale, ep_finale
     elif download:
-        scaricaEpisodi(ep_iniziale, ep_finale, a.get_url_range(ep_iniziale, ep_finale))
+        scaricaEpisodi(ep_iniziale, ep_finale, a.get_url_range(ep_iniziale, ep_finale), url_episodi)
 
     print("\033[1;33;40mApro il player...\033[1;37;40m")
     return ep_iniziale, ep_finale
 
 #la funzione prende i video scaricati e li apre
-def openDownloadedVideos(url_server):
+def openDownloadedVideos():
     print("\033[1;33;40mApro il player...\033[1;37;40m")
     path = str(Path.home()) + "/" + "Videos" + "/" + "Anime" "/" + a.name
     videos = glob.glob(path+"/*")
     player = mpv.MPV(input_default_bindings=True,
                          input_vo_keyboard=True, osc=True)
-    for i in range(len(url_server)):
+    videos.reverse()
+    for i in range (len(videos)):
         player.playlist_append(videos[i])  
 
     # avvio il player
@@ -305,7 +308,7 @@ def RicercaAnime():
 # la funzione prende in input l'url dell'anime scelto dall'utente
 # e salva in una variabile gli url di tutti gli episodi,
 # ricercandoli nell'html della pagina
-def UrlEpisodi():
+def UrlEpisodi(url):
     # prendo l'html dalla pagina web di AW
     html_content = requests.get(url).text
     soup = BeautifulSoup(html_content, "lxml")
@@ -317,12 +320,8 @@ def UrlEpisodi():
             url_episodi.append(temp)
     return url_episodi
 
-# controllo il tipo del dispositivo
-nome_os = hpcomt.Name()
-# classe
-a = Anime()
-if __name__ == "__main__":
-    #args
+def main():
+     #args
     syncpl = False
     download = False
     lista = False
@@ -343,117 +342,123 @@ if __name__ == "__main__":
     
 
     # utilizzo il try except per fare in modo che quando venga premuto crtl+c non vengano printati degli errori
-    try:
-        if lista:
-            risultati_ricerca, nomi_anime = listaUscite(args.lista)
-        else:
-            risultati_ricerca, nomi_anime = RicercaAnime()
-        while True:
-            os.system('cls' if os.name == 'nt' else 'clear')
-            # stampo i nomi degli anime
-            for i, e in reversed(list(enumerate(nomi_anime))):
-                print("\033[1;32;40m", i + 1,
-                      "\033[1;37;40m", str(e))
+    if lista:
+        risultati_ricerca, nomi_anime = listaUscite(args.lista)
+    else:
+        risultati_ricerca, nomi_anime = RicercaAnime()
+    while True:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        # stampo i nomi degli anime
+        for i, e in reversed(list(enumerate(nomi_anime))):
+            print("\033[1;32;40m", i + 1,
+                    "\033[1;37;40m", str(e))
 
-            '''
-            for i in range(0, len(nomi_anime)):
-                print("\033[1;32;40m", i + 1,
-                      "\033[1;37;40m", str(nomi_anime[i]))
-            '''
+        '''
+        for i in range(0, len(nomi_anime)):
+            print("\033[1;32;40m", i + 1,
+                    "\033[1;37;40m", str(nomi_anime[i]))
+        '''
+        s = int(input("\033[1;35;40mScegli un anime\n> \033[1;37;40m"))
+        #controllo che il numero inserito sia giusto
+        while (s < 1 or s > len(nomi_anime)):
+            print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
             s = int(input("\033[1;35;40mScegli un anime\n> \033[1;37;40m"))
-            #controllo che il numero inserito sia giusto
-            while (s < 1 or s > len(nomi_anime)):
-                print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
-                s = int(input("\033[1;35;40mScegli un anime\n> \033[1;37;40m"))
-            
-            url = risultati_ricerca[(s - 1)]
-            url_episodi = UrlEpisodi()
-            a.ep = len(url_episodi)
+        
+        url = risultati_ricerca[(s - 1)]
+        url_episodi = UrlEpisodi(url)
+        a.ep = len(url_episodi)
 
-            # se l'anime non ha episodi non può essere selezionato
-            if a.ep == 0:
-                print( "\033[1;31;40mEh, volevi! L'anime non ha episodi\033[1;37;40m")  
-                time.sleep(1)                       
-            else:
-                break
-
-        a.name = nomi_anime[(s - 1)]
-        # trovo il link del primo url server
-        # creo un obj BS con la pagina dell'ep
-        html = requests.get(url_episodi[0]).text
-        sp = BeautifulSoup(html, "lxml")
-
-        # trovo tutti gli url della pagina
-        tutti_url = TrovaUrl(str(sp))
-
-        # variabile temp per capire in che posizione è l'url tra tutti gli url della pagina
-        j = 0
-        # ciclo for con il numoro totale degli url
-        for i in range(0, len(tutti_url)):
-            # se l'url è un video e si trova in posizione 1 allora è quello del server
-            if (mimetypes.MimeTypes().guess_type(tutti_url[i])[0] == 'video/mp4'):
-                if (j == 1):
-                    # aggiungo alla varibile sempre e solo l'url server del primo episodio
-                    a.url = tutti_url[i]
-                    break
-                j += 1
-
-        if not lista:
-            ep_iniziale, ep_finale = scegliEpisodi(syncpl, download)
-            url_server = a.get_url_range(ep_iniziale, ep_finale)
-            #cont = 0
-            if a.ep != 1:
-                for i in range(0, len(url_server)):
-                    response = requests.head(str(url_server[i]))
-                    if response.status_code == 200:
-                        #cont += 1
-                        continue
-                    else:
-                        url_ep = url_episodi[(ep_iniziale - 1) + i]
-                        url_server[i] = serverInes(url_ep)
-                        #cont += 1   
+        # se l'anime non ha episodi non può essere selezionato
+        if a.ep == 0:
+            print( "\033[1;31;40mEh, volevi! L'anime non ha episodi\033[1;37;40m")  
+            time.sleep(1)                       
         else:
-            url_server = [a.get_url(a.ep)]
-            ep_finale = a.ep
+            break
+
+    a.name = nomi_anime[(s - 1)]
+    # trovo il link del primo url server
+    # creo un obj BS con la pagina dell'ep
+    html = requests.get(url_episodi[0]).text
+    sp = BeautifulSoup(html, "lxml")
+
+    # trovo tutti gli url della pagina
+    tutti_url = TrovaUrl(str(sp))
+
+    # variabile temp per capire in che posizione è l'url tra tutti gli url della pagina
+    j = 0
+    # ciclo for con il numoro totale degli url
+    for i in range(0, len(tutti_url)):
+        # se l'url è un video e si trova in posizione 1 allora è quello del server
+        if (mimetypes.MimeTypes().guess_type(tutti_url[i])[0] == 'video/mp4'):
+            if (j == 1):
+                # aggiungo alla varibile sempre e solo l'url server del primo episodio
+                a.url = tutti_url[i]
+                break
+            j += 1
+
+    if not lista:
+        ep_iniziale, ep_finale = scegliEpisodi(syncpl, download, url_episodi)
+        url_server = a.get_url_range(ep_iniziale, ep_finale)
+        #cont = 0
+        if a.ep != 1:
+            for i in range(0, len(url_server)):
+                response = requests.head(str(url_server[i]))
+                if response.status_code == 200:
+                    #cont += 1
+                    continue
+                else:
+                    url_ep = url_episodi[(ep_iniziale - 1) + i]
+                    url_server[i] = serverInes(url_ep)
+                    #cont += 1   
+    else:
+        url_server = [a.get_url(a.ep)]
+        ep_finale = a.ep
 
 
-        # menù che si visualizza dopo aver finito la riproduzione
-        i = ep_finale
-        ris_valida = True
+    # menù che si visualizza dopo aver finito la riproduzione
+    i = ep_finale
+    ris_valida = True
 
-        while True:
-            if ris_valida:
-                OpenPlayer(url_server, syncpl)
-            else:
-                print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
-                ris_valida = True
+    while True:
+        if ris_valida:
+            OpenPlayer(url_server, syncpl)
+        else:
+            print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
+            ris_valida = True
 
-            scelta_menu = input(
-                "\033[1;36;40m(p) prossimo \n" +
-                "\033[1;34;40m(r) riguarda \n" + 
-                "\033[1;36;40m(a) antecedente\n" + 
-                "\033[1;32;40m(s) seleziona\n" + 
-                "\033[1;31;40m(e) esci\n" + 
-                "\033[1;35;40m> \033[1;37;40m")
-            if scelta_menu.lower() == 'p' and i < a.ep:
-                i += 1
-            elif scelta_menu.lower() == 'r':
-                continue
-            elif scelta_menu.lower() == 'a' and i > 1:
-                i -= 1
-            elif scelta_menu.lower() == 's':
-                ep_iniziale, ep_finale = scegliEpisodi(syncpl, download)
-                url_server = a.get_url_range(ep_iniziale, ep_finale)
-                i = ep_finale
-                continue
-            elif scelta_menu.lower() == 'e' or scelta_menu == '':
-                exit()
-            else:
-                os.system('cls' if os.name == 'nt' else 'clear')
-                ris_valida = False
+        scelta_menu = input(
+            "\033[1;36;40m(p) prossimo \n" +
+            "\033[1;34;40m(r) riguarda \n" + 
+            "\033[1;36;40m(a) antecedente\n" + 
+            "\033[1;32;40m(s) seleziona\n" + 
+            "\033[1;31;40m(e) esci\n" + 
+            "\033[1;35;40m> \033[1;37;40m")
+        if scelta_menu.lower() == 'p' and i < a.ep:
+            i += 1
+        elif scelta_menu.lower() == 'r':
+            continue
+        elif scelta_menu.lower() == 'a' and i > 1:
+            i -= 1
+        elif scelta_menu.lower() == 's':
+            ep_iniziale, ep_finale = scegliEpisodi(syncpl, download, url_episodi)
+            url_server = a.get_url_range(ep_iniziale, ep_finale)
+            i = ep_finale
+            continue
+        elif scelta_menu.lower() == 'e' or scelta_menu == '':
+            exit()
+        else:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            ris_valida = False
 
-            if ris_valida:
-                url_server = [a.get_url(i)]
+        if ris_valida:
+            url_server = [a.get_url(i)]
 
+# controllo il tipo del dispositivo
+nome_os = hpcomt.Name()
+# classe
+a = Anime()
+if __name__ == "__main__":
+    try:
+        main()
     except KeyboardInterrupt:
         exit()
