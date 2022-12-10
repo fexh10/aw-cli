@@ -17,6 +17,6 @@ setup(
         "pySmartDL",
         "hpcomt",
     ],
-     entry_points="[console_scripts]aw-cli=aw-cli.aw-cli:main"
+     'console_scripts': [aw-cli=aw-cli.aw-cli:main"]
 )
 
