@@ -19,4 +19,3 @@ setup(
     ],
     entry_points="[console_scripts]aw-cli=awcli.run:main",
 )
-os.system('doskey aw-cli=python3 -m awcli.run' if os.name == 'nt' else 'alias aw-cli=python3 -m awcli.run')
