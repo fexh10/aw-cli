@@ -27,6 +27,7 @@ setup(
     packages=find_packages(include=["awcli"]),
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 46c4374 (Update setup.py)
     version="1.0",
 =======
@@ -35,6 +36,9 @@ setup(
 =======
     version="1.0.2",
 >>>>>>> 9aefcc1 (Aggiunta la descrizione al setup e modificata la versione)
+=======
+    version="1.2",
+>>>>>>> 79fee8b (Update setup.py)
     python_requires=">3.10",
     description="guarda anime dal terminale e molto altro!",
     long_description=long_description,
