@@ -30,7 +30,7 @@ python3 -m pip install git+https://github.com/fexh10/aw-cli.git
 python3 -m pip uninstall aw-cli
 ```
 
-##Utilizzo
+## Utilizzo
 ```
 usage: aw-cli [-h] [-s] [-d] [-l [{a,s,d}]]
 
