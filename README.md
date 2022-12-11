@@ -7,7 +7,7 @@ Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a hr
 ## Indice
 
 - [Installazione](#Installazione)
-- [Disinstallazione](#Disintallazione)
+- [Disinstallazione](#Disinstallazione)
 - [Utilizzo](#Utilizzo)
 - [Crediti](#Crediti)
 
