@@ -4,7 +4,7 @@ import os
 setup(
     name="aw-cli",
     packages=find_packages(include=["awcli"]),
-    version="1.0",
+    version="1.1",
     python_requires=">3.10",
     description="guarda anime dal terminale e molto altro!",
     author="fexh10",
@@ -17,6 +17,7 @@ setup(
         "lxml",
         "pySmartDL",
         "hpcomt",
+        "wheel",
     ],
     entry_points="[console_scripts]\naw-cli=awcli.run:main",
 )
