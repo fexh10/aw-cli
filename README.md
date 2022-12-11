@@ -45,6 +45,6 @@ options:
 ```
 
 ## Crediti
-Progetto ispirato da <a href="https://github.com/pystardust/ani-cli">ani-cli</a>.
+Progetto ispirato a <a href="https://github.com/pystardust/ani-cli">ani-cli</a>.
 
 Un ringraziamento speciale a <a href="https://github.com/axtrat">axtrat</a> per l'aiuto nella realizzazione del progetto.
