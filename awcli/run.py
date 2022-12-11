@@ -15,30 +15,6 @@ import glob
 class Anime:
     name = ""
     ep = 0
-    url = ""
-
-    def get_url(self, i):
-        if i <= 0 or i > self.ep:
-            raise Exception("Episodio non esistente")
-
-        if self.ep == 1:
-            return self.url
-
-        x = re.search("_\d+_", self.url)
-        if x is None:
-            raise Exception("Abbiamo problemi!")
-        
-        epB = int(x.group()[1:-1])
-        lenght = len(x.group()) - 2
-
-        return self.url.replace(x.group(), "_"+match_to_len(lenght, epB+(i-1))+"_")
-
-    def get_url_range(self, i, f):
-        array_url = []
-        for j in range(i, f + 1):
-            array_url.append(self.get_url(j))
-
-        return array_url
 
 def digit(n):
     if n > 0:
@@ -56,7 +32,10 @@ def match_to_len(l, n):
 
     return num + str(n)
 
-def serverInes(url_ep):
+def clearScreen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def trovaUrlServer(url_ep):
     #creo un obj BS con la pagina dell'ep
     html = requests.get(url_ep).text
     sp = BeautifulSoup(html, "lxml")
@@ -85,17 +64,7 @@ def chiediSeAprireDownload():
 #la funzione utilizza la libreria PySmartDL
 #per scaricare gli ep e gli salva in una cartella.
 #se l'ep è già presente nella cartella non lo riscarica
-def scaricaEpisodi(ep_iniziale, ep_finale, url_server, url_episodi):
-    cont = 0
-    for i in range(len(url_server)):
-        response = requests.head(str(url_server[i]))
-        if response.status_code == 200:
-            cont += 1
-            continue
-        else:
-            url_ep = url_episodi[(ep_iniziale - 1) + cont]
-            url_server[i] = serverInes(url_ep)
-            cont += 1  
+def scaricaEpisodi(url_ep):
     gia_scaricato = 0
     print("\033[1;33;40mPreparo il download... \033[1;37;40m")
     if (nome_os == "Android"):
@@ -104,31 +73,22 @@ def scaricaEpisodi(ep_iniziale, ep_finale, url_server, url_episodi):
         path = str(Path.home()) + "/" + "Videos" + "/" + "Anime" "/" + a.name
     if not os.path.exists(path):
         os.makedirs(path)
-    for i in range(ep_finale - (ep_iniziale - 1)):
-        nome_video = url_server[i].split('/')[-1]
-        # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
-        if not os.path.exists(str(path) + "/" + nome_video):
-            print("\033[1;34;40mEpisodio: " + nome_video + "\033[1;37;40m")
-            SDL = SmartDL(url_server[i], path)
-            SDL.start()
-        else:
-            print("\033[1;34;40mEpisodio: " + nome_video + "\033[1;37;40m")
-            print("\033[1;33;40mEpisodio già scaricato, skippo... \033[1;37;40m")
-            gia_scaricato += 1
-    if (gia_scaricato == len(url_server)):
-        chiediSeAprireDownload()
-    if nome_os == "Android":
-        print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Downloads\033[1;37;40m")
-        exit()
+    nome_video = url_ep.split('/')[-1]
+    # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
+    if not os.path.exists(str(path) + "/" + nome_video):
+        print("\033[1;34;40mEpisodio: " + nome_video + "\033[1;37;40m")
+        SDL = SmartDL(url_ep, path)
+        SDL.start()
     else:
-        print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Video, dentro la cartella Anime\033[1;37;40m")
-        chiediSeAprireDownload()
+        print("\033[1;34;40mEpisodio: " + nome_video + "\033[1;37;40m")
+        print("\033[1;33;40mEpisodio già scaricato, skippo... \033[1;37;40m")
+        gia_scaricato += 1
         
 #la funzione fa scegliere gli ep 
 #da guardare all'utente
 def scegliEpisodi(syncpl, download, url_episodi):
     # faccio decire all'utente il range di ep, se l'anime contiene solo 1 ep sarà riprodotto automaticamente
-    os.system('cls' if os.name == 'nt' else 'clear')
+    clearScreen()
     print("\033[1;37;40m" + a.name + "\033[1;37;40m ")
     if (a.ep != 1):
         while True:
@@ -180,9 +140,16 @@ def scegliEpisodi(syncpl, download, url_episodi):
     if syncpl:
         return ep_iniziale, ep_finale
     elif download:
-        scaricaEpisodi(ep_iniziale, ep_finale, a.get_url_range(ep_iniziale, ep_finale), url_episodi)
-
-    print("\033[1;33;40mApro il player...\033[1;37;40m")
+        for i in range(ep_iniziale - 1, ep_finale):
+            url_ep = trovaUrlServer(url_episodi[i])
+            scaricaEpisodi(url_ep)
+        if nome_os == "Android":
+            print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Downloads\033[1;37;40m")
+            exit()
+        else:
+            print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Video, dentro la cartella Anime\033[1;37;40m")
+            chiediSeAprireDownload()
+    #print("\033[1;33;40mApro il player...\033[1;37;40m")
     return ep_iniziale, ep_finale
 
 #la funzione prende i video scaricati e li apre
@@ -206,12 +173,8 @@ def openDownloadedVideos():
 
 #la funzione crea un file dove inserisce i link
 #degli episodi e avvia syncplay
-def open_Syncplay(url_server):
-    nome_file = os.path.dirname(__file__) + '/' + '.aw-syncpl.conf'
-    with open(nome_file, 'w') as f:
-        for i in range(len(url_server)):
-            f.write(url_server[i] + "\n")
-    os.system("syncplay --load-playlist-from-file " + nome_file + " -a syncplay.pl:8999 --language it &>/dev/null")
+def open_Syncplay(url_ep):
+    os.system("syncplay  " + url_ep + " -a syncplay.pl:8999 --language it &>/dev/null")
 
 #la funzione prende in input il link
 #del video e apre il player per riprodurre il video
@@ -220,20 +183,19 @@ def OpenPlayer(url_server, syncpl):
         open_Syncplay(url_server)
     elif (nome_os == "Android"):
         # apro il player utilizzando bash e riproduco un video
-        for i in range(len(url_server)):
-            os.system("am start --user 0 -a android.intent.action.VIEW -d \"" +
-                      url_server[i]+"\" -n org.videolan.vlc/org.videolan.vlc.gui.video.VideoPlayerActivity -e \""+a.name+"ep "+str(a.ep)+"\" \"$trackma_title\" > /dev/null 2>&1 &")
-            # os.system("am start --user 0 -a android.intent.action.VIEW -d \""+url_server[i]+"\" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &")
+        #os.system("am start --user 0 -a android.intent.action.VIEW -d \"" +
+                      #url_server+"\" -n org.videolan.vlc/org.videolan.vlc.gui.video.VideoPlayerActivity -e \""+a.name+"ep "+str(a.ep)+"\" \"$trackma_title\" > /dev/null 2>&1 &")
+
+        os.system("am start --user 0 -a android.intent.action.VIEW -d \""+url_server+"\" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &")
     else:
         player = mpv.MPV(input_default_bindings=True,
                         input_vo_keyboard=True, osc=True)
-        for i in range(len(url_server)):
-            player.playlist_append(url_server[i])
                 
         # avvio il player
         player.fullscreen = True
         player.playlist_pos = 0
         player._set_property("keep-open", True)
+        player.play(url_server)
         player.wait_for_shutdown()
         player.terminate()
 
@@ -243,6 +205,7 @@ def TrovaUrl(string):
     url = re.findall(regex, string)
     return [x[0] for x in url]
 
+#scraping per le ultime uscite di anime se AW
 def listaUscite(selected):
     url_ricerca = "https://www.animeworld.tv"
     contenuto_html = requests.get(url_ricerca).text
@@ -274,7 +237,7 @@ def listaUscite(selected):
 # relativi alla ricerca
 def RicercaAnime():
     while True:
-        os.system('cls' if os.name == 'nt' else 'clear')
+        clearScreen()
         scelta = input("\033[1;35;40mCerca un anime\n> \033[1;37;40m")
         #esco se metto exit
         if (scelta == "exit"):
@@ -320,6 +283,15 @@ def UrlEpisodi(url):
             url_episodi.append(temp)
     return url_episodi
 
+def openVideos(ep_iniziale, ep_finale, url_episodi, syncpl):
+    for i in range(ep_iniziale - 1, ep_finale):
+        url_ep = url_episodi[i]
+        url_server = trovaUrlServer(url_ep)
+        clearScreen()
+        print("\033[1;33;40mRiproduco", a.name, "Episodio", i + 1, "...\033[1;37;40m")
+        OpenPlayer(url_server, syncpl)
+        clearScreen()
+
 def main():
     try:
      #args
@@ -341,14 +313,12 @@ def main():
         elif args.lista:
             lista = True
 
-
-        # utilizzo il try except per fare in modo che quando venga premuto crtl+c non vengano printati degli errori
         if lista:
             risultati_ricerca, nomi_anime = listaUscite(args.lista)
         else:
             risultati_ricerca, nomi_anime = RicercaAnime()
         while True:
-            os.system('cls' if os.name == 'nt' else 'clear')
+            clearScreen()
             # stampo i nomi degli anime
             for i, e in reversed(list(enumerate(nomi_anime))):
                 print("\033[1;32;40m", i + 1,
@@ -399,34 +369,28 @@ def main():
 
         if not lista:
             ep_iniziale, ep_finale = scegliEpisodi(syncpl, download, url_episodi)
-            url_server = a.get_url_range(ep_iniziale, ep_finale)
-            #cont = 0
-            if a.ep != 1:
-                for i in range(0, len(url_server)):
-                    response = requests.head(str(url_server[i]))
-                    if response.status_code == 200:
-                        #cont += 1
-                        continue
-                    else:
-                        url_ep = url_episodi[(ep_iniziale - 1) + i]
-                        url_server[i] = serverInes(url_ep)
-                        #cont += 1   
+            #url_server = a.get_url_range(ep_iniziale, ep_finale)
+        
+            openVideos(ep_iniziale, ep_finale, url_episodi, syncpl)
+                           
         else:
-            url_server = [a.get_url(a.ep)]
+            ep_iniziale = a.ep
             ep_finale = a.ep
+            openVideos(ep_iniziale, ep_finale, url_episodi, syncpl)
 
 
-        # menù che si visualizza dopo aver finito la riproduzione
-        i = ep_finale
-        ris_valida = True
-
+        ris_valida = False
+        prima_volta = True
         while True:
             if ris_valida:
-                OpenPlayer(url_server, syncpl)
+                openVideos(ep_iniziale, ep_finale, url_episodi, syncpl)
             else:
-                print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
-                ris_valida = True
-
+                if prima_volta:
+                    prima_volta = False
+                else:
+                    print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
+            ris_valida = True
+            # menù che si visualizza dopo aver finito la riproduzione
             scelta_menu = input(
                 "\033[1;36;40m(p) prossimo \n" +
                 "\033[1;34;40m(r) riguarda \n" + 
@@ -434,25 +398,24 @@ def main():
                 "\033[1;32;40m(s) seleziona\n" + 
                 "\033[1;31;40m(e) esci\n" + 
                 "\033[1;35;40m> \033[1;37;40m")
-            if scelta_menu.lower() == 'p' and i < a.ep:
-                i += 1
+            if scelta_menu.lower() == 'p' and ep_iniziale < a.ep:
+                ep_iniziale = ep_finale + 1
+                ep_finale = ep_iniziale
+                continue
             elif scelta_menu.lower() == 'r':
                 continue
-            elif scelta_menu.lower() == 'a' and i > 1:
-                i -= 1
+            elif scelta_menu.lower() == 'a' and ep_iniziale > 1:
+                ep_iniziale = ep_finale - 1
+                ep_finale = ep_iniziale
+                continue
             elif scelta_menu.lower() == 's':
                 ep_iniziale, ep_finale = scegliEpisodi(syncpl, download, url_episodi)
-                url_server = a.get_url_range(ep_iniziale, ep_finale)
-                i = ep_finale
-                continue
             elif scelta_menu.lower() == 'e' or scelta_menu == '':
                 exit()
             else:
-                os.system('cls' if os.name == 'nt' else 'clear')
+                clearScreen()
                 ris_valida = False
 
-            if ris_valida:
-                url_server = [a.get_url(i)]
     except KeyboardInterrupt:
         exit()
 
@@ -460,5 +423,6 @@ def main():
 nome_os = hpcomt.Name()
 # classe
 a = Anime()
+
 if __name__ == "__main__":
     main()
