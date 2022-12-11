@@ -15,7 +15,6 @@ Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a hr
 ## Installazione
 
 Lo script funziona tramite il lettore video <a href="https://mpv.io/installation/">MPV</a>, quindi installarlo se non lo si ha già. <br />
-N.B: Su Android il lettore video è <a href="https://play.google.com/store/apps/details?id=org.videolan.vlc&hl=it&gl=US">VLC</a>. <br /> <br />
 È possibile installare aw-cli da pip:
 ```
 python3 -m pip install aw-cli --upgrade
