@@ -1,6 +1,6 @@
 # aw-cli
 <h3 align="center">
-Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a href="animeworld.tv/">AnimeWorld</a>
+Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a href="https://www.animeworld.tv/">AnimeWorld</a>
 
 </h3>
 
