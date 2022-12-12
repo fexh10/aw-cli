@@ -8,29 +8,12 @@ import time
 from pySmartDL import SmartDL
 from pathlib import Path
 import hpcomt
-import math
 import argparse
 import glob
 
 class Anime:
     name = ""
     ep = 0
-
-def digit(n):
-    if n > 0:
-        return int(math.log10(n))+1
-    elif n == 0:
-        return 1
-    else:
-        return int(math.log10(-n))+2
-
-def match_to_len(l, n):
-    num = ""
-
-    for i in range(l-digit(n)):
-        num += "0"
-
-    return num + str(n)
 
 def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -422,7 +405,7 @@ def main():
 # controllo il tipo del dispositivo
 nome_os = hpcomt.Name()
 # classe
-a = Anime()
+a = Anime()                                
 
 if __name__ == "__main__":
     main()
