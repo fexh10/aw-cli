@@ -10,6 +10,7 @@ Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a hr
 - [Disinstallazione](#Disinstallazione)
 - [Utilizzo](#Utilizzo)
 - [Crediti](#Crediti)
+- [Disclaimer](./disclaimer.md)
 
 
 ## Installazione
