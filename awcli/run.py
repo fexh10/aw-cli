@@ -16,7 +16,7 @@ class Anime:
     ep = 0
 
 
-def listaUscite(selected):
+def listaUscite(selected: str) -> tuple[list[str], list[str]]:
     """scraping per le ultime uscite di anime se AW"""
 
     url_ricerca = "https://www.animeworld.tv"
@@ -50,7 +50,7 @@ def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def RicercaAnime():
+def RicercaAnime() -> tuple[list[str], list[str]]:
     """dato in input un nome di un anime inserito dall'utente,\n
     restituisce un lista con gli url degli anime
     relativi alla ricerca"""
@@ -89,7 +89,7 @@ def RicercaAnime():
             time.sleep(1)
 
 
-def UrlEpisodi(url):
+def UrlEpisodi(url: str) -> list[str]:
     """prende in input l'url dell'anime scelto dall'utente\n
     restituisce: gli url di tutti gli episodi"""
 
@@ -104,16 +104,14 @@ def UrlEpisodi(url):
             url_episodi.append(temp)
     return url_episodi
 
-
-def TrovaUrl(string):
+def TrovaUrl(string: str) -> list[str]:
     """trova qualsisi url in una stringa"""
 
     regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
     url = re.findall(regex, string)
     return [x[0] for x in url]
 
-
-def trovaUrlServer(url_ep):
+def trovaUrlServer(url_ep: str) -> str:
     # creo un obj BS con la pagina dell'ep
     html = requests.get(url_ep).text
     sp = BeautifulSoup(html, "lxml")
@@ -130,7 +128,7 @@ def trovaUrlServer(url_ep):
             j += 1
 
 
-def scaricaEpisodi(url_ep):
+def scaricaEpisodi(url_ep: str) -> str:
     """utilizza la libreria PySmartDL
     per scaricare l'ep e lo salva in una cartella.
     se l'ep è già presente nella cartella non lo riscarica"""
@@ -156,7 +154,7 @@ def scaricaEpisodi(url_ep):
     return nome_video
 
 
-def openDownloadedVideos(nomi_video):
+def openDownloadedVideos(nomi_video: list[str]):
     """prende i video scaricati e li apre"""
 
     print("\033[1;33;40mApro il player...\033[1;37;40m")
@@ -175,7 +173,7 @@ def openDownloadedVideos(nomi_video):
     exit()
 
 
-def chiediSeAprireDownload(nomi_video):
+def chiediSeAprireDownload(nomi_video: list[str]):
     while True:
         aprire_ora = input(
             "\033[1;35;40mAprire ora il player con gli episodi scaricati? (S/n)\n> \033[1;37;40m")
@@ -187,7 +185,7 @@ def chiediSeAprireDownload(nomi_video):
             print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
 
 
-def scegliEpisodi(syncpl, download, url_episodi):
+def scegliEpisodi(syncpl: bool, download: bool, url_episodi: list[str]) -> tuple[int, int]:
     """fa scegliere gli ep da guardare all'utente"""
 
     # faccio decire all'utente il range di ep, se l'anime contiene solo 1 ep sarà riprodotto automaticamente
@@ -258,7 +256,7 @@ def scegliEpisodi(syncpl, download, url_episodi):
     return ep_iniziale, ep_finale
 
 
-def open_Syncplay(url_ep):
+def open_Syncplay(url_ep: str):
     """crea un file dove inserisce i link
     degli episodi e avvia syncplay"""
 
@@ -266,7 +264,7 @@ def open_Syncplay(url_ep):
               " -a syncplay.pl:8999 --language it &>/dev/null")
 
 
-def OpenPlayer(url_server, syncpl):
+def OpenPlayer(url_server: str, syncpl: bool):
     """prende in input il link
     del video e apre il player per riprodurre il video"""
 
@@ -292,7 +290,7 @@ def OpenPlayer(url_server, syncpl):
         player.terminate()
 
 
-def openVideos(ep_iniziale, ep_finale, url_episodi, syncpl):
+def openVideos(ep_iniziale: int, ep_finale: int, url_episodi: int, syncpl: bool):
     for i in range(ep_iniziale - 1, ep_finale):
         url_ep = url_episodi[i]
         url_server = trovaUrlServer(url_ep)
