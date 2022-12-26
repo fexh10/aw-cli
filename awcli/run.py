@@ -104,6 +104,7 @@ def UrlEpisodi(url: str) -> list[str]:
             url_episodi.append(temp)
     return url_episodi
 
+
 def TrovaUrl(string: str) -> list[str]:
     """trova qualsisi url in una stringa"""
 
@@ -111,24 +112,24 @@ def TrovaUrl(string: str) -> list[str]:
     url = re.findall(regex, string)
     return [x[0] for x in url]
 
+
 def trovaUrlServer(url_ep: str) -> str:
     # creo un obj BS con la pagina dell'ep
     html = requests.get(url_ep).text
     sp = BeautifulSoup(html, "lxml")
-    # trovo tutti gli url della pagina
-    tutti_url = TrovaUrl(str(sp))
+
     # variabile temp per capire in che posizione è l'url tra tutti gli url della pagina
     j = 0
     # ciclo for con il numoro totale degli url
-    for i in range(0, len(tutti_url)):
+    for url in TrovaUrl(str(sp)):
         # se l'url è un video e si trova in posizione 1 allora è quello del server
-        if (mimetypes.MimeTypes().guess_type(tutti_url[i])[0] == 'video/mp4'):
+        if (mimetypes.MimeTypes().guess_type(url)[0] == 'video/mp4'):
             if (j == 1):
-                return tutti_url[i]
+                return url
             j += 1
 
 
-def scaricaEpisodi(url_ep: str) -> str:
+def scaricaEpisodio(url_ep: str) -> str:
     """utilizza la libreria PySmartDL
     per scaricare l'ep e lo salva in una cartella.
     se l'ep è già presente nella cartella non lo riscarica"""
@@ -159,11 +160,11 @@ def openDownloadedVideos(nomi_video: list[str]):
 
     print("\033[1;33;40mApro il player...\033[1;37;40m")
     path = str(Path.home()) + "/Videos/Anime/" + a.name
-    for i in range(len(nomi_video)):
+    for nome in nomi_video:
         player = mpv.MPV(input_default_bindings=True,
                          input_vo_keyboard=True, osc=True)
-        player.play(path + "/" + nomi_video[i])
-        print("\033[1;33;40mRiproduco", nomi_video[i].replace(
+        player.play(f"{path}/{nome}")
+        print("\033[1;33;40mRiproduco", nome.replace(
             ".mp4", ""), "...\033[1;37;40m")
         # avvio il player
         player.fullscreen = True
@@ -180,7 +181,7 @@ def chiediSeAprireDownload(nomi_video: list[str]):
         if aprire_ora.lower() == 's' or aprire_ora == "":
             openDownloadedVideos(nomi_video)
         elif aprire_ora.lower() == 'n':
-            exit()
+            break
         else:
             print("\033[1;31;40mSeleziona una risposta valida\033[1;37;40m")
 
@@ -244,14 +245,15 @@ def scegliEpisodi(syncpl: bool, download: bool, url_episodi: list[str]) -> tuple
         nomi_video = []
         for i in range(ep_iniziale - 1, ep_finale):
             url_ep = trovaUrlServer(url_episodi[i])
-            nomi_video.append(scaricaEpisodi(url_ep))
+            nomi_video.append(scaricaEpisodio(url_ep))
+
         if nome_os == "Android":
             print(
                 "\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Downloads\033[1;37;40m")
-            exit()
         else:
             print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Video, dentro la cartella Anime\033[1;37;40m")
             chiediSeAprireDownload(nomi_video)
+        exit()
     #print("\033[1;33;40mApro il player...\033[1;37;40m")
     return ep_iniziale, ep_finale
 
@@ -295,8 +297,8 @@ def openVideos(ep_iniziale: int, ep_finale: int, url_episodi: int, syncpl: bool)
         url_ep = url_episodi[i]
         url_server = trovaUrlServer(url_ep)
         clearScreen()
-        print("\033[1;33;40mRiproduco", a.name,
-              "Episodio", i + 1, "...\033[1;37;40m")
+        print(
+            f"\033[1;33;40mRiproduco {a.name} Episodio {i + 1} ...\033[1;37;40m")
         OpenPlayer(url_server, syncpl)
         clearScreen()
 
