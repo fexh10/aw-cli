@@ -9,7 +9,6 @@ from pySmartDL import SmartDL
 from pathlib import Path
 import hpcomt
 import argparse
-import glob
 
 class Anime:
     name = ""
@@ -34,11 +33,11 @@ def trovaUrlServer(url_ep):
                 return tutti_url[i]
             j+=1
 
-def chiediSeAprireDownload():
+def chiediSeAprireDownload(nomi_video):
     while True:
             aprire_ora = input("\033[1;35;40mAprire ora il player con gli episodi scaricati? (S/n)\n> \033[1;37;40m")
             if aprire_ora.lower() == 's' or aprire_ora == "": 
-                openDownloadedVideos()
+                openDownloadedVideos(nomi_video)
             elif aprire_ora.lower() == 'n':        
                 exit()
             else:
@@ -53,7 +52,7 @@ def scaricaEpisodi(url_ep):
     if (nome_os == "Android"):
         path = "storage" + "/" + "downloads" + "/" + a.name
     else:
-        path = str(Path.home()) + "/" + "Videos" + "/" + "Anime" "/" + a.name
+        path = str(Path.home()) + "/Videos/Anime/" + a.name
     if not os.path.exists(path):
         os.makedirs(path)
     nome_video = url_ep.split('/')[-1]
@@ -66,6 +65,7 @@ def scaricaEpisodi(url_ep):
         print("\033[1;34;40mEpisodio: " + nome_video + "\033[1;37;40m")
         print("\033[1;33;40mEpisodio già scaricato, skippo... \033[1;37;40m")
         gia_scaricato += 1
+    return nome_video
         
 #la funzione fa scegliere gli ep 
 #da guardare all'utente
@@ -123,35 +123,33 @@ def scegliEpisodi(syncpl, download, url_episodi):
     if syncpl:
         return ep_iniziale, ep_finale
     elif download:
+        nomi_video = []
         for i in range(ep_iniziale - 1, ep_finale):
             url_ep = trovaUrlServer(url_episodi[i])
-            scaricaEpisodi(url_ep)
+            nomi_video.append(scaricaEpisodi(url_ep))
         if nome_os == "Android":
             print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Downloads\033[1;37;40m")
             exit()
         else:
             print("\033[1;32;40mTutti i video scaricati correttamente!\nLi puoi trovare nella cartella Video, dentro la cartella Anime\033[1;37;40m")
-            chiediSeAprireDownload()
+            chiediSeAprireDownload(nomi_video)
     #print("\033[1;33;40mApro il player...\033[1;37;40m")
     return ep_iniziale, ep_finale
 
 #la funzione prende i video scaricati e li apre
-def openDownloadedVideos():
+def openDownloadedVideos(nomi_video):
     print("\033[1;33;40mApro il player...\033[1;37;40m")
-    path = str(Path.home()) + "/" + "Videos" + "/" + "Anime" "/" + a.name
-    videos = glob.glob(path+"/*")
-    player = mpv.MPV(input_default_bindings=True,
+    path = str(Path.home()) + "/Videos/Anime/" + a.name
+    for i in range(len(nomi_video)):
+        player = mpv.MPV(input_default_bindings=True,
                          input_vo_keyboard=True, osc=True)
-    videos.reverse()
-    for i in range (len(videos)):
-        player.playlist_append(videos[i])  
-
-    # avvio il player
-    player.fullscreen = True
-    player.playlist_pos = 0
-    player._set_property("keep-open", True)
-    player.wait_for_shutdown()
-    player.terminate()
+        player.play(path + "/" + nomi_video[i])  
+        print("\033[1;33;40mRiproduco", nomi_video[i].replace(".mp4", ""), "...\033[1;37;40m")
+        # avvio il player
+        player.fullscreen = True
+        player._set_property("keep-open", True)
+        player.wait_for_shutdown()
+        player.terminate()
     exit()
 
 #la funzione crea un file dove inserisce i link
