@@ -185,7 +185,7 @@ def chiediSeAprireDownload(nomi_video: list[str]):
             my_print("Seleziona una risposta valida", color=31)
 
 
-def scegliEpisodi(syncpl: bool, download: bool, url_episodi: list[str]) -> tuple[int, int]:
+def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
     """fa scegliere gli ep da guardare all'utente"""
 
     # faccio decire all'utente il range di ep, se l'anime contiene solo 1 ep sarà riprodotto automaticamente
@@ -260,7 +260,7 @@ def open_Syncplay(url_ep: str):
     os.system(f"syncplay  {url_ep} -a syncplay.pl:8999 --language it &>/dev/null")
 
 
-def OpenPlayer(url_server: str, syncpl: bool):
+def OpenPlayer(url_server: str):
     """prende in input il link
     del video e apre il player per riprodurre il video"""
 
@@ -286,36 +286,37 @@ def OpenPlayer(url_server: str, syncpl: bool):
         player.terminate()
 
 
-def openVideos(ep_iniziale: int, ep_finale: int, url_episodi: int, syncpl: bool):
-    for i in range(ep_iniziale - 1, ep_finale):
-        url_ep = url_episodi[i]
+def openVideos(url_episodi: list[str]):
+    for url_ep in url_episodi:
         url_server = trovaUrlServer(url_ep)
-        my_print(f"Riproduco {a.name} Episodio {i + 1} ...", color=33)
-        OpenPlayer(url_server, syncpl)
+        nome_video = url_server.split('/')[-1]
+        my_print(f"Riproduco {nome_video} ...", color=33)
+        OpenPlayer(url_server)
 
 
 def main():
+    global syncpl
+    global download
+    global lista
+
+    # args
+    parser = argparse.ArgumentParser(
+        "aw-cli", description="Guarda anime dal terminale e molto altro!")
+    if nome_os != "Android":
+        parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
+    parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
+    parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
+    args = parser.parse_args()
+
+    if nome_os != "Android":
+        if args.syncpl:
+            syncpl = True
+    if args.download:
+        download = True
+    elif args.lista:
+        lista = True
+
     try:
-        # args
-        syncpl = False
-        download = False
-        lista = False
-        parser = argparse.ArgumentParser(
-            "aw-cli", description="Guarda anime dal terminale e molto altro!")
-        if nome_os != "Android":
-            parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
-        parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
-        parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
-        args = parser.parse_args()
-
-        if nome_os != "Android":
-            if args.syncpl:
-                syncpl = True
-        if args.download:
-            download = True
-        elif args.lista:
-            lista = True
-
         if lista:
             risultati_ricerca, nomi_anime = listaUscite(args.lista)
         else:
@@ -365,7 +366,7 @@ def main():
                 j += 1
 
         if not lista:
-            ep_iniziale, ep_finale = scegliEpisodi(syncpl, download, url_episodi)
+            ep_iniziale, ep_finale = scegliEpisodi(url_episodi)
 
         else:
             ep_iniziale = a.ep
@@ -374,7 +375,7 @@ def main():
         ris_valida = True
         while True:
             if ris_valida:
-                openVideos(ep_iniziale, ep_finale, url_episodi, syncpl)
+                openVideos(url_episodi[ep_iniziale-1:ep_finale])
             else:
                 my_print("eleziona una risposta valida", color=33)
                 ris_valida = True
@@ -396,8 +397,7 @@ def main():
                 ep_finale = ep_iniziale
                 continue
             elif scelta_menu == 's':
-                ep_iniziale, ep_finale = scegliEpisodi(
-                    syncpl, download, url_episodi)
+                ep_iniziale, ep_finale = scegliEpisodi(url_episodi)
             elif scelta_menu == 'e' or scelta_menu == '':
                 exit()
             else:
@@ -410,6 +410,10 @@ def main():
 
 # controllo il tipo del dispositivo
 nome_os = hpcomt.Name()
+#args
+syncpl = False
+download = False
+lista = False
 # classe
 a = Anime()
 
