@@ -55,6 +55,7 @@ def listaUscite(selected: str) -> tuple[list[str], list[str]]:
 
     return risultati_ricerca, nomi_anime
 
+
 def RicercaAnime() -> tuple[list[str], list[str]]:
     """dato in input un nome di un anime inserito dall'utente,\n
     restituisce un lista con gli url degli anime
@@ -132,20 +133,80 @@ def trovaUrlServer(url_ep: str) -> str:
             j += 1
 
 
-def scaricaEpisodio(url_ep: str) -> str:
+def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
+    """fa scegliere gli ep da guardare all'utente"""
+    
+    my_print(a.name, cls=True)
+    #se contiene solo 1 ep sarà riprodotto automaticamente
+    if a.ep == 1:
+        return 1, 1
+
+    if lista:
+        return a.ep, a.ep
+
+    # faccio decire all'utente il range di ep
+    while True:
+        if (nome_os == "Android"):
+            my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color=33)
+        my_print(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{str(a.ep)})\n>", color=33, end=" ")
+        n_episodi = input()
+        # controllo se l'utente ha inserito un range o un episodio unico (premere invio di default selezione automaticamente tutti gli episodi)
+        if "-" not in n_episodi:
+            if n_episodi == '':
+                ep_iniziale = 1
+                ep_finale = a.ep
+                break
+            else:
+                ep_iniziale = int(n_episodi)
+                ep_finale = int(n_episodi)
+                if (ep_iniziale > a.ep or ep_iniziale < 1):
+                    my_print("La ricerca non ha prodotto risultati", color=31)
+                else:
+                    break
+        else:
+            flag = 0
+            temp1 = ""
+            temp2 = ""
+            for i in range(0, len(n_episodi)):
+                if (flag == 0 and n_episodi[i] != '-'):
+                    temp1 += n_episodi[i]
+                if (n_episodi[i] == '-'):
+                    flag = 1
+                    continue
+                if (flag == 1):
+                    temp2 += n_episodi[i]
+
+            ep_iniziale = int(temp1)
+            ep_finale = int(temp2)
+            if (ep_iniziale > ep_finale or ep_finale > a.ep or ep_iniziale < 1):
+                my_print("La ricerca non ha prodotto risultati", color=31)
+            else:
+                break
+
+    return ep_iniziale, ep_finale
+
+
+
+
+def downloadPath():
+    if (nome_os == "Android"):
+        path = f"storage/downloads/{a.name}"
+    else:
+        path = f"{Path.home()}/Videos/Anime/{a.name}"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return path
+
+
+def scaricaEpisodio(url_ep: str, path: str):
     """utilizza la libreria PySmartDL
     per scaricare l'ep e lo salva in una cartella.
     se l'ep è già presente nella cartella non lo riscarica"""
 
     gia_scaricato = 0
     my_print("Preparo il download...", color=33)
-    if (nome_os == "Android"):
-        path = "storage" + "/" + "downloads" + "/" + a.name
-    else:
-        path = str(Path.home()) + "/Videos/Anime/" + a.name
-    if not os.path.exists(path):
-        os.makedirs(path)
     nome_video = url_ep.split('/')[-1]
+
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
     my_print(f"Episodio: {nome_video}", color=34)
     if not os.path.exists(str(path) + "/" + nome_video):
@@ -154,103 +215,6 @@ def scaricaEpisodio(url_ep: str) -> str:
     else:
         my_print("Episodio già scaricato, skippo...", color=33)
         gia_scaricato += 1
-    return nome_video
-
-
-def openDownloadedVideos(nomi_video: list[str]):
-    """prende i video scaricati e li apre"""
-    my_print("pro il player...", color=33)
-    path = str(Path.home()) + "/Videos/Anime/" + a.name
-    for nome in nomi_video:
-        player = mpv.MPV(input_default_bindings=True, input_vo_keyboard=True, osc=True)
-        player.play(f"{path}/{nome}")
-        my_print(f"Riproduco {nome[:-4]} ...", color=33)
-        # avvio il player
-        player.fullscreen = True
-        player._set_property("keep-open", True)
-        player.wait_for_shutdown()
-        player.terminate()
-    exit()
-
-
-def chiediSeAprireDownload(nomi_video: list[str]):
-    while True:
-        my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color=35, end=" ")
-        aprire_ora = input()
-        if aprire_ora.lower() == 's' or aprire_ora == "":
-            openDownloadedVideos(nomi_video)
-        elif aprire_ora.lower() == 'n':
-            break
-        else:
-            my_print("Seleziona una risposta valida", color=31)
-
-
-def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
-    """fa scegliere gli ep da guardare all'utente"""
-
-    # faccio decire all'utente il range di ep, se l'anime contiene solo 1 ep sarà riprodotto automaticamente
-    my_print(a.name, cls=True)
-    if (a.ep != 1):
-        while True:
-            if (nome_os == "Android"):
-                my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color=33)
-            my_print(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{str(a.ep)})\n>", color=33, end=" ")
-            n_episodi = input()
-            # controllo se l'utente ha inserito un range o un episodio unico (premere invio di default selezione automaticamente tutti gli episodi)
-            if "-" not in n_episodi:
-                if n_episodi == '':
-                    ep_iniziale = 1
-                    ep_finale = a.ep
-                    break
-                else:
-                    ep_iniziale = int(n_episodi)
-                    ep_finale = int(n_episodi)
-                    if (ep_iniziale > a.ep or ep_iniziale < 1):
-                        my_print("La ricerca non ha prodotto risultati", color=31)
-                    else:
-                        break
-            else:
-                flag = 0
-                temp1 = ""
-                temp2 = ""
-                for i in range(0, len(n_episodi)):
-                    if (flag == 0 and n_episodi[i] != '-'):
-                        temp1 += n_episodi[i]
-                    if (n_episodi[i] == '-'):
-                        flag = 1
-                        continue
-                    if (flag == 1):
-                        temp2 += n_episodi[i]
-
-                ep_iniziale = int(temp1)
-                ep_finale = int(temp2)
-                if (ep_iniziale > ep_finale or ep_finale > a.ep or ep_iniziale < 1):
-                    my_print("La ricerca non ha prodotto risultati", color=31)
-                else:
-                    break
-    else:
-        ep_iniziale = 1
-        ep_finale = 1
-
-    # se syncplay è stato scelto allora non chiedo
-    # di fare il download ed esco dalla funzione
-    if syncpl:
-        return ep_iniziale, ep_finale
-    elif download:
-        nomi_video = []
-        for i in range(ep_iniziale - 1, ep_finale):
-            url_ep = trovaUrlServer(url_episodi[i])
-            nomi_video.append(scaricaEpisodio(url_ep))
-
-        my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color=32, end=" ")
-        if nome_os == "Android":
-            my_print("Downloads", color=32)
-        else:
-            my_print("Video/Anime", color=32)
-            chiediSeAprireDownload(nomi_video)
-        exit()
-    
-    return ep_iniziale, ep_finale
 
 
 def open_Syncplay(url_ep: str):
@@ -286,11 +250,27 @@ def OpenPlayer(url_server: str):
         player.terminate()
 
 
+def openDownlodedVideos(path_episodi: list[str]):
+    for path_ep in path_episodi:
+        nome_video = path_ep.split('/')[-1]
+        my_print(f"Riproduco {nome_video} ...", color=33, cls=True)
+        OpenPlayer(path_ep)
+
+
+def chiediSeAprireDownload(path_video: list[str]):
+    while True:
+        my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color=35, end=" ")
+        match input().lower():
+            case 's'|"": openDownlodedVideos(path_video)
+            case 'n': break
+            case  _: my_print("Seleziona una risposta valida", color=31)
+
+
 def openVideos(url_episodi: list[str]):
     for url_ep in url_episodi:
         url_server = trovaUrlServer(url_ep)
         nome_video = url_server.split('/')[-1]
-        my_print(f"Riproduco {nome_video} ...", color=33)
+        my_print(f"Riproduco {nome_video} ...", color=33, cls=True)
         OpenPlayer(url_server)
 
 
@@ -300,8 +280,7 @@ def main():
     global lista
 
     # args
-    parser = argparse.ArgumentParser(
-        "aw-cli", description="Guarda anime dal terminale e molto altro!")
+    parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
     if nome_os != "Android":
         parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
@@ -365,19 +344,33 @@ def main():
                     break
                 j += 1
 
-        if not lista:
-            ep_iniziale, ep_finale = scegliEpisodi(url_episodi)
+        ep_iniziale, ep_finale = scegliEpisodi(url_episodi)
 
-        else:
-            ep_iniziale = a.ep
-            ep_finale = a.ep
+        # se syncplay è stato scelto allora non chiedo
+        # di fare il download ed esco dalla funzione
+        if not syncpl and download:
+            path_video = []
+            path = downloadPath()
+            for i in range(ep_iniziale - 1, ep_finale):
+                url_ep = trovaUrlServer(url_episodi[i])
+                nome_video = url_ep.split('/')[-1]
+                scaricaEpisodio(url_ep, path)
+                path_video.append(f"{path}/{nome_video}")
+
+            my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color=32, end=" ")
+            if nome_os == "Android":
+                my_print("Downloads", color=32)
+            else:
+                my_print("Video/Anime", color=32)
+                chiediSeAprireDownload(path_video)
+            exit()
 
         ris_valida = True
         while True:
             if ris_valida:
                 openVideos(url_episodi[ep_iniziale-1:ep_finale])
             else:
-                my_print("eleziona una risposta valida", color=33)
+                my_print("Seleziona una risposta valida", color=33)
                 ris_valida = True
             # menù che si visualizza dopo aver finito la riproduzione
             my_print("(p) prossimo", color=36)
