@@ -20,11 +20,13 @@ def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def my_print(text: str, format = 1, color = 37, bg_color = 40, cls = False, end = "\n"):
+def my_print(text: str, format=1, color="bianco", bg_color="nero", cls=False, end="\n"):
+    COLORS = {'nero': 0,'rosso': 1,'verde': 2,'giallo': 3,'blu': 4,'magenta': 5,'azzurro': 6,'bianco': 7}
     if cls:
-        clearScreen()
-        
-    print(f"\033[{format};{color};{bg_color}m{text}\033[1;37;40m", end=end)
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+    print(
+        f"\033[{format};3{COLORS[color]};4{COLORS[bg_color]}m{text}\033[1;37;40m", end=end)
 
 
 def listaUscite(selected: str) -> tuple[list[str], list[str]]:
@@ -62,7 +64,7 @@ def RicercaAnime() -> tuple[list[str], list[str]]:
     relativi alla ricerca"""
 
     while True:
-        my_print("Cerca un anime\n>", color=35, cls=True, end=" ")
+        my_print("Cerca un anime\n>", color="magenta", cls=True, end=" ")
         scelta = input()
         # esco se metto exit
         if (scelta == "exit"):
@@ -72,7 +74,7 @@ def RicercaAnime() -> tuple[list[str], list[str]]:
         # cerco l'anime su animeworld
         url_ricerca = "https://www.animeworld.tv/search?keyword=" + rimpiazza
 
-        my_print("Ricerco...", color=33)
+        my_print("Ricerco...", color="giallo")
 
         # prendo i link degli anime relativi alla ricerca
         contenuto_html = requests.get(url_ricerca).text
@@ -89,7 +91,7 @@ def RicercaAnime() -> tuple[list[str], list[str]]:
         if (len(risultati_ricerca) != 0):
             return risultati_ricerca, nomi_anime
         else:
-            my_print("La ricerca non ha prodotto risultati", color=31)
+            my_print("La ricerca non ha prodotto risultati", color="rosso")
             time.sleep(1)
 
 
@@ -147,8 +149,8 @@ def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
     # faccio decire all'utente il range di ep
     while True:
         if (nome_os == "Android"):
-            my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color=33)
-        my_print(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{str(a.ep)})\n>", color=33, end=" ")
+            my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color="giallo")
+        my_print(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{str(a.ep)})\n>", color="magenta", end=" ")
         n_episodi = input()
         # controllo se l'utente ha inserito un range o un episodio unico (premere invio di default selezione automaticamente tutti gli episodi)
         if "-" not in n_episodi:
@@ -160,7 +162,7 @@ def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
                 ep_iniziale = int(n_episodi)
                 ep_finale = int(n_episodi)
                 if (ep_iniziale > a.ep or ep_iniziale < 1):
-                    my_print("La ricerca non ha prodotto risultati", color=31)
+                    my_print("La ricerca non ha prodotto risultati", color="rosso")
                 else:
                     break
         else:
@@ -179,7 +181,7 @@ def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
             ep_iniziale = int(temp1)
             ep_finale = int(temp2)
             if (ep_iniziale > ep_finale or ep_finale > a.ep or ep_iniziale < 1):
-                my_print("La ricerca non ha prodotto risultati", color=31)
+                my_print("La ricerca non ha prodotto risultati", color="rosso")
             else:
                 break
 
@@ -204,16 +206,16 @@ def scaricaEpisodio(url_ep: str, path: str):
     se l'ep è già presente nella cartella non lo riscarica"""
 
     gia_scaricato = 0
-    my_print("Preparo il download...", color=33)
+    my_print("Preparo il download...", color="giallo")
     nome_video = url_ep.split('/')[-1]
 
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
-    my_print(f"Episodio: {nome_video}", color=34)
+    my_print(f"Episodio: {nome_video}", color="blu")
     if not os.path.exists(str(path) + "/" + nome_video):
         SDL = SmartDL(url_ep, path)
         SDL.start()
     else:
-        my_print("Episodio già scaricato, skippo...", color=33)
+        my_print("Episodio già scaricato, skippo...", color="giallo")
         gia_scaricato += 1
 
 
@@ -253,24 +255,27 @@ def OpenPlayer(url_server: str):
 def openDownlodedVideos(path_episodi: list[str]):
     for path_ep in path_episodi:
         nome_video = path_ep.split('/')[-1]
-        my_print(f"Riproduco {nome_video} ...", color=33, cls=True)
+        my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(path_ep)
+
 
 
 def chiediSeAprireDownload(path_video: list[str]):
     while True:
-        my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color=35, end=" ")
+        my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color="magenta", end=" ")
         match input().lower():
-            case 's'|"": openDownlodedVideos(path_video)
+            case 's'|"": 
+                openDownlodedVideos(path_video)
+                break
             case 'n': break
-            case  _: my_print("Seleziona una risposta valida", color=31)
+            case  _: my_print("Seleziona una risposta valida", color="rosso")
 
 
 def openVideos(url_episodi: list[str]):
     for url_ep in url_episodi:
         url_server = trovaUrlServer(url_ep)
         nome_video = url_server.split('/')[-1]
-        my_print(f"Riproduco {nome_video} ...", color=33, cls=True)
+        my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(url_server)
 
 
@@ -304,17 +309,17 @@ def main():
             clearScreen()
             # stampo i nomi degli anime
             for i, nome in reversed(list(enumerate(nomi_anime))):
-                my_print(f"{i + 1}", color=32, end=" ")
+                my_print(f"{i + 1} ", color="verde", end=" ")
                 my_print(nome)
 
             
             while True:
-                my_print("Scegli un anime\n>", color=33, end=" ")
+                my_print("Scegli un anime\n>", color="magenta", end=" ")
                 s = int(input())-1
                 # controllo che il numero inserito sia giusto
                 if s in range(len(nomi_anime)):
                     break
-                my_print("Seleziona una risposta valida", color=31)
+                my_print("Seleziona una risposta valida", color="rosso")
 
             url = risultati_ricerca[s]
             url_episodi = UrlEpisodi(url)
@@ -322,7 +327,7 @@ def main():
 
             # se l'anime non ha episodi non può essere selezionato
             if a.ep == 0:
-                my_print("Eh, volevi! L'anime non ha episodi", color=31)
+                my_print("Eh, volevi! L'anime non ha episodi", color="rosso")
                 time.sleep(1)
             else:
                 break
@@ -357,11 +362,11 @@ def main():
                 scaricaEpisodio(url_ep, path)
                 path_video.append(f"{path}/{nome_video}")
 
-            my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color=32, end=" ")
+            my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
             if nome_os == "Android":
-                my_print("Downloads", color=32)
+                my_print("Downloads", color="verde")
             else:
-                my_print("Video/Anime", color=32)
+                my_print("Video/Anime", color="verde")
                 chiediSeAprireDownload(path_video)
             exit()
 
@@ -370,14 +375,15 @@ def main():
             if ris_valida:
                 openVideos(url_episodi[ep_iniziale-1:ep_finale])
             else:
-                my_print("Seleziona una risposta valida", color=33)
+                my_print("Seleziona una risposta valida", color="rosso")
                 ris_valida = True
             # menù che si visualizza dopo aver finito la riproduzione
-            my_print("(p) prossimo", color=36)
-            my_print("(r) riguarda", color=34)
-            my_print("(a) antecedente", color=36)
-            my_print("(s) seleziona", color=32)
-            my_print("(e) esci", color=31)
+            my_print("(p) prossimo", color="azzurro")
+            my_print("(r) riguarda", color="blu")
+            my_print("(a) antecedente", color="azzurro")
+            my_print("(s) seleziona", color="verde")
+            my_print("(e) esci", color="rosso")
+            my_print(">", color="magenta", end=" ")
             scelta_menu = input().lower()
             if scelta_menu == 'p' and ep_iniziale < a.ep:
                 ep_iniziale = ep_finale + 1
