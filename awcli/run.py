@@ -1,45 +1,14 @@
 import os
 from bs4 import BeautifulSoup
 import requests
-import mimetypes
 import mpv
 import time
-from pySmartDL import SmartDL
-from pathlib import Path
 import hpcomt
 import argparse
+from pySmartDL import SmartDL
+from pathlib import Path
 from awcli.utilities import *
 from awcli.animeworld import AnimeWorld
-
-
-def listaUscite(selected: str) -> list[Anime]:
-    """scraping per le ultime uscite di anime se AW"""
-
-    url_ricerca = "https://www.animeworld.tv"
-    contenuto_html = requests.get(url_ricerca).text
-    bs = BeautifulSoup(contenuto_html, "lxml")
-
-    animes = list[Anime]()
-
-    match selected:
-        case 's': data_name = "sub"
-        case 'd': data_name = "dub"
-        case  _ : data_name = "all"
-        
-
-    div = bs.find("div", {"data-name": data_name})
-    for div in div.find_all(class_='inner'):
-        anime = Anime()
-        anime.url = "https://www.animeworld.tv" + div.a.get('href')
-        
-        for a in div.find_all(class_='name'):
-            anime.name = a.text
-        for div in div.find_all(class_='ep'):
-            anime.name += " [" + div.text + "]"
-        
-        animes.append(anime)
-
-    return animes
 
 
 def RicercaAnime() -> list[Anime]:
@@ -246,7 +215,7 @@ def main():
         lista = True
 
     try:
-        animes = listaUscite(args.lista) if lista else RicercaAnime()
+        animes = sito.latest(args.lista) if lista else RicercaAnime()
         
         while True:
             clearScreen()
