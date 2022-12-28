@@ -16,7 +16,7 @@ def mock_get():
 
 # Definisce la prima funzione di test
 def test_search_onepiece(anime_world, mock_get):
-    with open("search_onepiece.html") as html:
+    with open("search_onepiece") as html:
         mock_get.return_value.text = html.read()
 
     expected = [
@@ -34,7 +34,7 @@ def test_search_onepiece(anime_world, mock_get):
         
 
 def test_search_dragonball(anime_world, mock_get):
-    with open("search_dragonball.html") as html:
+    with open("search_dragonball") as html:
         mock_get.return_value.text = html.read()
     results = [anime.name for anime in anime_world.search("dragon ball")]
         

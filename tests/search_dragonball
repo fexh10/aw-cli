@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<body class="dark">
+    <div id="body">
+        <div class="container" id="body-container">
+            <div id="main">
+                <div class="content">
+                    <div class="widget">
+                        <div class="widget-body">
+                            <div class="film-list">
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-super.qu9Y82" class="poster"
+                                            data-tip="api/tooltip/141">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/83348l.jpg"
+                                                alt="Dragon Ball Super" />
+                                            <div class="status">
+
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-super.qu9Y82" data-jtitle="Dragon Ball Super"
+                                            class="name">Dragon Ball Super</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-kai.QKA6SX" class="poster"
+                                            data-tip="api/tooltip/402">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/28655l.jpg"
+                                                alt="Dragon Ball Kai" />
+                                            <div class="status">
+
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-kai.QKA6SX" data-jtitle="Dragon Ball Z Kai"
+                                            class="name">Dragon Ball Kai</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-gt-ita.92GyFX3" class="poster"
+                                            data-tip="api/tooltip/403">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/20727.jpg"
+                                                alt="Dragon Ball GT (ITA)" />
+                                            <div class="status">
+                                                <div class="dub">DUB</div>
+
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-gt-ita.92GyFX3" data-jtitle="Dragon Ball GT"
+                                            class="name">Dragon Ball GT (ITA)</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-z-ita.biybs3" class="poster"
+                                            data-tip="api/tooltip/552">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/1Pww1S5.jpg"
+                                                alt="Dragon Ball Z (ITA)" />
+                                            <div class="status">
+                                                <div class="dub">DUB</div>
+
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-z-ita.biybs3" data-jtitle="Dragon Ball Z"
+                                            class="name">Dragon Ball Z (ITA)</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-ita.z8kdG3" class="poster"
+                                            data-tip="api/tooltip/603">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/5233l.jpg"
+                                                alt="Dragon Ball (ITA)" />
+                                            <div class="status">
+                                                <div class="dub">DUB</div>
+
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-ita.z8kdG3" data-jtitle="Dragon Ball"
+                                            class="name">Dragon Ball (ITA)</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-super-ita.gIF242" class="poster"
+                                            data-tip="api/tooltip/772">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/74606l.jpg"
+                                                alt="Dragon Ball Super (ITA)" />
+                                            <div class="status">
+                                                <div class="dub">DUB</div>
+
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-super-ita.gIF242"
+                                            data-jtitle="Dragon Ball Super (ITA)" class="name">Dragon Ball Super
+                                            (ITA)</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-heroes.8sYrL" class="poster"
+                                            data-tip="api/tooltip/1258">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/8sYrL.png?0"
+                                                alt="Super Dragon Ball Heroes" />
+                                            <div class="status">
+
+                                                <div class="ona">ONA</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-heroes.8sYrL" data-jtitle="Dragon Ball Heroes"
+                                            class="name">Super Dragon Ball Heroes</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-z-il-super-saiyan-della-leggenda.Y0xYa"
+                                            class="poster" data-tip="api/tooltip/2355">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/92342l.jpg"
+                                                alt="Dragon Ball Z: Il Super Saiyan della leggenda" />
+                                            <div class="status">
+                                                <div class="dub">DUB</div>
+
+                                                <div class="movie">Movie</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-z-il-super-saiyan-della-leggenda.Y0xYa"
+                                            data-jtitle="Dragon Ball Z Movie 08: Moetsukiro!! Nessen, Ressen, Chougekisen"
+                                            class="name">Dragon Ball Z: Il Super Saiyan della leggenda</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-super-movie-broly.iGQim" class="poster"
+                                            data-tip="api/tooltip/3491">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/iGQim.jpg"
+                                                alt="Dragon Ball Super Movie: Broly" />
+                                            <div class="status">
+
+                                                <div class="movie">Movie</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-super-movie-broly.iGQim"
+                                            data-jtitle="Dragon Ball Super: Broly" class="name">Dragon Ball Super Movie:
+                                            Broly</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-super-movie-broly-ita.xJyuL" class="poster"
+                                            data-tip="api/tooltip/3492">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/xJyuL.jpg"
+                                                alt="Dragon Ball Super Movie: Broly (ITA)" />
+                                            <div class="status">
+                                                <div class="dub">DUB</div>
+
+                                                <div class="movie">Movie</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-super-movie-broly-ita.xJyuL"
+                                            data-jtitle="Dragon Ball Super: Broly (ITA)" class="name">Dragon Ball Super
+                                            Movie: Broly (ITA)</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-super-super-hero.t61-B" class="poster"
+                                            data-tip="api/tooltip/4101">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/t61-B.png"
+                                                alt="Dragon Ball Super: Super Hero" />
+                                            <div class="status">
+
+                                                <div class="movie">Movie</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-super-super-hero.t61-B"
+                                            data-jtitle="Dragon Ball Super: Super Hero" class="name">Dragon Ball Super:
+                                            Super Hero</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="/play/dragon-ball-super-super-hero-ita.qfJZH" class="poster"
+                                            data-tip="api/tooltip/4404">
+                                            <img loading="lazy" src="https://img.animeworld.tv/locandine/t61-B.png"
+                                                alt="Dragon Ball Super: Super Hero (ITA)" />
+                                            <div class="status">
+                                                <div class="dub">DUB</div>
+
+                                                <div class="movie">Movie</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="/play/dragon-ball-super-super-hero-ita.qfJZH"
+                                            data-jtitle="Dragon Ball Super: Super Hero (ITA)" class="name">Dragon Ball
+                                            Super: Super Hero (ITA)</a>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

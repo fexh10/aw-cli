@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<body class="dark">
+    <div id="body">
+        <div class="container" id="body-container">
+            <div id="main">
+                <div class="content">
+                    <div class="widget">
+                        <div class="widget-body">
+                            <div class="film-list">
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="https://www.animeworld.tv/play/one-piece-subita.qzG-L"
+                                            class="poster tooltipstered" data-tip="api/tooltip/160">
+                                            <img loading="lazy"
+                                                src="./search_one piece_files/8056a82e973dde98ebb82abd39dc69.jpg"
+                                                alt="One Piece">
+                                            <div class="status">
+
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="https://www.animeworld.tv/play/one-piece-subita.qzG-L"
+                                            data-jtitle="One Piece" class="name">One Piece</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="https://www.animeworld.tv/play/one-piece-ita.d5nah"
+                                            class="poster tooltipstered" data-tip="api/tooltip/1297">
+                                            <img loading="lazy" src="./search_one piece_files/d5nah.png"
+                                                alt="One Piece (ITA)">
+                                            <div class="status">
+                                                <div class="dub">DUB</div>
+
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="https://www.animeworld.tv/play/one-piece-ita.d5nah"
+                                            data-jtitle="One Piece (ITA)" class="name">One Piece (ITA)</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="https://www.animeworld.tv/play/one-piece-episode-of-skypiea.lnBAU"
+                                            class="poster tooltipstered" data-tip="api/tooltip/1332">
+                                            <img loading="lazy" src="./search_one piece_files/lPxq68n.jpg"
+                                                alt="One Piece: Episode of Skypiea">
+                                            <div class="status">
+
+                                                <div class="special">Special</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="https://www.animeworld.tv/play/one-piece-episode-of-skypiea.lnBAU"
+                                            data-jtitle="One Piece: Episode of Sorajima" class="name">One Piece: Episode
+                                            of Skypiea</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="https://www.animeworld.tv/play/one-piece-3d2y-superare-la-morte-di-ace-rufy-e-il-giuramento-fatto-ai-compagni.2lJmq"
+                                            class="poster tooltipstered" data-tip="api/tooltip/1671">
+                                            <img loading="lazy" src="./search_one piece_files/64755l.jpg"
+                                                alt="One Piece 3D2Y: Superare la Morte di Ace! Rufy e il Giuramento Fatto ai Compagni">
+                                            <div class="status">
+
+                                                <div class="special">Special</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="https://www.animeworld.tv/play/one-piece-3d2y-superare-la-morte-di-ace-rufy-e-il-giuramento-fatto-ai-compagni.2lJmq"
+                                            data-jtitle="One Piece 3D2Y: Ace no shi wo Koete! Luffy Nakama Tono Chikai"
+                                            class="name">One Piece 3D2Y: Superare la Morte di Ace! Rufy e il Giuramento
+                                            Fatto ai Compagni</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="https://www.animeworld.tv/play/one-piece-movie-14-stampede.mawDj"
+                                            class="poster tooltipstered" data-tip="api/tooltip/3748">
+                                            <img loading="lazy" src="./search_one piece_files/mawDj.jpg"
+                                                alt="One Piece Movie 14: Stampede">
+                                            <div class="status">
+
+                                                <div class="movie">Movie</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="https://www.animeworld.tv/play/one-piece-movie-14-stampede.mawDj"
+                                            data-jtitle="One Piece: Stampede" class="name">One Piece Movie 14:
+                                            Stampede</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="https://www.animeworld.tv/play/one-piece-barto-no-himitsu-no-heya.1fQZQ"
+                                            class="poster tooltipstered" data-tip="api/tooltip/4175">
+                                            <img loading="lazy" src="./search_one piece_files/1fQZQ.jpg"
+                                                alt="One Piece: Barto no Himitsu no Heya!">
+                                            <div class="status">
+
+                                                <div class="special">Special</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="https://www.animeworld.tv/play/one-piece-barto-no-himitsu-no-heya.1fQZQ"
+                                            data-jtitle="One Piece: Barto no Himitsu no Heya!" class="name">One Piece:
+                                            Barto no Himitsu no Heya!</a>
+                                    </div>
+                                </div>
+                                <div class="item">
+                                    <div class="inner">
+                                        <a href="https://www.animeworld.tv/play/one-piece-movie-15-red.Acz9n"
+                                            class="poster tooltipstered" data-tip="api/tooltip/4227">
+                                            <img loading="lazy" src="./search_one piece_files/Acz9n.jpg"
+                                                alt="One Piece Movie 15: Red">
+                                            <div class="status">
+
+                                                <div class="movie">Movie</div>
+                                                <span class="bar"></span>
+                                            </div>
+                                        </a>
+                                        <a href="https://www.animeworld.tv/play/one-piece-movie-15-red.Acz9n"
+                                            data-jtitle="One Piece Film: Red" class="name">One Piece Movie 15: Red</a>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
