@@ -6,7 +6,7 @@ import argparse
 from pySmartDL import SmartDL
 from pathlib import Path
 from awcli.utilities import *
-from awcli.animeworld import AnimeWorld
+from awcli import animeworld
 
 
 def RicercaAnime() -> list[Anime]:
@@ -21,7 +21,7 @@ def RicercaAnime() -> list[Anime]:
         if (scelta == "exit"):
             exit()
 
-        risultati_ricerca = sito.search(scelta)
+        risultati_ricerca = animeworld.search(scelta)
         if (len(risultati_ricerca) != 0):
             break
         
@@ -165,7 +165,7 @@ def chiediSeAprireDownload(path_video: list[str]):
 
 def openVideos(url_episodi: list[str]):
     for url_ep in url_episodi:
-        url_server = sito.download(url_ep)
+        url_server = animeworld.download(url_ep)
         nome_video = url_server.split('/')[-1]
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(url_server)
@@ -194,7 +194,7 @@ def main():
         lista = True
 
     try:
-        animes = sito.latest(args.lista) if lista else RicercaAnime()
+        animes = animeworld.latest(args.lista) if lista else RicercaAnime()
         
         while True:
             clearScreen()
@@ -214,7 +214,7 @@ def main():
                 my_print("Seleziona una risposta valida", color="rosso")
 
             
-            url_episodi = sito.episodes(animes[s].url)
+            url_episodi = animeworld.episodes(animes[s].url)
             a = animes[s]
             a.ep = len(url_episodi)
             
@@ -233,7 +233,7 @@ def main():
             path_video = []
             path = downloadPath()
             for i in range(ep_iniziale - 1, ep_finale):
-                url_ep = sito.download(url_episodi[i])
+                url_ep = animeworld.download(url_episodi[i])
                 nome_video = url_ep.split('/')[-1]
                 scaricaEpisodio(url_ep, path)
                 path_video.append(f"{path}/{nome_video}")
@@ -291,7 +291,6 @@ download = False
 lista = False
 # classe
 a = Anime()
-sito = AnimeWorld()
 
 if __name__ == "__main__":
     main()

@@ -1,13 +1,9 @@
 # Importa le dipendenze
 from pytest import fixture
-from awcli.animeworld import AnimeWorld
+from awcli import animeworld
 from unittest.mock import patch
 
-# Definisce la fixture anime_world
-@fixture
-def anime_world():
-    return AnimeWorld()
-
+# Definisce la fixture mock_get
 @fixture
 def mock_get():
     with patch('requests.get') as mock:
@@ -15,7 +11,7 @@ def mock_get():
         
 
 
-def test_search_onepiece(anime_world, mock_get):
+def test_search_onepiece(mock_get):
     with open("search_onepiece") as html:
         mock_get.return_value.text = html.read()
 
@@ -27,15 +23,15 @@ def test_search_onepiece(anime_world, mock_get):
         'One Piece Movie 14: Stampede', 'One Piece: Barto no Himitsu no Heya!',
         'One Piece Movie 15: Red'
     ]
-    results = [anime.name for anime in anime_world.search("one piece")]
+    results = [anime.name for anime in animeworld.search("one piece")]
     
     assert results == expected
         
 
-def test_search_dragonball(anime_world, mock_get):
+def test_search_dragonball(mock_get):
     with open("search_dragonball") as html:
         mock_get.return_value.text = html.read()
-    results = [anime.name for anime in anime_world.search("dragon ball")]
+    results = [anime.name for anime in animeworld.search("dragon ball")]
         
     expected = [
         "Dragon Ball Super",
@@ -51,23 +47,22 @@ def test_search_dragonball(anime_world, mock_get):
         "Dragon Ball Super: Super Hero",
         "Dragon Ball Super: Super Hero (ITA)",
     ]
-    results = [anime.name for anime in anime_world.search("one piece")]
         
     assert results == expected
 
-def test_download(anime_world, mock_get):
+def test_download(mock_get):
     with open("theeminenceinshadowep13") as html:
         mock_get.return_value.text = html.read()
-    results = anime_world.download("https://www.animeworld.tv/play/the-eminence-in-shadow.pzm5j/Dcqo-Q")
+    results = animeworld.download("https://www.animeworld.tv/play/the-eminence-in-shadow.pzm5j/Dcqo-Q")
     expected = "https://server18.streamingaw.online/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
 
     assert results == expected
 
-def test_episodes_len(anime_world, mock_get):
+def test_episodes_len(mock_get):
     with open("theeminenceinshadowep13") as html:
         mock_get.return_value.text = html.read()
     
-    results = anime_world.episodes("https://www.animeworld.tv/play/the-eminence-in-shadow.pzm5j/Dcqo-Q")
+    results = animeworld.episodes("https://www.animeworld.tv/play/the-eminence-in-shadow.pzm5j/Dcqo-Q")
 
     assert len(results) == 13
     
