@@ -8,44 +8,41 @@ from pySmartDL import SmartDL
 from pathlib import Path
 import hpcomt
 import argparse
-from awcli.functions import *
+from awcli.utilities import *
+from awcli.animeworld import AnimeWorld
 
 
-class Anime:
-    name = ""
-    ep = 0
-
-
-def listaUscite(selected: str) -> tuple[list[str], list[str]]:
+def listaUscite(selected: str) -> list[Anime]:
     """scraping per le ultime uscite di anime se AW"""
 
     url_ricerca = "https://www.animeworld.tv"
     contenuto_html = requests.get(url_ricerca).text
     bs = BeautifulSoup(contenuto_html, "lxml")
 
-    risultati_ricerca = []
-    nomi_anime = []
-    data_name = "all"
+    animes = list[Anime]()
 
-    if selected == "s":
-        data_name = "sub"
-    elif selected == 'd':
-        data_name = "dub"
+    match selected:
+        case 's': data_name = "sub"
+        case 'd': data_name = "dub"
+        case  _ : data_name = "all"
+        
 
     div = bs.find("div", {"data-name": data_name})
     for div in div.find_all(class_='inner'):
-        temp = ""
-        risultati_ricerca.append("https://www.animeworld.tv" + div.a.get('href'))
+        anime = Anime()
+        anime.url = "https://www.animeworld.tv" + div.a.get('href')
+        
         for a in div.find_all(class_='name'):
-            temp = a.text
+            anime.name = a.text
         for div in div.find_all(class_='ep'):
-            temp += " [" + div.text + "]"
-            nomi_anime.append(temp)
+            anime.name += " [" + div.text + "]"
+        
+        animes.append(anime)
 
-    return risultati_ricerca, nomi_anime
+    return animes
 
 
-def RicercaAnime() -> tuple[list[str], list[str]]:
+def RicercaAnime() -> list[Anime]:
     """dato in input un nome di un anime inserito dall'utente,\n
     restituisce un lista con gli url degli anime
     relativi alla ricerca"""
@@ -57,29 +54,13 @@ def RicercaAnime() -> tuple[list[str], list[str]]:
         if (scelta == "exit"):
             exit()
 
-        rimpiazza = scelta.replace(" ", "+")
-        # cerco l'anime su animeworld
-        url_ricerca = "https://www.animeworld.tv/search?keyword=" + rimpiazza
-
-        my_print("Ricerco...", color="giallo")
-
-        # prendo i link degli anime relativi alla ricerca
-        contenuto_html = requests.get(url_ricerca).text
-        bs = BeautifulSoup(contenuto_html, "lxml")
-
-        risultati_ricerca = []
-        nomi_anime = []
-
-        div = bs.find(class_='film-list')
-        for div in div.find_all(class_='inner'):
-            risultati_ricerca.append("https://www.animeworld.tv" + div.a.get('href'))
-            for a in div.find_all(class_='name'):
-                nomi_anime.append(a.text)
+        risultati_ricerca = sito.search(scelta)
         if (len(risultati_ricerca) != 0):
-            return risultati_ricerca, nomi_anime
-        else:
-            my_print("La ricerca non ha prodotto risultati", color="rosso")
-            time.sleep(1)
+            break
+        
+        my_print("La ricerca non ha prodotto risultati", color="rosso")
+        time.sleep(1)
+    return risultati_ricerca
 
 
 def UrlEpisodi(url: str) -> list[str]:
@@ -261,6 +242,7 @@ def main():
     global syncpl
     global download
     global lista
+    global a
 
     # args
     parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
@@ -279,53 +261,36 @@ def main():
         lista = True
 
     try:
-        if lista:
-            risultati_ricerca, nomi_anime = listaUscite(args.lista)
-        else:
-            risultati_ricerca, nomi_anime = RicercaAnime()
+        animes = listaUscite(args.lista) if lista else RicercaAnime()
+        
         while True:
             clearScreen()
             # stampo i nomi degli anime
-            for i, nome in reversed(list(enumerate(nomi_anime))):
+            for i, anime in reversed(list(enumerate(animes))):
                 my_print(f"{i + 1} ", color="verde", end=" ")
-                my_print(nome)
+                my_print(anime.name)
 
             
             while True:
                 my_print("Scegli un anime\n>", color="magenta", end=" ")
                 s = int(input())-1
+                
                 # controllo che il numero inserito sia giusto
-                if s in range(len(nomi_anime)):
+                if s in range(len(animes)):
                     break
                 my_print("Seleziona una risposta valida", color="rosso")
 
-            url = risultati_ricerca[s]
-            url_episodi = UrlEpisodi(url)
+            
+            url_episodi = UrlEpisodi(animes[s].url)
+            a = animes[s]
             a.ep = len(url_episodi)
-
-            # se l'anime non ha episodi non può essere selezionato
-            if a.ep == 0:
-                my_print("Eh, volevi! L'anime non ha episodi", color="rosso")
-                time.sleep(1)
-            else:
+            
+            if a.ep != 0:
                 break
 
-        a.name = nomi_anime[s]
-        # trovo il link del primo url server
-        # creo un obj BS con la pagina dell'ep
-        html = requests.get(url_episodi[0]).text
-        sp = BeautifulSoup(html, "lxml")
-
-        # variabile temp per capire in che posizione è l'url tra tutti gli url della pagina
-        j = 0
-        for url in TrovaUrl(str(sp)):
-            # se l'url è un video e si trova in posizione 1 allora è quello del server
-            if (mimetypes.MimeTypes().guess_type(url)[0] == 'video/mp4'):
-                if (j == 1):
-                    # aggiungo alla varibile sempre e solo l'url server del primo episodio
-                    a.url = url
-                    break
-                j += 1
+            # se l'anime non ha episodi non può essere selezionato
+            my_print("Eh, volevi! L'anime non ha episodi", color="rosso")
+            time.sleep(1)
 
         ep_iniziale, ep_finale = scegliEpisodi(url_episodi)
 
@@ -393,6 +358,7 @@ download = False
 lista = False
 # classe
 a = Anime()
+sito = AnimeWorld()
 
 if __name__ == "__main__":
     main()

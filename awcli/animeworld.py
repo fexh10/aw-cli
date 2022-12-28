@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from awcli.run import Anime
-from awcli.functions import my_print
+from awcli.utilities import Anime, my_print
 
 
 class AnimeWorld():

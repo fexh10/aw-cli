@@ -2,8 +2,19 @@ import os
 from re import findall
 
 
+class Anime:
+    name = ""
+    url = ""
+    ep = 0
+
+
+    def __str__(self) -> str:
+        return f"name: {self.name}, url: {self.url},  ep: {self.ep}"
+
+
 def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
+    pass
 
 
 def my_print(text: str, format=1, color="bianco", bg_color="nero", cls=False, end="\n"):
