@@ -1,5 +1,4 @@
 import os
-from re import findall
 
 
 class Anime:
@@ -11,9 +10,10 @@ class Anime:
     def __str__(self) -> str:
         return f"name: {self.name}, url: {self.url},  ep: {self.ep}"
 
-    def getEpisodio(ep: int) -> str:
-        pass
-
+    def getEpisodio(self, ep: int) -> str:
+        ep -= 1
+        if ep in range(len(self.url_episodi)):
+            return "ciao"
 
 
 def clearScreen():
@@ -27,12 +27,3 @@ def my_print(text: str, format=1, color="bianco", bg_color="nero", cls=False, en
         clearScreen()
 
     print(f"\033[{format};3{COLORS[color]};4{COLORS[bg_color]}m{text}\033[1;37;40m", end=end)
-
-
-
-def TrovaUrl(string: str) -> list[str]:
-    """trova qualsisi url in una stringa"""
-
-    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-    url = findall(regex, string)
-    return [x[0] for x in url]

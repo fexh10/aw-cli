@@ -78,21 +78,6 @@ def UrlEpisodi(url: str) -> list[str]:
             url_episodi.append(temp)
     return url_episodi
 
-def trovaUrlServer(url_ep: str) -> str:
-    # creo un obj BS con la pagina dell'ep
-    html = requests.get(url_ep).text
-    sp = BeautifulSoup(html, "lxml")
-
-    # variabile temp per capire in che posizione è l'url tra tutti gli url della pagina
-    j = 0
-    # ciclo for con il numoro totale degli url
-    for url in TrovaUrl(str(sp)):
-        # se l'url è un video e si trova in posizione 1 allora è quello del server
-        if (mimetypes.MimeTypes().guess_type(url)[0] == 'video/mp4'):
-            if (j == 1):
-                return url
-            j += 1
-
 
 def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
     """fa scegliere gli ep da guardare all'utente"""
@@ -232,7 +217,7 @@ def chiediSeAprireDownload(path_video: list[str]):
 
 def openVideos(url_episodi: list[str]):
     for url_ep in url_episodi:
-        url_server = trovaUrlServer(url_ep)
+        url_server = sito.download(url_ep)
         nome_video = url_server.split('/')[-1]
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(url_server)
@@ -300,7 +285,7 @@ def main():
             path_video = []
             path = downloadPath()
             for i in range(ep_iniziale - 1, ep_finale):
-                url_ep = trovaUrlServer(url_episodi[i])
+                url_ep = sito.download(url_episodi[i])
                 nome_video = url_ep.split('/')[-1]
                 scaricaEpisodio(url_ep, path)
                 path_video.append(f"{path}/{nome_video}")
