@@ -167,9 +167,12 @@ def openVideos(url_episodi: list[str]):
     for url_ep in url_episodi:
         url_server = animeworld.download(url_ep)
         nome_video = url_server.split('/')[-1]
+        #se il video è già stato scaricato lo riproduco invece di farlo in streaming
+        path = f"{downloadPath()}/{nome_video}"
+        if os.path.exists(path):
+            url_server = path
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(url_server)
-
 
 def main():
     global syncpl
