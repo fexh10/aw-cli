@@ -1,6 +1,4 @@
 import os
-from bs4 import BeautifulSoup
-import requests
 import mpv
 import time
 import hpcomt
@@ -30,22 +28,6 @@ def RicercaAnime() -> list[Anime]:
         my_print("La ricerca non ha prodotto risultati", color="rosso")
         time.sleep(1)
     return risultati_ricerca
-
-
-def UrlEpisodi(url: str) -> list[str]:
-    """prende in input l'url dell'anime scelto dall'utente\n
-    restituisce: gli url di tutti gli episodi"""
-
-    # prendo l'html dalla pagina web di AW
-    html_content = requests.get(url).text
-    soup = BeautifulSoup(html_content, "lxml")
-    url_episodi = []
-    # cerco gli url di tutti gli episodi
-    for div in soup.find_all(class_='server active'):
-        for li in div.find_all(class_="episode"):
-            temp = "https://www.animeworld.tv" + (li.a.get('href'))
-            url_episodi.append(temp)
-    return url_episodi
 
 
 def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
@@ -99,8 +81,6 @@ def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
                 break
 
     return ep_iniziale, ep_finale
-
-
 
 
 def downloadPath():
@@ -172,7 +152,6 @@ def openDownlodedVideos(path_episodi: list[str]):
         OpenPlayer(path_ep)
 
 
-
 def chiediSeAprireDownload(path_video: list[str]):
     while True:
         my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color="magenta", end=" ")
@@ -235,7 +214,7 @@ def main():
                 my_print("Seleziona una risposta valida", color="rosso")
 
             
-            url_episodi = UrlEpisodi(animes[s].url)
+            url_episodi = sito.episodes(animes[s].url)
             a = animes[s]
             a.ep = len(url_episodi)
             

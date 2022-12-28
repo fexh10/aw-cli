@@ -64,3 +64,19 @@ class AnimeWorld():
 
         links = bs.find(id="download").find_all("a")
         return links[1].get('href')
+
+    def episodes(self, url_ep: str) -> list[str]:
+        """Cerca i link degli episodi dell'annime alla pagina selezionata
+        :param url_ep: indica la pagina dell'episodio
+        :return: la lista con url dei vari episodi trovati"""
+
+        # prendo l'html dalla pagina web di AW
+        bs = BeautifulSoup(requests.get(url_ep).text, "lxml")
+
+        url_episodi = list[str]()
+        # cerco gli url di tutti gli episodi
+        for div in bs.find_all(class_='server active'):
+            for li in div.find_all(class_="episode"):
+                temp = "https://www.animeworld.tv" + (li.a.get('href'))
+                url_episodi.append(temp)
+        return url_episodi

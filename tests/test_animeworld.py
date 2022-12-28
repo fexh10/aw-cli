@@ -62,4 +62,12 @@ def test_download(anime_world, mock_get):
     expected = "https://server18.streamingaw.online/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
 
     assert results == expected
+
+def test_episodes_len(anime_world, mock_get):
+    with open("theeminenceinshadowep13") as html:
+        mock_get.return_value.text = html.read()
+    
+    results = anime_world.episodes("https://www.animeworld.tv/play/the-eminence-in-shadow.pzm5j/Dcqo-Q")
+
+    assert len(results) == 13
     
