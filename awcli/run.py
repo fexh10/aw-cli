@@ -1,7 +1,6 @@
 import os
 from bs4 import BeautifulSoup
 import requests
-import re
 import mimetypes
 import mpv
 import time
@@ -9,24 +8,12 @@ from pySmartDL import SmartDL
 from pathlib import Path
 import hpcomt
 import argparse
+from awcli.functions import *
 
 
 class Anime:
     name = ""
     ep = 0
-
-
-def clearScreen():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-
-def my_print(text: str, format=1, color="bianco", bg_color="nero", cls=False, end="\n"):
-    COLORS = {'nero': 0,'rosso': 1,'verde': 2,'giallo': 3,'blu': 4,'magenta': 5,'azzurro': 6,'bianco': 7}
-    if cls:
-        os.system('cls' if os.name == 'nt' else 'clear')
-
-    print(
-        f"\033[{format};3{COLORS[color]};4{COLORS[bg_color]}m{text}\033[1;37;40m", end=end)
 
 
 def listaUscite(selected: str) -> tuple[list[str], list[str]]:
@@ -109,15 +96,6 @@ def UrlEpisodi(url: str) -> list[str]:
             temp = "https://www.animeworld.tv" + (li.a.get('href'))
             url_episodi.append(temp)
     return url_episodi
-
-
-def TrovaUrl(string: str) -> list[str]:
-    """trova qualsisi url in una stringa"""
-
-    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-    url = re.findall(regex, string)
-    return [x[0] for x in url]
-
 
 def trovaUrlServer(url_ep: str) -> str:
     # creo un obj BS con la pagina dell'ep
