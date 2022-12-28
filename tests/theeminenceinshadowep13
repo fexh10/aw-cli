@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="it">
+<body class="dark">
+    <div id="body">
+        <div class="container" id="body-container">
+            <div id="main">
+                <div class="content">
+                    <div class="widget servers" id="animeId" data-id="pzm5j" data-bind-api="#player">
+                        <div class="widget-title">
+                            <span class="title">Server</span>
+                            <span class="tabs servers-tabs">
+
+
+                                <span class="tab server-tab active" data-name="9">AnimeWorld Server</span>
+
+
+                                <span class="tab server-tab " data-name="28">FileMoon</span>
+
+
+                                <span class="tab server-tab " data-name="25">Streamlare</span>
+
+
+                                <span class="tab server-tab " data-name="8">Streamtape</span>
+
+
+                                <span class="tab server-tab " data-name="2">Doodstream</span>
+
+
+                                <span class="tab server-tab " data-name="19">StreamSB</span>
+
+
+
+
+
+
+
+
+                            </span>
+                        </div>
+                        <div class="widget-body">
+
+                            <div class="server hidden" data-name="2" data-type="iframe" data-id="2">
+                                <div class="range"></div>
+                                <ul class="episodes range active" data-range-id="0">
+                                    <li class="episode"><a data-episode-id="69228" data-id="wCPUYS" data-episode-num="1"
+                                            data-num="1" data-base="1" data-comment="1"
+                                            href="/play/the-eminence-in-shadow.pzm5j/wCPUYS">1</a></li>
+
+                                    <li class="episode"><a data-episode-id="69343" data-id="kigpem" data-episode-num="2"
+                                            data-num="2" data-base="2" data-comment="2"
+                                            href="/play/the-eminence-in-shadow.pzm5j/kigpem">2</a></li>
+
+                                    <li class="episode"><a data-episode-id="69424" data-id="FlydGC" data-episode-num="3"
+                                            data-num="3" data-base="3" data-comment="3"
+                                            href="/play/the-eminence-in-shadow.pzm5j/FlydGC">3</a></li>
+
+                                    <li class="episode"><a data-episode-id="70188" data-id="2kKe2s" data-episode-num="4"
+                                            data-num="4" data-base="4" data-comment="4"
+                                            href="/play/the-eminence-in-shadow.pzm5j/2kKe2s">4</a></li>
+
+                                    <li class="episode"><a data-episode-id="70272" data-id="CRbl97" data-episode-num="5"
+                                            data-num="5" data-base="5" data-comment="5"
+                                            href="/play/the-eminence-in-shadow.pzm5j/CRbl97">5</a></li>
+
+                                    <li class="episode"><a data-episode-id="70349" data-id="uydSQb" data-episode-num="6"
+                                            data-num="6" data-base="6" data-comment="6"
+                                            href="/play/the-eminence-in-shadow.pzm5j/uydSQb">6</a></li>
+
+                                    <li class="episode"><a data-episode-id="70427" data-id="CiE5X-" data-episode-num="7"
+                                            data-num="7" data-base="7" data-comment="7"
+                                            href="/play/the-eminence-in-shadow.pzm5j/CiE5X-">7</a></li>
+
+                                    <li class="episode"><a data-episode-id="70487" data-id="PGJS8v" data-episode-num="8"
+                                            data-num="8" data-base="8" data-comment="8"
+                                            href="/play/the-eminence-in-shadow.pzm5j/PGJS8v">8</a></li>
+
+                                    <li class="episode"><a data-episode-id="70740" data-id="BqrXi5" data-episode-num="9"
+                                            data-num="9" data-base="9" data-comment="9"
+                                            href="/play/the-eminence-in-shadow.pzm5j/BqrXi5">9</a></li>
+
+                                    <li class="episode"><a data-episode-id="70745" data-id="4XEoxK"
+                                            data-episode-num="10" data-num="10" data-base="10" data-comment="10"
+                                            href="/play/the-eminence-in-shadow.pzm5j/4XEoxK">10</a></li>
+
+                                    <li class="episode"><a data-episode-id="70749" data-id="DQ0w9a"
+                                            data-episode-num="11" data-num="11" data-base="11" data-comment="11"
+                                            href="/play/the-eminence-in-shadow.pzm5j/DQ0w9a">11</a></li>
+
+                                    <li class="episode"><a data-episode-id="70926" data-id="l9mGm4"
+                                            data-episode-num="12" data-num="12" data-base="12" data-comment="12"
+                                            href="/play/the-eminence-in-shadow.pzm5j/l9mGm4">12</a></li>
+
+                                    <li class="episode"><a data-episode-id="71040" data-id="lhsSv2"
+                                            data-episode-num="13" data-num="13" data-base="13" data-comment="13"
+                                            href="/play/the-eminence-in-shadow.pzm5j/lhsSv2">13</a></li>
+                                </ul>
+                            </div>
+                            <div class="server hidden" data-name="8" data-type="iframe" data-id="8">
+                                <div class="range"></div>
+                                <ul class="episodes range active" data-range-id="0">
+                                    <li class="episode"><a data-episode-id="69228" data-id="s4jAEL" data-episode-num="1"
+                                            data-num="1" data-base="1" data-comment="1"
+                                            href="/play/the-eminence-in-shadow.pzm5j/s4jAEL">1</a></li>
+
+                                    <li class="episode"><a data-episode-id="69343" data-id="Is8fzR" data-episode-num="2"
+                                            data-num="2" data-base="2" data-comment="2"
+                                            href="/play/the-eminence-in-shadow.pzm5j/Is8fzR">2</a></li>
+
+                                    <li class="episode"><a data-episode-id="69424" data-id="8tWUkG" data-episode-num="3"
+                                            data-num="3" data-base="3" data-comment="3"
+                                            href="/play/the-eminence-in-shadow.pzm5j/8tWUkG">3</a></li>
+
+                                    <li class="episode"><a data-episode-id="70188" data-id="mZKFOt" data-episode-num="4"
+                                            data-num="4" data-base="4" data-comment="4"
+                                            href="/play/the-eminence-in-shadow.pzm5j/mZKFOt">4</a></li>
+
+                                    <li class="episode"><a data-episode-id="70272" data-id="wp0F8k" data-episode-num="5"
+                                            data-num="5" data-base="5" data-comment="5"
+                                            href="/play/the-eminence-in-shadow.pzm5j/wp0F8k">5</a></li>
+
+                                    <li class="episode"><a data-episode-id="70349" data-id="Se3k83" data-episode-num="6"
+                                            data-num="6" data-base="6" data-comment="6"
+                                            href="/play/the-eminence-in-shadow.pzm5j/Se3k83">6</a></li>
+
+                                    <li class="episode"><a data-episode-id="70427" data-id="wqed4s" data-episode-num="7"
+                                            data-num="7" data-base="7" data-comment="7"
+                                            href="/play/the-eminence-in-shadow.pzm5j/wqed4s">7</a></li>
+
+                                    <li class="episode"><a data-episode-id="70487" data-id="dabCJM" data-episode-num="8"
+                                            data-num="8" data-base="8" data-comment="8"
+                                            href="/play/the-eminence-in-shadow.pzm5j/dabCJM">8</a></li>
+
+                                    <li class="episode"><a data-episode-id="70740" data-id="Pf6U3a" data-episode-num="9"
+                                            data-num="9" data-base="9" data-comment="9"
+                                            href="/play/the-eminence-in-shadow.pzm5j/Pf6U3a">9</a></li>
+
+                                    <li class="episode"><a data-episode-id="70745" data-id="6NzVEb"
+                                            data-episode-num="10" data-num="10" data-base="10" data-comment="10"
+                                            href="/play/the-eminence-in-shadow.pzm5j/6NzVEb">10</a></li>
+
+                                    <li class="episode"><a data-episode-id="70749" data-id="kkbhfq"
+                                            data-episode-num="11" data-num="11" data-base="11" data-comment="11"
+                                            href="/play/the-eminence-in-shadow.pzm5j/kkbhfq">11</a></li>
+
+                                    <li class="episode"><a data-episode-id="70926" data-id="l8y-Ft"
+                                            data-episode-num="12" data-num="12" data-base="12" data-comment="12"
+                                            href="/play/the-eminence-in-shadow.pzm5j/l8y-Ft">12</a></li>
+
+                                    <li class="episode"><a data-episode-id="71040" data-id="DvE-Ni"
+                                            data-episode-num="13" data-num="13" data-base="13" data-comment="13"
+                                            href="/play/the-eminence-in-shadow.pzm5j/DvE-Ni">13</a></li>
+                                </ul>
+                            </div>
+                            <div class="server active" data-name="9" data-type="iframe" data-id="9">
+                                <div class="range"></div>
+                                <ul class="episodes range active" data-range-id="0">
+                                    <li class="episode"><a data-episode-id="69228" data-id="wc88rg" data-episode-num="1"
+                                            data-num="1" data-base="1" data-comment="1"
+                                            href="/play/the-eminence-in-shadow.pzm5j/wc88rg">1</a></li>
+
+                                    <li class="episode"><a data-episode-id="69343" data-id="94DUwH" data-episode-num="2"
+                                            data-num="2" data-base="2" data-comment="2"
+                                            href="/play/the-eminence-in-shadow.pzm5j/94DUwH">2</a></li>
+
+                                    <li class="episode"><a data-episode-id="69424" data-id="767ULG" data-episode-num="3"
+                                            data-num="3" data-base="3" data-comment="3"
+                                            href="/play/the-eminence-in-shadow.pzm5j/767ULG">3</a></li>
+
+                                    <li class="episode"><a data-episode-id="70188" data-id="fkZv4s" data-episode-num="4"
+                                            data-num="4" data-base="4" data-comment="4"
+                                            href="/play/the-eminence-in-shadow.pzm5j/fkZv4s">4</a></li>
+
+                                    <li class="episode"><a data-episode-id="70272" data-id="cEA6vi" data-episode-num="5"
+                                            data-num="5" data-base="5" data-comment="5"
+                                            href="/play/the-eminence-in-shadow.pzm5j/cEA6vi">5</a></li>
+
+                                    <li class="episode"><a data-episode-id="70349" data-id="7oDIuU" data-episode-num="6"
+                                            data-num="6" data-base="6" data-comment="6"
+                                            href="/play/the-eminence-in-shadow.pzm5j/7oDIuU">6</a></li>
+
+                                    <li class="episode"><a data-episode-id="70427" data-id="UPunS4" data-episode-num="7"
+                                            data-num="7" data-base="7" data-comment="7"
+                                            href="/play/the-eminence-in-shadow.pzm5j/UPunS4">7</a></li>
+
+                                    <li class="episode"><a data-episode-id="70487" data-id="gbiqVl" data-episode-num="8"
+                                            data-num="8" data-base="8" data-comment="8"
+                                            href="/play/the-eminence-in-shadow.pzm5j/gbiqVl">8</a></li>
+
+                                    <li class="episode"><a data-episode-id="70740" data-id="tmoKKw" data-episode-num="9"
+                                            data-num="9" data-base="9" data-comment="9"
+                                            href="/play/the-eminence-in-shadow.pzm5j/tmoKKw">9</a></li>
+
+                                    <li class="episode"><a data-episode-id="70745" data-id="BcA9MA"
+                                            data-episode-num="10" data-num="10" data-base="10" data-comment="10"
+                                            href="/play/the-eminence-in-shadow.pzm5j/BcA9MA">10</a></li>
+
+                                    <li class="episode"><a data-episode-id="70749" data-id="8hK5eg"
+                                            data-episode-num="11" data-num="11" data-base="11" data-comment="11"
+                                            href="/play/the-eminence-in-shadow.pzm5j/8hK5eg">11</a></li>
+
+                                    <li class="episode"><a data-episode-id="70926" data-id="D5OCoH"
+                                            data-episode-num="12" data-num="12" data-base="12" data-comment="12"
+                                            href="/play/the-eminence-in-shadow.pzm5j/D5OCoH">12</a></li>
+
+                                    <li class="episode"><a data-episode-id="71040" data-id="Dcqo-Q"
+                                            data-episode-num="13" data-num="13" data-base="13" data-comment="13"
+                                            href="/play/the-eminence-in-shadow.pzm5j/Dcqo-Q" class="active">13</a></li>
+                                </ul>
+                            </div>
+                            <div class="server hidden" data-name="19" data-type="iframe" data-id="19">
+                                <div class="range"></div>
+                                <ul class="episodes range active" data-range-id="0">
+                                    <li class="episode"><a data-episode-id="69228" data-id="-FVIUL" data-episode-num="1"
+                                            data-num="1" data-base="1" data-comment="1"
+                                            href="/play/the-eminence-in-shadow.pzm5j/-FVIUL">1</a></li>
+
+                                    <li class="episode"><a data-episode-id="69343" data-id="pHuOom" data-episode-num="2"
+                                            data-num="2" data-base="2" data-comment="2"
+                                            href="/play/the-eminence-in-shadow.pzm5j/pHuOom">2</a></li>
+
+                                    <li class="episode"><a data-episode-id="69424" data-id="0rAilu" data-episode-num="3"
+                                            data-num="3" data-base="3" data-comment="3"
+                                            href="/play/the-eminence-in-shadow.pzm5j/0rAilu">3</a></li>
+
+                                    <li class="episode"><a data-episode-id="70188" data-id="uVMv2U" data-episode-num="4"
+                                            data-num="4" data-base="4" data-comment="4"
+                                            href="/play/the-eminence-in-shadow.pzm5j/uVMv2U">4</a></li>
+
+                                    <li class="episode"><a data-episode-id="70272" data-id="yTJsIU" data-episode-num="5"
+                                            data-num="5" data-base="5" data-comment="5"
+                                            href="/play/the-eminence-in-shadow.pzm5j/yTJsIU">5</a></li>
+
+                                    <li class="episode"><a data-episode-id="70349" data-id="ABwG1F" data-episode-num="6"
+                                            data-num="6" data-base="6" data-comment="6"
+                                            href="/play/the-eminence-in-shadow.pzm5j/ABwG1F">6</a></li>
+
+                                    <li class="episode"><a data-episode-id="70427" data-id="dBGuzz" data-episode-num="7"
+                                            data-num="7" data-base="7" data-comment="7"
+                                            href="/play/the-eminence-in-shadow.pzm5j/dBGuzz">7</a></li>
+
+                                    <li class="episode"><a data-episode-id="70487" data-id="LZmGtx" data-episode-num="8"
+                                            data-num="8" data-base="8" data-comment="8"
+                                            href="/play/the-eminence-in-shadow.pzm5j/LZmGtx">8</a></li>
+
+                                    <li class="episode"><a data-episode-id="70740" data-id="p-CCIp" data-episode-num="9"
+                                            data-num="9" data-base="9" data-comment="9"
+                                            href="/play/the-eminence-in-shadow.pzm5j/p-CCIp">9</a></li>
+
+                                    <li class="episode"><a data-episode-id="70745" data-id="GgzKoR"
+                                            data-episode-num="10" data-num="10" data-base="10" data-comment="10"
+                                            href="/play/the-eminence-in-shadow.pzm5j/GgzKoR">10</a></li>
+
+                                    <li class="episode"><a data-episode-id="70749" data-id="7M6Z4a"
+                                            data-episode-num="11" data-num="11" data-base="11" data-comment="11"
+                                            href="/play/the-eminence-in-shadow.pzm5j/7M6Z4a">11</a></li>
+
+                                    <li class="episode"><a data-episode-id="70926" data-id="8che-S"
+                                            data-episode-num="12" data-num="12" data-base="12" data-comment="12"
+                                            href="/play/the-eminence-in-shadow.pzm5j/8che-S">12</a></li>
+
+                                    <li class="episode"><a data-episode-id="71040" data-id="rAAEAT"
+                                            data-episode-num="13" data-num="13" data-base="13" data-comment="13"
+                                            href="/play/the-eminence-in-shadow.pzm5j/rAAEAT">13</a></li>
+                                </ul>
+                            </div>
+                            <div class="server hidden" data-name="25" data-type="iframe" data-id="25">
+                                <div class="range"></div>
+                                <ul class="episodes range active" data-range-id="0">
+                                    <li class="episode"><a data-episode-id="69228" data-id="6kdI5x" data-episode-num="1"
+                                            data-num="1" data-base="1" data-comment="1"
+                                            href="/play/the-eminence-in-shadow.pzm5j/6kdI5x">1</a></li>
+
+                                    <li class="episode"><a data-episode-id="69343" data-id="XFCgos" data-episode-num="2"
+                                            data-num="2" data-base="2" data-comment="2"
+                                            href="/play/the-eminence-in-shadow.pzm5j/XFCgos">2</a></li>
+
+                                    <li class="episode"><a data-episode-id="69424" data-id="HN9TZO" data-episode-num="3"
+                                            data-num="3" data-base="3" data-comment="3"
+                                            href="/play/the-eminence-in-shadow.pzm5j/HN9TZO">3</a></li>
+
+                                    <li class="episode"><a data-episode-id="70188" data-id="cd1YRW" data-episode-num="4"
+                                            data-num="4" data-base="4" data-comment="4"
+                                            href="/play/the-eminence-in-shadow.pzm5j/cd1YRW">4</a></li>
+
+                                    <li class="episode"><a data-episode-id="70272" data-id="bYAgOw" data-episode-num="5"
+                                            data-num="5" data-base="5" data-comment="5"
+                                            href="/play/the-eminence-in-shadow.pzm5j/bYAgOw">5</a></li>
+
+                                    <li class="episode"><a data-episode-id="70349" data-id="-xu8BF" data-episode-num="6"
+                                            data-num="6" data-base="6" data-comment="6"
+                                            href="/play/the-eminence-in-shadow.pzm5j/-xu8BF">6</a></li>
+
+                                    <li class="episode"><a data-episode-id="70427" data-id="uhd1LY" data-episode-num="7"
+                                            data-num="7" data-base="7" data-comment="7"
+                                            href="/play/the-eminence-in-shadow.pzm5j/uhd1LY">7</a></li>
+
+                                    <li class="episode"><a data-episode-id="70487" data-id="CNdbCb" data-episode-num="8"
+                                            data-num="8" data-base="8" data-comment="8"
+                                            href="/play/the-eminence-in-shadow.pzm5j/CNdbCb">8</a></li>
+
+                                    <li class="episode"><a data-episode-id="70740" data-id="SqPcnd" data-episode-num="9"
+                                            data-num="9" data-base="9" data-comment="9"
+                                            href="/play/the-eminence-in-shadow.pzm5j/SqPcnd">9</a></li>
+
+                                    <li class="episode"><a data-episode-id="70745" data-id="y3KsZg"
+                                            data-episode-num="10" data-num="10" data-base="10" data-comment="10"
+                                            href="/play/the-eminence-in-shadow.pzm5j/y3KsZg">10</a></li>
+
+                                    <li class="episode"><a data-episode-id="70749" data-id="coAQmJ"
+                                            data-episode-num="11" data-num="11" data-base="11" data-comment="11"
+                                            href="/play/the-eminence-in-shadow.pzm5j/coAQmJ">11</a></li>
+
+                                    <li class="episode"><a data-episode-id="70926" data-id="zbcVZI"
+                                            data-episode-num="12" data-num="12" data-base="12" data-comment="12"
+                                            href="/play/the-eminence-in-shadow.pzm5j/zbcVZI">12</a></li>
+
+                                    <li class="episode"><a data-episode-id="71040" data-id="NcgOU-"
+                                            data-episode-num="13" data-num="13" data-base="13" data-comment="13"
+                                            href="/play/the-eminence-in-shadow.pzm5j/NcgOU-">13</a></li>
+                                </ul>
+                            </div>
+                            <div class="server hidden" data-name="28" data-type="iframe" data-id="28">
+                                <div class="range"></div>
+                                <ul class="episodes range active" data-range-id="0">
+                                    <li class="episode"><a data-episode-id="69228" data-id="3zckBc" data-episode-num="1"
+                                            data-num="1" data-base="1" data-comment="1"
+                                            href="/play/the-eminence-in-shadow.pzm5j/3zckBc">1</a></li>
+
+                                    <li class="episode"><a data-episode-id="69343" data-id="MtFWq0" data-episode-num="2"
+                                            data-num="2" data-base="2" data-comment="2"
+                                            href="/play/the-eminence-in-shadow.pzm5j/MtFWq0">2</a></li>
+
+                                    <li class="episode"><a data-episode-id="69424" data-id="yDqB56" data-episode-num="3"
+                                            data-num="3" data-base="3" data-comment="3"
+                                            href="/play/the-eminence-in-shadow.pzm5j/yDqB56">3</a></li>
+
+                                    <li class="episode"><a data-episode-id="70188" data-id="TP1eL3" data-episode-num="4"
+                                            data-num="4" data-base="4" data-comment="4"
+                                            href="/play/the-eminence-in-shadow.pzm5j/TP1eL3">4</a></li>
+
+                                    <li class="episode"><a data-episode-id="70272" data-id="SfUfBQ" data-episode-num="5"
+                                            data-num="5" data-base="5" data-comment="5"
+                                            href="/play/the-eminence-in-shadow.pzm5j/SfUfBQ">5</a></li>
+
+                                    <li class="episode"><a data-episode-id="70349" data-id="HPX7aV" data-episode-num="6"
+                                            data-num="6" data-base="6" data-comment="6"
+                                            href="/play/the-eminence-in-shadow.pzm5j/HPX7aV">6</a></li>
+
+                                    <li class="episode"><a data-episode-id="70427" data-id="9AvO-A" data-episode-num="7"
+                                            data-num="7" data-base="7" data-comment="7"
+                                            href="/play/the-eminence-in-shadow.pzm5j/9AvO-A">7</a></li>
+
+                                    <li class="episode"><a data-episode-id="70487" data-id="DZr9GN" data-episode-num="8"
+                                            data-num="8" data-base="8" data-comment="8"
+                                            href="/play/the-eminence-in-shadow.pzm5j/DZr9GN">8</a></li>
+
+                                    <li class="episode"><a data-episode-id="70740" data-id="EgHLhA" data-episode-num="9"
+                                            data-num="9" data-base="9" data-comment="9"
+                                            href="/play/the-eminence-in-shadow.pzm5j/EgHLhA">9</a></li>
+
+                                    <li class="episode"><a data-episode-id="70745" data-id="Kc5So0"
+                                            data-episode-num="10" data-num="10" data-base="10" data-comment="10"
+                                            href="/play/the-eminence-in-shadow.pzm5j/Kc5So0">10</a></li>
+
+                                    <li class="episode"><a data-episode-id="70749" data-id="rn5l2A"
+                                            data-episode-num="11" data-num="11" data-base="11" data-comment="11"
+                                            href="/play/the-eminence-in-shadow.pzm5j/rn5l2A">11</a></li>
+
+                                    <li class="episode"><a data-episode-id="70926" data-id="4RWBeO"
+                                            data-episode-num="12" data-num="12" data-base="12" data-comment="12"
+                                            href="/play/the-eminence-in-shadow.pzm5j/4RWBeO">12</a></li>
+
+                                    <li class="episode"><a data-episode-id="71040" data-id="CxfJBZ"
+                                            data-episode-num="13" data-num="13" data-base="13" data-comment="13"
+                                            href="/play/the-eminence-in-shadow.pzm5j/CxfJBZ">13</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="download">
+                        <div class="widget downloads">
+                            <div class="widget-title">
+                                <span class="title">Download</span>
+                                <span class="tabs" data-target=".widget.downloads .download"> <span
+                                        class="tab active">The Eminence in Shadow</span> </span>
+                            </div>
+                            <div class="widget-body" style="padding-top: 17px;padding-bottom: 17px;">
+                                <center>
+                                    <a href="https://server18.streamingaw.online/download-file.php?id=DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
+                                        id="downloadLink" class="m-1 btn btn-sm btn-primary" target="_blank"><i
+                                            class="fas fa-download"></i>&nbsp;&nbsp;Download Diretto - Ep. <span
+                                            class="episodeNum">13</span></a>
+                                    <a href="https://server18.streamingaw.online/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
+                                        id="alternativeDownloadLink" class="m-1 btn btn-sm btn-primary" target="_blank"
+                                        download><i class="fas fa-download"></i>&nbsp;&nbsp;Download Alternativo - Ep.
+                                        <span class="episodeNum">13</span></a>
+                                    <a href="" id="customDownloadButton" class="m-1 btn btn-sm btn-primary hidden"
+                                        target="_blank"><i class="fas fa-download"></i>&nbsp;&nbsp;Download - Ep. <span
+                                            class="episodeNum">13</span></a>
+                                </center>
+
+                                <hr id="mainServerHr" class="" style="margin-top: 10px; margin-bottom: 10px;" />
+
+                                <div id="external-downloads">
+                                    <center>
+                                        <a href="https://dood.re/d/k7hvaf87jidx"
+                                            class="m-1 btn btn-sm btn-primary btn-doodstream" target="_blank"><i
+                                                class="fas fa-download"></i>&nbsp;&nbsp;Download Doodstream - Ep. <span
+                                                class="episodeNum">13</span></a>
+                                        <a href="https://streamtape.com/v/aYAgmJLMOXtxXMz/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
+                                            class="m-1 btn btn-sm btn-primary btn-streamtape" target="_blank"><i
+                                                class="fas fa-download"></i>&nbsp;&nbsp;Download Streamtape - Ep. <span
+                                                class="episodeNum">13</span></a>
+                                    </center>
+                                </div>
+
+                                <br>
+                                <div class="download-info">Se in alcune serie il tasto <b>Download Diretto</b> porta in
+                                    una pagina 404, utilizzate il tasto <b>Download Alternativo</b>.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

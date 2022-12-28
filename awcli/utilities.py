@@ -6,10 +6,14 @@ class Anime:
     name = ""
     url = ""
     ep = 0
-
+    url_episodi = []
 
     def __str__(self) -> str:
         return f"name: {self.name}, url: {self.url},  ep: {self.ep}"
+
+    def getEpisodio(ep: int) -> str:
+        pass
+
 
 
 def clearScreen():

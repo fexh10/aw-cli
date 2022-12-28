@@ -12,8 +12,6 @@ class AnimeWorld():
         url_ricerca = self._url + "/search?keyword=" + input.replace(" ", "+")
         bs = BeautifulSoup(requests.get(url_ricerca).text, "lxml")
 
-        
-
         animes = list[Anime]()
         # prendo i link degli anime relativi alla ricerca
         for div in bs.find(class_='film-list').find_all(class_='inner'):
@@ -26,3 +24,9 @@ class AnimeWorld():
             animes.append(anime)
 
         return animes
+
+    def download(self, url_ep: str):
+        bs = BeautifulSoup(requests.get(url_ep).text, "lxml")
+
+        links = bs.find(id="download").find_all("a")
+        return links[1].get('href')
