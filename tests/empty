@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<body class="dark">
+    <div id="body">
+        <div class="container" id="body-container">
+            <div id="main">
+                <div class="content">
+                    <div class="widget">
+                        <div class="widget-body">
+                            <div class="film-list">
+                                <br>
+                                <div class="alert alert-danger">Ci dispiace, attualmente con la parola <span
+                                        style="font-weight: bold;">""</span> non c'è nulla!</div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

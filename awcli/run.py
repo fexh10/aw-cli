@@ -6,7 +6,6 @@ import argparse
 from pySmartDL import SmartDL
 from pathlib import Path
 from awcli.utilities import *
-from awcli import animeworld
 
 
 def RicercaAnime() -> list[Anime]:
@@ -21,7 +20,7 @@ def RicercaAnime() -> list[Anime]:
         if (scelta == "exit"):
             exit()
 
-        risultati_ricerca = animeworld.search(scelta)
+        risultati_ricerca = search(scelta)
         if (len(risultati_ricerca) != 0):
             break
         
@@ -30,33 +29,33 @@ def RicercaAnime() -> list[Anime]:
     return risultati_ricerca
 
 
-def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
+def scegliEpisodi() -> tuple[int, int]:
     """fa scegliere gli ep da guardare all'utente"""
     
-    my_print(a.name, cls=True)
+    my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
-    if a.ep == 1:
+    if anime.ep == 1:
         return 1, 1
 
     if lista:
-        return a.ep, a.ep
+        return anime.ep, anime.ep
 
     # faccio decire all'utente il range di ep
     while True:
         if (nome_os == "Android"):
             my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color="giallo")
-        my_print(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{str(a.ep)})\n>", color="magenta", end=" ")
+        my_print(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{str(anime.ep)})\n>", color="magenta", end=" ")
         n_episodi = input()
         # controllo se l'utente ha inserito un range o un episodio unico (premere invio di default selezione automaticamente tutti gli episodi)
         if "-" not in n_episodi:
             if n_episodi == '':
                 ep_iniziale = 1
-                ep_finale = a.ep
+                ep_finale = anime.ep
                 break
             else:
                 ep_iniziale = int(n_episodi)
                 ep_finale = int(n_episodi)
-                if (ep_iniziale > a.ep or ep_iniziale < 1):
+                if (ep_iniziale > anime.ep or ep_iniziale < 1):
                     my_print("La ricerca non ha prodotto risultati", color="rosso")
                 else:
                     break
@@ -75,7 +74,7 @@ def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
 
             ep_iniziale = int(temp1)
             ep_finale = int(temp2)
-            if (ep_iniziale > ep_finale or ep_finale > a.ep or ep_iniziale < 1):
+            if (ep_iniziale > ep_finale or ep_finale > anime.ep or ep_iniziale < 1):
                 my_print("La ricerca non ha prodotto risultati", color="rosso")
             else:
                 break
@@ -85,12 +84,11 @@ def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
 
 def downloadPath(create=True):
     if (nome_os == "Android"):
-        path = f"storage/downloads/{a.name}"
+        path = f"storage/downloads/{anime.name}"
     else:
-        path = f"{Path.home()}/Videos/Anime/{a.name}"
-    if create:
-        if not os.path.exists(path):
-            os.makedirs(path)
+        path = f"{Path.home()}/Videos/Anime/{anime.name}"
+    if create and not os.path.exists(path):
+        os.makedirs(path)
     return path
 
 
@@ -164,9 +162,9 @@ def chiediSeAprireDownload(path_video: list[str]):
             case  _: my_print("Seleziona una risposta valida", color="rosso")
 
 
-def openVideos(url_episodi: list[str]):
-    for url_ep in url_episodi:
-        url_server = animeworld.download(url_ep)
+def openVideos(ep_iniziale: int,ep_finale: int):
+    for ep in range(ep_iniziale, ep_finale+1):
+        url_server = anime.getEpisodio(ep)
         nome_video = url_server.split('/')[-1]
         #se il video è già stato scaricato lo riproduco invece di farlo in streaming
         path = f"{downloadPath(create=False)}/{nome_video}"
@@ -177,9 +175,9 @@ def openVideos(url_episodi: list[str]):
 
 def main():
     global syncpl
-    global download
+    global downl
     global lista
-    global a
+    global anime
 
     # args
     parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
@@ -193,20 +191,18 @@ def main():
         if args.syncpl:
             syncpl = True
     if args.download:
-        download = True
+        downl = True
     elif args.lista:
         lista = True
 
     try:
-        animes = animeworld.latest(args.lista) if lista else RicercaAnime()
-        
+        animes = latest(args.lista) if lista else RicercaAnime()
         while True:
-            clearScreen()
+            my_print("", end="", cls=True)
             # stampo i nomi degli anime
             for i, anime in reversed(list(enumerate(animes))):
                 my_print(f"{i + 1} ", color="verde", end=" ")
                 my_print(anime.name)
-
             
             while True:
                 my_print("Scegli un anime\n>", color="magenta", end=" ")
@@ -216,28 +212,26 @@ def main():
                 if s in range(len(animes)):
                     break
                 my_print("Seleziona una risposta valida", color="rosso")
-
             
-            url_episodi = animeworld.episodes(animes[s].url)
-            a = animes[s]
-            a.ep = len(url_episodi)
+            anime = animes[s]
+            anime.setUrlEpisodi()
             
-            if a.ep != 0:
+            if anime.ep != 0:
                 break
 
             # se l'anime non ha episodi non può essere selezionato
             my_print("Eh, volevi! L'anime non ha episodi", color="rosso")
             time.sleep(1)
 
-        ep_iniziale, ep_finale = scegliEpisodi(url_episodi)
+        ep_iniziale, ep_finale = scegliEpisodi()
 
         # se syncplay è stato scelto allora non chiedo
         # di fare il download ed esco dalla funzione
-        if not syncpl and download:
+        if not syncpl and downl:
             path_video = []
             path = downloadPath()
-            for i in range(ep_iniziale - 1, ep_finale):
-                url_ep = animeworld.download(url_episodi[i])
+            for ep in range(ep_iniziale, ep_finale+1):
+                url_ep = anime.getEpisodio(ep)
                 nome_video = url_ep.split('/')[-1]
                 scaricaEpisodio(url_ep, path)
                 path_video.append(f"{path}/{nome_video}")
@@ -253,7 +247,7 @@ def main():
         ris_valida = True
         while True:
             if ris_valida:
-                openVideos(url_episodi[ep_iniziale-1:ep_finale])
+                openVideos(ep_iniziale,ep_finale)
             else:
                 my_print("Seleziona una risposta valida", color="rosso")
                 ris_valida = True
@@ -265,7 +259,7 @@ def main():
             my_print("(e) esci", color="rosso")
             my_print(">", color="magenta", end=" ")
             scelta_menu = input().lower()
-            if scelta_menu == 'p' and ep_iniziale < a.ep:
+            if scelta_menu == 'p' and ep_iniziale < anime.ep:
                 ep_iniziale = ep_finale + 1
                 ep_finale = ep_iniziale
                 continue
@@ -276,25 +270,22 @@ def main():
                 ep_finale = ep_iniziale
                 continue
             elif scelta_menu == 's':
-                ep_iniziale, ep_finale = scegliEpisodi(url_episodi)
+                ep_iniziale, ep_finale = scegliEpisodi()
             elif scelta_menu == 'e' or scelta_menu == '':
                 exit()
             else:
-                clearScreen()
+                my_print("", end="", cls=True)
                 ris_valida = False
 
     except KeyboardInterrupt:
         exit()
 
-
 # controllo il tipo del dispositivo
 nome_os = hpcomt.Name()
 #args
 syncpl = False
-download = False
+downl = False
 lista = False
-# classe
-a = Anime()
 
 if __name__ == "__main__":
     main()
