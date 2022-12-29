@@ -83,13 +83,14 @@ def scegliEpisodi(url_episodi: list[str]) -> tuple[int, int]:
     return ep_iniziale, ep_finale
 
 
-def downloadPath():
+def downloadPath(create=True):
     if (nome_os == "Android"):
         path = f"storage/downloads/{a.name}"
     else:
         path = f"{Path.home()}/Videos/Anime/{a.name}"
-    if not os.path.exists(path):
-        os.makedirs(path)
+    if create:
+        if not os.path.exists(path):
+            os.makedirs(path)
     return path
 
 
@@ -168,7 +169,7 @@ def openVideos(url_episodi: list[str]):
         url_server = animeworld.download(url_ep)
         nome_video = url_server.split('/')[-1]
         #se il video è già stato scaricato lo riproduco invece di farlo in streaming
-        path = f"{downloadPath()}/{nome_video}"
+        path = f"{downloadPath(create=False)}/{nome_video}"
         if os.path.exists(path):
             url_server = path
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
