@@ -92,33 +92,29 @@ def downloadPath(create=True):
     return path
 
 
-def scaricaEpisodio(url_ep: str, path: str):
+def scaricaEpisodio(url_ep: str, path: str, nome_video: str):
     """utilizza la libreria PySmartDL
     per scaricare l'ep e lo salva in una cartella.
     se l'ep è già presente nella cartella non lo riscarica"""
 
-    gia_scaricato = 0
     my_print("Preparo il download...", color="giallo")
-    nome_video = url_ep.split('/')[-1]
 
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
     my_print(f"Episodio: {nome_video}", color="blu")
-    if not os.path.exists(str(path) + "/" + nome_video):
-        SDL = SmartDL(url_ep, path)
+    if not os.path.exists(f"{path}/{nome_video}"):
+        SDL = SmartDL(url_ep, f"{path}/{nome_video}")
         SDL.start()
     else:
         my_print("Episodio già scaricato, skippo...", color="giallo")
-        gia_scaricato += 1
 
 
 def open_Syncplay(url_ep: str):
-    """crea un file dove inserisce i link
-    degli episodi e avvia syncplay"""
+    """avvia syncplay"""
 
-    os.system(f"syncplay  {url_ep} -a syncplay.pl:8999 --language it &>/dev/null")
+    os.system(f"syncplay '{url_ep}' -a syncplay.pl:8999 --language it &>/dev/null")
 
 
-def OpenPlayer(url_server: str):
+def OpenPlayer(url_server: str, nome_video:str):
     """prende in input il link
     del video e apre il player per riprodurre il video"""
 
@@ -138,25 +134,26 @@ def OpenPlayer(url_server: str):
         # avvio il player
         player.fullscreen = True
         player.playlist_pos = 0
-        player._set_property("keep-open", True)
+        player["keep-open"] = True
+        player["media-title"] = nome_video
         player.play(url_server)
         player.wait_for_shutdown()
         player.terminate()
 
 
-def openDownlodedVideos(path_episodi: list[str]):
+def openDownloadedVideos(path_episodi: list[str]):
     for path_ep in path_episodi:
-        nome_video = path_ep.split('/')[-1]
+        nome_video = path_ep.split("/")[-1]
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-        OpenPlayer(path_ep)
+        OpenPlayer(path_ep, nome_video)
 
 
-def chiediSeAprireDownload(path_video: list[str]):
+def chiediSeAprireDownload(path_video: list[str], nome_video: str):
     while True:
         my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color="magenta", end=" ")
         match input().lower():
             case 's'|"": 
-                openDownlodedVideos(path_video)
+                openDownloadedVideos(path_video)
                 break
             case 'n': break
             case  _: my_print("Seleziona una risposta valida", color="rosso")
@@ -164,14 +161,13 @@ def chiediSeAprireDownload(path_video: list[str]):
 
 def openVideos(ep_iniziale: int,ep_finale: int):
     for ep in range(ep_iniziale, ep_finale+1):
-        url_server = anime.getEpisodio(ep)
-        nome_video = url_server.split('/')[-1]
+
+        nome_video = f"{anime.name} Ep. {ep}"
         #se il video è già stato scaricato lo riproduco invece di farlo in streaming
         path = f"{downloadPath(create=False)}/{nome_video}"
-        if os.path.exists(path):
-            url_server = path
+        url_server = path if os.path.exists(path) else anime.getEpisodio(ep)
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-        OpenPlayer(url_server)
+        OpenPlayer(url_server, nome_video)
 
 def main():
     global syncpl
@@ -232,8 +228,8 @@ def main():
             path = downloadPath()
             for ep in range(ep_iniziale, ep_finale+1):
                 url_ep = anime.getEpisodio(ep)
-                nome_video = url_ep.split('/')[-1]
-                scaricaEpisodio(url_ep, path)
+                nome_video = f"{anime.name} Ep. {ep}"
+                scaricaEpisodio(url_ep, path, nome_video)
                 path_video.append(f"{path}/{nome_video}")
 
             my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
@@ -241,7 +237,7 @@ def main():
                 my_print("Downloads", color="verde")
             else:
                 my_print("Video/Anime", color="verde")
-                chiediSeAprireDownload(path_video)
+                chiediSeAprireDownload(path_video, nome_video)
             exit()
 
         ris_valida = True
