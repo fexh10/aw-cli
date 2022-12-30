@@ -141,24 +141,6 @@ def OpenPlayer(url_server: str, nome_video:str):
         player.terminate()
 
 
-def openDownloadedVideos(path_episodi: list[str]):
-    for path_ep in path_episodi:
-        nome_video = path_ep.split("/")[-1]
-        my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-        OpenPlayer(path_ep, nome_video)
-
-
-def chiediSeAprireDownload(path_video: list[str], nome_video: str):
-    while True:
-        my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color="magenta", end=" ")
-        match input().lower():
-            case 's'|"": 
-                openDownloadedVideos(path_video)
-                break
-            case 'n': break
-            case  _: my_print("Seleziona una risposta valida", color="rosso")
-
-
 def openVideos(ep_iniziale: int,ep_finale: int):
     for ep in range(ep_iniziale, ep_finale+1):
 
@@ -224,20 +206,27 @@ def main():
         # se syncplay è stato scelto allora non chiedo
         # di fare il download ed esco dalla funzione
         if not syncpl and downl:
-            path_video = []
             path = downloadPath()
             for ep in range(ep_iniziale, ep_finale+1):
                 url_ep = anime.getEpisodio(ep)
                 nome_video = f"{anime.name} Ep. {ep}"
                 scaricaEpisodio(url_ep, path, nome_video)
-                path_video.append(f"{path}/{nome_video}")
 
             my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
             if nome_os == "Android":
                 my_print("Downloads", color="verde")
             else:
                 my_print("Video/Anime", color="verde")
-                chiediSeAprireDownload(path_video, nome_video)
+                
+                #chiedi all'utente se aprire ora i video scaricati
+                while True:
+                    my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color="magenta", end=" ")
+                    match input().lower():
+                        case 's'|"": 
+                            openVideos(ep_iniziale, ep_finale)
+                            break
+                        case 'n': break
+                        case  _: my_print("Seleziona una risposta valida", color="rosso")
             exit()
 
         ris_valida = True
