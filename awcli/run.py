@@ -103,16 +103,15 @@ def scaricaEpisodio(ep: int, path: str):
         path (str): il percorso dove salvare l'episodio.
     """
 
-    url_ep = anime.getEpisodio(ep)
+    url_ep = anime.get_episodio(ep)
     nome_video = anime.ep_name(ep)
-    my_print("Preparo il download...", color="giallo")
     
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
-    my_print(f"Episodio: {nome_video}", color="blu", end=" ")
+    my_print(nome_video, color="blu", end="")
+    my_print(":\n" if nome_os == "Android" else ": ", end="")
     if not os.path.exists(f"{path}/{nome_video}"):
         SDL = SmartDL(url_ep, f"{path}/{nome_video}")
         SDL.start()
-        print()
     else:
         my_print("già scaricato, skippo...", color="giallo")
 
@@ -178,7 +177,7 @@ def openVideos(ep_iniziale: int, ep_finale: int):
         nome_video = anime.ep_name(ep)
         #se il video è già stato scaricato lo riproduco invece di farlo in streaming
         path = f"{downloadPath(create=False)}/{nome_video}"
-        url_server = path if os.path.exists(path) else anime.getEpisodio(ep)
+        url_server = path if os.path.exists(path) else anime.get_episodio(ep)
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(url_server, nome_video)
 
@@ -294,6 +293,8 @@ nome_os = hpcomt.Name()
 syncpl = False
 downl = False
 lista = False
+
+anime = Anime("", "")
 
 if __name__ == "__main__":
     main()

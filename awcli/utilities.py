@@ -13,6 +13,7 @@ class Anime:
         url (str): l'URL della pagina dell'anime su AnimeWorld.
         ep (int): il numero di episodi dell'anime.
     """ 
+
     def __init__(self, name, url) -> None:
         self.name = name
         self.url = url

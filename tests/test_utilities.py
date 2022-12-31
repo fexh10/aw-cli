@@ -36,12 +36,26 @@ def test_episodes_len(mock_get):
     results = utilities.episodes("theeminenceinshadowep13")
     assert len(results) == 13
         
-def test_getEpisodio(mock_get):
+def test_get_episodio(mock_get):
     with open("theeminenceinshadowep13") as html:
         mock_get.return_value.text = html.read()
 
     anime = utilities.Anime("test", "theeminenceinshadowep13")
-    anime.setUrlEpisodi()
+    anime.load_episodes()
     expected = "https://server18.streamingaw.online/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
-    assert anime.getEpisodio(13) == expected
+    assert anime.get_episodio(13) == expected
+
+@pytest.mark.parametrize("input_str, format_func, input_values, expected_output", [
+    ("Inserisci un numero", lambda i: int(i) if i.isdigit() else None, ["abc", "5"], 5),
+    ("Inserisci una stringa", lambda i: i if i else None, ["", "hello"], "hello"),
+    ("Inserisci un numero", lambda i: int(i) if i.isdigit() else None, ["abc", "10"], 10),
+])
+@patch("builtins.input")
+def test_my_input(input_mock, input_str, format_func, input_values, expected_output):
+    # Mock della funzione di input
+    input_mock.side_effect = input_values
+    # Esegue il test
+    result = utilities.my_input(input_str, format_func)
+    # Verifica che il risultato sia corretto
+    assert result == expected_output
 
