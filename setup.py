@@ -23,6 +23,7 @@ setup(
         "pySmartDL",
         "hpcomt",
         "wheel",
+        "psutil",
         "pywinauto",
     ],
     entry_points="[console_scripts]\naw-cli=awcli.run:main",
