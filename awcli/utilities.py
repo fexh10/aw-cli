@@ -1,5 +1,6 @@
 import os
 import requests
+from time import sleep
 from bs4 import BeautifulSoup
 
 
@@ -29,6 +30,24 @@ def my_print(text: str, format=1, color="bianco", bg_color="nero", cls=False, en
         os.system('cls' if os.name == 'nt' else 'clear')
 
     print(f"\033[{format};3{COLORS[color]};4{COLORS[bg_color]}m{text}\033[1;37;40m", end=end)
+
+def my_input(text: str, format = lambda i: i, error: str = "Seleziona una risposta valida", cls = False):
+    """Funzione personalizzata d'input che restituisce un input formattato sse format(input) != None
+    param text: testo da stampare
+    param format: funzione che formatta l'input se possibile altrimenti restituisce None
+    param error: messeggio di errore in caso di formato errato
+    param cls: se impostato a True esegue la clearscren dopo 1 secondo
+    return: input formattato dalla funzione format"""
+    while True:
+        my_print(f"{text}\n>", end=" ", color="magenta")
+        
+        if (i := format(input())) is not None:
+            break
+        my_print(error, color="rosso")
+        if cls:
+            sleep(1)
+            my_print("",end="", cls=True)
+    return i
 
 def search(input: str) -> list[Anime]:
     """Ricerca l'anime selezionato su AnimeWorld

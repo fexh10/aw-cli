@@ -12,21 +12,15 @@ def RicercaAnime() -> list[Anime]:
     """dato in input un nome di un anime inserito dall'utente,\n
     restituisce un lista con gli url degli anime
     relativi alla ricerca"""
+    def check_search(s: str):
+        if s == "exit":
+            exit() 
+        result = search(s)
+        if len(result) != 0:
+            return result
 
-    while True:
-        my_print("Cerca un anime\n>", color="magenta", cls=True, end=" ")
-        scelta = input()
-        # esco se metto exit
-        if (scelta == "exit"):
-            exit()
-
-        risultati_ricerca = search(scelta)
-        if (len(risultati_ricerca) != 0):
-            break
-        
-        my_print("La ricerca non ha prodotto risultati", color="rosso")
-        time.sleep(1)
-    return risultati_ricerca
+    return my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
+    #return my_input("Cerca un anime", lambda i: exit() if i == "exit" else res if len(res:=search(i))!= 0 else None,"La ricerca non ha prodotto risultati", cls = True)
 
 
 def scegliEpisodi() -> tuple[int, int]:
@@ -41,45 +35,26 @@ def scegliEpisodi() -> tuple[int, int]:
         return anime.ep, anime.ep
 
     # faccio decire all'utente il range di ep
-    while True:
-        if (nome_os == "Android"):
-            my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color="giallo")
-        my_print(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{str(anime.ep)})\n>", color="magenta", end=" ")
-        n_episodi = input()
-        # controllo se l'utente ha inserito un range o un episodio unico (premere invio di default selezione automaticamente tutti gli episodi)
-        if "-" not in n_episodi:
-            if n_episodi == '':
-                ep_iniziale = 1
-                ep_finale = anime.ep
-                break
-            else:
-                ep_iniziale = int(n_episodi)
-                ep_finale = int(n_episodi)
-                if (ep_iniziale > anime.ep or ep_iniziale < 1):
-                    my_print("La ricerca non ha prodotto risultati", color="rosso")
-                else:
-                    break
-        else:
-            flag = 0
-            temp1 = ""
-            temp2 = ""
-            for i in range(0, len(n_episodi)):
-                if (flag == 0 and n_episodi[i] != '-'):
-                    temp1 += n_episodi[i]
-                if (n_episodi[i] == '-'):
-                    flag = 1
-                    continue
-                if (flag == 1):
-                    temp2 += n_episodi[i]
+    if (nome_os == "Android"):
+        my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color="giallo")
+    # controllo se l'utente ha inserito un range o un episodio unico
+    def check_string(s: str):
+        if s.isdigit():
+            n = int(s)
+            if n in range(1, anime.ep):
+                return n,n
+        elif "-" in s:
+            n, m = s.split("-")
+            if not n.isdigit() or not m.isdigit():
+                return None
+            n = int(n)
+            m = int(m)
+            if n in range(1, anime.ep) and m in range(n, anime.ep):
+                return n, m
+        elif s == "":
+            return 1, anime.ep
 
-            ep_iniziale = int(temp1)
-            ep_finale = int(temp2)
-            if (ep_iniziale > ep_finale or ep_finale > anime.ep or ep_iniziale < 1):
-                my_print("La ricerca non ha prodotto risultati", color="rosso")
-            else:
-                break
-
-    return ep_iniziale, ep_finale
+    return my_input(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{anime.ep})",check_string,"Ep, o range selezionato non valido")
 
 
 def downloadPath(create=True):
@@ -175,23 +150,23 @@ def main():
 
     try:
         animes = latest(args.lista) if lista else RicercaAnime()
+
         while True:
             my_print("", end="", cls=True)
             # stampo i nomi degli anime
             for i, anime in reversed(list(enumerate(animes))):
                 my_print(f"{i + 1} ", color="verde", end=" ")
                 my_print(anime.name)
-            
-            while True:
-                my_print("Scegli un anime\n>", color="magenta", end=" ")
-                s = int(input())-1
-                
-                # controllo che il numero inserito sia giusto
-                if s in range(len(animes)):
-                    break
-                my_print("Seleziona una risposta valida", color="rosso")
-            
-            anime = animes[s]
+
+            def check_index(s: str):
+                if s.isdigit():
+                    index = int(s) - 1
+                    if index in range(len(animes)):
+                        return index
+
+            #scelta = my_input("Scegli un anime", lambda i: res if i.isdigit() and (res:=int(i)-1) in range(len(animes)) else None)
+            scelta = my_input("Scegli un anime", check_index)
+            anime = animes[scelta]
             anime.setUrlEpisodi()
             
             if anime.ep != 0:
@@ -219,14 +194,8 @@ def main():
                 my_print("Video/Anime", color="verde")
                 
                 #chiedi all'utente se aprire ora i video scaricati
-                while True:
-                    my_print("Aprire ora il player con gli episodi scaricati? (S/n)\n>", color="magenta", end=" ")
-                    match input().lower():
-                        case 's'|"": 
-                            openVideos(ep_iniziale, ep_finale)
-                            break
-                        case 'n': break
-                        case  _: my_print("Seleziona una risposta valida", color="rosso")
+                if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
+                    openVideos(ep_iniziale, ep_finale)
             exit()
 
         ris_valida = True
