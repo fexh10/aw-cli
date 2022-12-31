@@ -19,6 +19,7 @@ def RicercaAnime() -> list[Anime]:
         if len(result) != 0:
             return result
 
+    my_print("", end="", cls=True)
     return my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
     #return my_input("Cerca un anime", lambda i: exit() if i == "exit" else res if len(res:=search(i))!= 0 else None,"La ricerca non ha prodotto risultati", cls = True)
 
@@ -54,7 +55,7 @@ def scegliEpisodi() -> tuple[int, int]:
         elif s == "":
             return 1, anime.ep
 
-    return my_input(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{anime.ep})",check_string,"Ep, o range selezionato non valido")
+    return my_input(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{anime.ep})",check_string,"Ep. o range selezionato non valido")
 
 
 def downloadPath(create=True):
@@ -83,18 +84,18 @@ def scaricaEpisodio(url_ep: str, path: str, nome_video: str):
         my_print("Episodio già scaricato, skippo...", color="giallo")
 
 
-def open_Syncplay(url_ep: str):
+def open_Syncplay(url_ep: str, nome_video: str):
     """avvia syncplay"""
 
-    os.system(f"syncplay '{url_ep}' -a syncplay.pl:8999 --language it &>/dev/null")
+    os.system(f"syncplay '{url_ep}' media-title='{nome_video}' -a syncplay.pl:8999 --language it &>/dev/null")
 
 
 def OpenPlayer(url_server: str, nome_video:str):
     """prende in input il link
-    del video e apre il player per riprodurre il video"""
+    del video o il path e apre il player per riprodurlo"""
 
     if syncpl:
-        open_Syncplay(url_server)
+        open_Syncplay(url_server, nome_video)
     elif (nome_os == "Android"):
         # apro il player utilizzando bash e riproduco un video
         # os.system("am start --user 0 -a android.intent.action.VIEW -d \"" +
