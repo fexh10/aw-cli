@@ -15,15 +15,16 @@ Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a hr
 
 ## Installazione
 
-Lo script funziona tramite il lettore video <a href="https://mpv.io/installation/">MPV</a>, quindi installarlo se non lo si ha già. <br />
+Lo script funziona tramite il lettore video <a href="https://mpv.io/installation/">MPV</a>, quindi installarlo se non lo si ha già. <br /> 
+Su Windows, inoltre, occorre installare "mpv-2.dll", scaricabile da questo [link](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/), e copiarlo nella stessa directory dello script.
 
-È possibile installare aw-cli da pip:
-```
-python3 -m pip install aw-cli --upgrade
-```
-O si se preferisce da sorgente (potrebbe essere più aggiornato):
+È possibile installare aw-cli da sorgente (potrebbe essere più aggiornato):
 ```
 python3 -m pip install git+https://github.com/fexh10/aw-cli.git
+```
+O se si preferisce da pip:
+```
+python3 -m pip install aw-cli --upgrade
 ```
 ## Disinstallazione 
 
