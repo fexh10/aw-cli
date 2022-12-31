@@ -1,4 +1,9 @@
 import os
+
+if os.name == "nt":
+    script_directory = os.path.dirname(os.path.realpath(__file__))
+    os.environ["PATH"] = script_directory + os.pathsep + os.environ["PATH"]
+
 import mpv
 import time
 import hpcomt
