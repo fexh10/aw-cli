@@ -3,6 +3,7 @@ import os
 if os.name == "nt":
     script_directory = os.path.dirname(os.path.realpath(__file__))
     os.environ["PATH"] = script_directory + os.pathsep + os.environ["PATH"]
+    from pywinauto import Application
 
 import mpv
 import time
@@ -13,9 +14,7 @@ import warnings
 import subprocess
 from pySmartDL import SmartDL
 from pathlib import Path
-from pywinauto import Application
 from awcli.utilities import *
-
 
 
 def RicercaAnime() -> list[Anime]:
