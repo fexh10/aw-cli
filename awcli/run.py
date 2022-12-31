@@ -9,9 +9,14 @@ from awcli.utilities import *
 
 
 def RicercaAnime() -> list[Anime]:
-    """dato in input un nome di un anime inserito dall'utente,\n
-    restituisce un lista con gli url degli anime
-    relativi alla ricerca"""
+    """
+    Dato in input un nome di un anime inserito dall'utente, restituisce una lista con gli URL degli anime
+    relativi alla ricerca.
+
+    Returns:
+        list[Anime]: la lista con gli URL degli anime trovati
+    """
+
     def check_search(s: str):
         if s == "exit":
             exit() 
@@ -21,11 +26,20 @@ def RicercaAnime() -> list[Anime]:
 
     my_print("", end="", cls=True)
     return my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
-    #return my_input("Cerca un anime", lambda i: exit() if i == "exit" else res if len(res:=search(i))!= 0 else None,"La ricerca non ha prodotto risultati", cls = True)
-
+    
 
 def scegliEpisodi() -> tuple[int, int]:
-    """fa scegliere gli ep da guardare all'utente"""
+    """
+    Fa scegliere all'utente gli episodi dell'anime da guardare.
+
+    Se l'anime ha solo un episodio, questo verrà riprodotto automaticamente.
+    In caso contrario, l'utente può scegliere un singolo episodio o un intervallo di episodi da riprodurre.
+    Inserire il valore predefinito (Enter) farà riprodurre tutti gli episodi disponibili.
+
+    Returns:
+        tuple[int, int]: una tupla con il numero di episodio iniziale e finale da riprodurre.
+    """
+
     
     my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
@@ -58,7 +72,18 @@ def scegliEpisodi() -> tuple[int, int]:
     return my_input(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{anime.ep})",check_string,"Ep. o range selezionato non valido")
 
 
-def downloadPath(create=True):
+def downloadPath(create: bool = True) -> str:
+    """
+    Restituisce il percorso di download dell'anime, a seconda del sistema operativo in uso.
+    Se create è True (valore predefinito) e il percorso non esiste, viene creato.
+
+    Args:
+        create (bool, optional): se impostato a True, crea il percorso se non esiste. Valore predefinito: True.
+
+    Returns:
+        str: il percorso di download dell'anime.
+    """
+
     if (nome_os == "Android"):
         path = f"storage/downloads/{anime.name}"
     else:
@@ -68,31 +93,51 @@ def downloadPath(create=True):
     return path
 
 
-def scaricaEpisodio(url_ep: str, path: str, nome_video: str):
-    """utilizza la libreria PySmartDL
-    per scaricare l'ep e lo salva in una cartella.
-    se l'ep è già presente nella cartella non lo riscarica"""
+def scaricaEpisodio(ep: int, path: str):
+    """
+    Scarica l'episodio dell'anime e lo salva nella cartella specificata.
+    Se l'episodio è già presente nella cartella, non viene riscaricato.
 
+    Args:
+        ep (int): il numero dell'episodio da scaricare.
+        path (str): il percorso dove salvare l'episodio.
+    """
+
+    url_ep = anime.getEpisodio(ep)
+    nome_video = anime.ep_name(ep)
     my_print("Preparo il download...", color="giallo")
-
+    
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
-    my_print(f"Episodio: {nome_video}", color="blu")
+    my_print(f"Episodio: {nome_video}", color="blu", end=" ")
     if not os.path.exists(f"{path}/{nome_video}"):
         SDL = SmartDL(url_ep, f"{path}/{nome_video}")
         SDL.start()
+        print()
     else:
-        my_print("Episodio già scaricato, skippo...", color="giallo")
+        my_print("già scaricato, skippo...", color="giallo")
 
 
 def open_Syncplay(url_ep: str, nome_video: str):
-    """avvia syncplay"""
+    """
+    Avvia Syncplay.
+
+    Args:
+        url_ep (str): l'URL dell'episodio da riprodurre.
+        nome_video (str): il nome dell'episodio.
+    """
 
     os.system(f"syncplay '{url_ep}' media-title='{nome_video}' -a syncplay.pl:8999 --language it &>/dev/null")
 
 
-def OpenPlayer(url_server: str, nome_video:str):
-    """prende in input il link
-    del video o il path e apre il player per riprodurlo"""
+def OpenPlayer(url_server: str, nome_video: str):
+    """
+    Apre il player per riprodurre il video.
+
+    Args:
+        url_server (str): il link del video o il percorso del file.
+        nome_video (str): il nome del video.
+    """
+
 
     if syncpl:
         open_Syncplay(url_server, nome_video)
@@ -117,10 +162,20 @@ def OpenPlayer(url_server: str, nome_video:str):
         player.terminate()
 
 
-def openVideos(ep_iniziale: int,ep_finale: int):
+def openVideos(ep_iniziale: int, ep_finale: int):
+    """
+    Riproduce gli episodi dell'anime, a partire da ep_iniziale fino a ep_finale.
+    Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
+    Altrimenti, viene riprodotto in streaming.
+
+    Args:
+        ep_iniziale (int): il numero di episodio iniziale da riprodurre.
+        ep_finale (int): il numero di episodio finale da riprodurre.
+    """
+
     for ep in range(ep_iniziale, ep_finale+1):
 
-        nome_video = f"{anime.name} Ep. {ep}"
+        nome_video = anime.ep_name(ep)
         #se il video è già stato scaricato lo riproduco invece di farlo in streaming
         path = f"{downloadPath(create=False)}/{nome_video}"
         url_server = path if os.path.exists(path) else anime.getEpisodio(ep)
@@ -168,7 +223,7 @@ def main():
             #scelta = my_input("Scegli un anime", lambda i: res if i.isdigit() and (res:=int(i)-1) in range(len(animes)) else None)
             scelta = my_input("Scegli un anime", check_index)
             anime = animes[scelta]
-            anime.setUrlEpisodi()
+            anime.load_episodes()
             
             if anime.ep != 0:
                 break
@@ -184,9 +239,7 @@ def main():
         if not syncpl and downl:
             path = downloadPath()
             for ep in range(ep_iniziale, ep_finale+1):
-                url_ep = anime.getEpisodio(ep)
-                nome_video = f"{anime.name} Ep. {ep}"
-                scaricaEpisodio(url_ep, path, nome_video)
+                scaricaEpisodio(ep, path)
 
             my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
             if nome_os == "Android":
