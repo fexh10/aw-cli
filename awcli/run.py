@@ -8,9 +8,14 @@ import mpv
 import time
 import hpcomt
 import argparse
+import psutil
+import warnings
+import subprocess
 from pySmartDL import SmartDL
 from pathlib import Path
+from pywinauto import Application
 from awcli.utilities import *
+
 
 
 def RicercaAnime() -> list[Anime]:
@@ -129,8 +134,24 @@ def open_Syncplay(url_ep: str, nome_video: str):
         url_ep (str): l'URL dell'episodio da riprodurre.
         nome_video (str): il nome dell'episodio.
     """
+    if os.name == "nt":
+        pid = 0
+        #avvio syncplay tramite l'exe e passo gli argomenti necessari
+        comando = f"& 'C:\\Program Files (x86)\\Syncplay.\\Syncplay.exe' '{url_ep}' media-title='{nome_video}' -a syncplay.pl:8999"
+        syncplay_exe =subprocess.Popen(['powershell.exe', comando])
 
-    os.system(f"syncplay '{url_ep}' media-title='{nome_video}' -a syncplay.pl:8999 --language it &>/dev/null")
+        warnings.filterwarnings("ignore", category=UserWarning)
+        #ricerco il PID di Syncplay.exe in modo da poter aspettare 
+        #che venga chiuso per poter continuare con l'esecuzione del programma 
+        PROCNAME = "Syncplay.exe"
+        time.sleep(1)
+        for proc in psutil.process_iter():
+            if proc.name() == PROCNAME:
+                pid = proc.pid
+        app = Application().connect(process=pid)
+        app.wait_for_process_exit(timeout=86400, retry_interval=0.1)
+    else:
+        os.system(f"syncplay '{url_ep}' media-title='{nome_video}' -a syncplay.pl:8999 --language it &>/dev/null")
 
 
 def OpenPlayer(url_server: str, nome_video: str):
