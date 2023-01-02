@@ -4,12 +4,12 @@ if os.name == "nt":
     script_directory = os.path.dirname(os.path.realpath(__file__))
     os.environ["PATH"] = script_directory + os.pathsep + os.environ["PATH"]
     from pywinauto import Application
+    import psutil
 
 import mpv
 import time
 import hpcomt
 import argparse
-import psutil
 import warnings
 import subprocess
 from pySmartDL import SmartDL
