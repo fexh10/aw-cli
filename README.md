@@ -4,6 +4,9 @@ Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a hr
 
 </h3>
 
+## Anteprima
+https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-95ff-dcd85b39a45c.mp4
+
 ## Indice
 
 - [Installazione](#Installazione)
