@@ -65,7 +65,7 @@ def scegliEpisodi() -> tuple[int, int]:
     def check_string(s: str):
         if s.isdigit():
             n = int(s)
-            if n in range(1, anime.ep):
+            if n in range(1, anime.ep+1):
                 return n,n
         elif "-" in s:
             n, m = s.split("-")
@@ -73,7 +73,7 @@ def scegliEpisodi() -> tuple[int, int]:
                 return None
             n = int(n)
             m = int(m)
-            if n in range(1, anime.ep) and m in range(n, anime.ep):
+            if n in range(1, anime.ep+1) and m in range(n, anime.ep+1):
                 return n, m
         elif s == "":
             return 1, anime.ep
