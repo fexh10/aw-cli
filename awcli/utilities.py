@@ -12,6 +12,7 @@ class Anime:
         name (str): il nome dell'anime.
         url (str): l'URL della pagina dell'anime su AnimeWorld.
         ep (int): il numero di episodi dell'anime.
+        ep_ini (int): il numero dell'episodio di inizio. Valore predefinito 1
     """ 
 
     def __init__(self, name, url) -> None:
@@ -24,6 +25,7 @@ class Anime:
         """
         self.url_episodi = episodes(self.url)
         self.ep = len(self.url_episodi)
+        self.ep_ini = 1
 
     def get_episodio(self, ep: int) -> str:
         """
@@ -52,11 +54,29 @@ class Anime:
         """
         return f"{self.name} Ep. {ep}"
 
+    def downloaded_episodes(self, path: str) -> None:
+        """
+        Prende i nomi degli episodi scaricati in base all'anime scelto e
+        ne ricava il primo e l'ultimo episodio riproducibili.
+
+        Args:
+            path (str): il path dell'anime scelto dall'utente.
+        """
+        nomi_episodi = os.listdir(path)
+        nomi_episodi = sorted(nomi_episodi, key=lambda s: int(s.split('Ep. ')[1]))
+        togli = f"{self.name} Ep. "
+        if len(nomi_episodi) != 0:
+            self.ep = int(nomi_episodi[-1].replace(togli, "")) 
+            self.ep_ini = int(nomi_episodi[0].replace(togli, ""))
+        else:
+            self.ep = 0
+            self.ep_ini = 0
+
 _url = "https://www.animeworld.tv"
 
 def my_print(text: str, format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
     """
-    Stampa il testo con il formata, colore e lo sfondo specificato.
+    Stampa il testo con il formato, colore e lo sfondo specificato.
 
     Args:
         text (str): il testo da stampare
@@ -191,3 +211,25 @@ def episodes(url_ep: str) -> list[str]:
             temp = "https://www.animeworld.tv" + (li.a.get('href'))
             url_episodi.append(temp)
     return url_episodi
+
+def animeScaricati(path: str) -> list[Anime]:
+    """
+    Prende i nomi degli anime scaricati nella cartella Video/Anime.
+
+    Args:
+        path (str): il path relativo alla cartella Video/Anime
+
+    Returns:
+        list[Anime]: la lista degli anime trovati
+    """
+    nomi = os.listdir(path)
+
+    if len(nomi) == 0:
+        my_print("Nessun anime scaricato", color='rosso')
+        exit()
+
+    animes = list[Anime]()
+    for name in nomi:
+        animes.append(Anime(name, f"{path}/{name}"))
+    return animes
+

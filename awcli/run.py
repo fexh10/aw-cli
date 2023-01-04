@@ -65,7 +65,7 @@ def scegliEpisodi() -> tuple[int, int]:
     def check_string(s: str):
         if s.isdigit():
             n = int(s)
-            if n in range(1, anime.ep+1):
+            if n in range(anime.ep_ini, anime.ep+1):
                 return n,n
         elif "-" in s:
             n, m = s.split("-")
@@ -73,12 +73,12 @@ def scegliEpisodi() -> tuple[int, int]:
                 return None
             n = int(n)
             m = int(m)
-            if n in range(1, anime.ep+1) and m in range(n, anime.ep+1):
+            if n in range(anime.ep_ini, anime.ep+1) and m in range(n, anime.ep+1):
                 return n, m
         elif s == "":
-            return 1, anime.ep
+            return anime.ep_ini, anime.ep
 
-    return my_input(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: 1-{anime.ep})",check_string,"Ep. o range selezionato non valido")
+    return my_input(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: {anime.ep_ini}-{anime.ep})",check_string,"Ep. o range selezionato non valido")
 
 
 def downloadPath(create: bool = True) -> str:
@@ -94,9 +94,9 @@ def downloadPath(create: bool = True) -> str:
     """
 
     if (nome_os == "Android"):
-        path = f"storage/downloads/{anime.name}"
+        path = f"storage/downloads"
     else:
-        path = f"{Path.home()}/Videos/Anime/{anime.name}"
+        path = f"{Path.home()}/Videos/Anime"
     if create and not os.path.exists(path):
         os.makedirs(path)
     return path
@@ -201,8 +201,17 @@ def openVideos(ep_iniziale: int, ep_finale: int):
 
         nome_video = anime.ep_name(ep)
         #se il video è già stato scaricato lo riproduco invece di farlo in streaming
-        path = f"{downloadPath(create=False)}/{nome_video}"
-        url_server = path if os.path.exists(path) else anime.get_episodio(ep)
+        path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}"
+        if offline:
+            if os.path.exists(path):
+                url_server = path
+            else:
+                my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
+                sleep(1)
+                continue
+        else:
+            url_server = path if os.path.exists(path) else anime.get_episodio(ep)
+
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(url_server, nome_video)
 
@@ -210,6 +219,7 @@ def main():
     global syncpl
     global downl
     global lista
+    global offline
     global anime
 
     # args
@@ -218,6 +228,7 @@ def main():
         parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
+    parser.add_argument('-o', '--offline', action='store_true', dest='offline', help='apri gli episodi scaricati precedentemente direttamente dal terminale')
     args = parser.parse_args()
 
     if nome_os != "Android":
@@ -227,9 +238,11 @@ def main():
         downl = True
     elif args.lista:
         lista = True
+    elif args.offline:
+        offline = True
 
     try:
-        animes = latest(args.lista) if lista else RicercaAnime()
+        animes = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
 
         while True:
             my_print("", end="", cls=True)
@@ -247,8 +260,9 @@ def main():
             #scelta = my_input("Scegli un anime", lambda i: res if i.isdigit() and (res:=int(i)-1) in range(len(animes)) else None)
             scelta = my_input("Scegli un anime", check_index)
             anime = animes[scelta]
-            anime.load_episodes()
-            
+
+            anime.load_episodes() if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
+
             if anime.ep != 0:
                 break
 
@@ -261,7 +275,7 @@ def main():
         # se syncplay è stato scelto allora non chiedo
         # di fare il download ed esco dalla funzione
         if not syncpl and downl:
-            path = downloadPath()
+            path = f"{downloadPath()}/{anime.name}"
             for ep in range(ep_iniziale, ep_finale+1):
                 scaricaEpisodio(ep, path)
 
@@ -291,19 +305,19 @@ def main():
             my_print("(e) esci", color="rosso")
             my_print(">", color="magenta", end=" ")
             scelta_menu = input().lower()
-            if scelta_menu == 'p' and ep_iniziale < anime.ep:
+            if (scelta_menu == 'p' or scelta_menu == '') and ep_iniziale < anime.ep - (ep_finale - ep_iniziale):
                 ep_iniziale = ep_finale + 1
                 ep_finale = ep_iniziale
                 continue
             elif scelta_menu == 'r':
-                continue
-            elif scelta_menu == 'a' and ep_iniziale > 1:
+                continue            
+            elif scelta_menu == 'a' and ep_finale > anime.ep_ini:
                 ep_iniziale = ep_finale - 1
                 ep_finale = ep_iniziale
                 continue
             elif scelta_menu == 's':
                 ep_iniziale, ep_finale = scegliEpisodi()
-            elif scelta_menu == 'e' or scelta_menu == '':
+            elif scelta_menu == 'e':
                 exit()
             else:
                 my_print("", end="", cls=True)
@@ -318,6 +332,7 @@ nome_os = hpcomt.Name()
 syncpl = False
 downl = False
 lista = False
+offline = False
 
 anime = Anime("", "")
 
