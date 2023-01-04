@@ -63,11 +63,19 @@ class Anime:
             path (str): il path dell'anime scelto dall'utente.
         """
         nomi_episodi = os.listdir(path)
-        nomi_episodi = sorted(nomi_episodi, key=lambda s: int(s.split('Ep. ')[1]))
         togli = f"{self.name} Ep. "
         if len(nomi_episodi) != 0:
-            self.ep = int(nomi_episodi[-1].replace(togli, "")) 
-            self.ep_ini = int(nomi_episodi[0].replace(togli, ""))
+            minimo = int(nomi_episodi[0].replace(togli, ""))
+            massimo = int(nomi_episodi[0].replace(togli, ""))
+
+            for stringa in nomi_episodi:
+                stringa = int(stringa.replace(togli, ""))
+                if stringa < minimo:
+                    minimo = stringa
+                if stringa > massimo:
+                    massimo = stringa
+            self.ep = massimo 
+            self.ep_ini = minimo
         else:
             self.ep = 0
             self.ep_ini = 0
