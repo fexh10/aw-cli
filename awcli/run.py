@@ -214,8 +214,46 @@ def openVideos(ep_iniziale: int, ep_finale: int):
             url_server = path if os.path.exists(path) else anime.get_episodio(ep)
 
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-        addToCronologia(nome_video)
         OpenPlayer(url_server, nome_video)
+        addToCronologia(nome_video)
+
+
+def checkCronologia(nome_file: str, nome_video: str) -> bool:
+    """
+    Se l'anime è già presente nel file, la riga viene sostituita con il nuovo episodio.\n
+    Se il file non esiste viene creato.
+
+    Args:
+        nome_file (str): il nome del file csv.
+        nome_video (str): contiene il nome dell'anime e l'episodio visualizzato.
+
+    Returns:
+        flag (bool): assume valore True se l'anime è già presente, altrimenti False.
+    """
+    # creo il file se non esiste
+    if not os.path.exists(nome_file):
+        with open(nome_file, 'w') as csv_file:
+            pass
+
+    flag = False
+    #apro il file in lettura per controllare se l'anime esiste già
+    with open(nome_file, 'r') as csv_file_read:
+        csv_reader = csv.reader(csv_file_read)
+        nuove_righe = []
+        for riga in csv_reader:
+            if riga[0].split("Ep. ")[0] == nome_video.split("Ep. ")[0]:
+                nuova_riga = [nome_video, anime.url]
+                flag = True
+            else:
+                nuova_riga = riga
+            nuove_righe.append(nuova_riga)
+
+    if flag:
+        with open(nome_file, 'w', newline='') as csv_file_write:
+            csv_writer = csv.writer(csv_file_write)
+            csv_writer.writerows(nuove_righe)
+    return flag
+
 
 def addToCronologia(nome_video: str):
     """
@@ -228,11 +266,13 @@ def addToCronologia(nome_video: str):
         nome_video (str): contiene il nome dell'anime e l'episodio visualizzato.
     """
     nome_file = f"{os.path.dirname(__file__)}/aw-cronologia.csv"
-    informazioni = []
-    with open(nome_file, 'a', newline='') as csv_file:
-        csv_writer = csv.writer(csv_file)
-        informazioni = [nome_video, anime.url]
-        csv_writer.writerow(informazioni)
+    esiste = checkCronologia(nome_file, nome_video)
+    if not esiste:
+        informazioni = []
+        with open(nome_file, 'a', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file)
+            informazioni = [nome_video, anime.url]
+            csv_writer.writerow(informazioni)
 
 def main():
     global syncpl
