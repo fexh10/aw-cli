@@ -12,6 +12,7 @@ import hpcomt
 import argparse
 import warnings
 import subprocess
+import csv
 from pySmartDL import SmartDL
 from pathlib import Path
 from awcli.utilities import *
@@ -213,13 +214,32 @@ def openVideos(ep_iniziale: int, ep_finale: int):
             url_server = path if os.path.exists(path) else anime.get_episodio(ep)
 
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
+        addToCronologia(nome_video)
         OpenPlayer(url_server, nome_video)
+
+def addToCronologia(nome_video: str):
+    """
+    Viene aggiunta alla cronologia locale il nome del video
+    e il link di AnimeWorld relativo all'anime.
+    La cronologia viene salvata su un file csv nella stessa 
+    directory dello script. Se il file non esiste viene creato.
+
+    Args:
+        nome_video (str): contiene il nome dell'anime e l'episodio visualizzato.
+    """
+    nome_file = f"{os.path.dirname(__file__)}/aw-cronologia.csv"
+    informazioni = []
+    with open(nome_file, 'a', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file)
+        informazioni = [nome_video, anime.url]
+        csv_writer.writerow(informazioni)
 
 def main():
     global syncpl
     global downl
     global lista
     global offline
+    global cronologia
     global anime
 
     # args
@@ -229,6 +249,7 @@ def main():
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
     parser.add_argument('-o', '--offline', action='store_true', dest='offline', help='apri gli episodi scaricati precedentemente direttamente dal terminale')
+    parser.add_argument('-c', '--cronologia', action='store_true', dest='cronologia', help='continua a guardare un anime dalla cronologia')
     args = parser.parse_args()
 
     if nome_os != "Android":
@@ -240,6 +261,8 @@ def main():
         lista = True
     elif args.offline:
         offline = True
+    elif args.cronologia:
+        cronologia = True
 
     try:
         animes = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
@@ -333,6 +356,7 @@ syncpl = False
 downl = False
 lista = False
 offline = False
+cronologia = False
 
 anime = Anime("", "")
 
