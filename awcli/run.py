@@ -151,7 +151,7 @@ def open_Syncplay(url_ep: str, nome_video: str):
         app = Application().connect(process=pid)
         app.wait_for_process_exit(timeout=86400, retry_interval=0.1)
     else:
-        os.system(f"syncplay '{url_ep}' media-title='{nome_video}' -a syncplay.pl:8999 --language it &>/dev/null")
+        os.system(f'''syncplay \"{url_ep}" media-title="{nome_video}" -a syncplay.pl:8999 --language it &>/dev/null''')
 
 
 def OpenPlayer(url_server: str, nome_video: str):
@@ -215,11 +215,15 @@ def openVideos(ep_iniziale: int, ep_finale: int):
 
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(url_server, nome_video)
-        addToCronologia(nome_video)
+        #se non sono in modalità offline aggiungo l'anime alla cronologia
+        if not offline:
+            addToCronologia(nome_video)
 
 
 def checkCronologia(nome_file: str, nome_video: str) -> bool:
     """
+    Controlli da fare prima di inserire un anime in cronologia.\n
+    Se si sta riproducendo l'ultimo episodio di un anime, quest'ultimo viene rimosso dalla cronologia.\n
     Se l'anime è già presente nel file, la riga viene sostituita con il nuovo episodio.\n
     Se il file non esiste viene creato.
 
@@ -241,12 +245,13 @@ def checkCronologia(nome_file: str, nome_video: str) -> bool:
         csv_reader = csv.reader(csv_file_read)
         nuove_righe = []
         for riga in csv_reader:
-            #se il l'anime è presente sovrascrivo la riga
-            if riga[1]== anime.url:
+            #se l'ep riprodotto è l'ultimo allora non lo inserisco più
+            if int(nome_video.split("Ep. ")[1]) == anime.ep:
                 flag = True
-                #se l'ep riprodotto è l'ultimo allora non lo inserisco più
-                if int(nome_video.split("Ep. ")[1]) == anime.ep:
-                    continue 
+                continue 
+            #se l'anime è presente sovrascrivo la riga
+            elif riga[1]== anime.url:
+                flag = True
                 nuova_riga = [nome_video, anime.url]
             else:
                 nuova_riga = riga
@@ -277,6 +282,33 @@ def addToCronologia(nome_video: str):
             csv_writer = csv.writer(csv_file)
             informazioni = [nome_video, anime.url]
             csv_writer.writerow(informazioni)
+
+
+def getCronologia() -> list[Anime]:
+    """
+    Prende i dati dalla cronologia.
+
+    Returns:
+        list[Anime]: la lista degli anime trovati
+    """
+    
+    nome_file = f"{os.path.dirname(__file__)}/aw-cronologia.csv"
+    #se il file non esiste stampo un messaggio di errore
+    if not os.path.exists(nome_file):
+        my_print("Cronologia inesistente!", color='rosso')
+        exit()
+
+    with open(nome_file, 'r') as csv_file_read:
+        csv_reader = csv.reader(csv_file_read)
+        animes = []
+        for riga in csv_reader:
+            animes.append(Anime(riga[0], riga[1]))
+    #se il file esiste ma non contiene dati stampo un messaggio di errore
+    if len(animes) == 0:
+        my_print("Cronologia inesistente!", color='rosso')
+        exit()
+    return animes
+
 
 def main():
     global syncpl
@@ -309,7 +341,7 @@ def main():
         cronologia = True
 
     try:
-        animes = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
+        animes = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else getCronologia() if cronologia else RicercaAnime()
 
         while True:
             my_print("", end="", cls=True)
@@ -337,7 +369,12 @@ def main():
             my_print("Eh, volevi! L'anime non ha episodi", color="rosso")
             time.sleep(1)
 
-        ep_iniziale, ep_finale = scegliEpisodi()
+        if not cronologia:
+            ep_iniziale, ep_finale = scegliEpisodi()
+        else:
+            ep_iniziale = int(anime.name.split("Ep. ")[1]) + 1
+            ep_finale = ep_iniziale
+            anime.name = anime.name.split(" Ep. ")[0]
 
         # se syncplay è stato scelto allora non chiedo
         # di fare il download ed esco dalla funzione

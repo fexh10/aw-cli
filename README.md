@@ -37,7 +37,7 @@ python3 -m pip uninstall aw-cli
 
 ## Utilizzo
 ```
-usage: aw-cli [-h] [-s] [-d] [-l [{a,s,d}]] [-o]
+usage: aw-cli [-h] [-s] [-d] [-l [{a,s,d}]] [-o] [-c]
 
 Guarda anime dal terminale e molto altro!
 
@@ -48,6 +48,8 @@ options:
   -l [{a,s,d}], --lista [{a,s,d}]
                         lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub
   -o, --offline         apri gli episodi scaricati precedentemente direttamente dal terminale
+  -c, --cronologia      continua a guardare un anime dalla cronologia
+                                                             
 ```
 
 ## Crediti
