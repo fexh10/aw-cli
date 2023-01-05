@@ -187,7 +187,7 @@ def OpenPlayer(url_server: str, nome_video: str):
         player.terminate()
 
 
-def checkCronologia(nome_file: str, nome_video: str) -> bool:
+def checkCronologia(nome_file: str, ep: int) -> bool:
     """
     Controlli da fare prima di inserire un anime in cronologia.\n
     Se si sta riproducendo l'ultimo episodio di un anime, quest'ultimo viene rimosso dalla cronologia.\n
@@ -196,7 +196,7 @@ def checkCronologia(nome_file: str, nome_video: str) -> bool:
 
     Args:
         nome_file (str): il nome del file csv.
-        nome_video (str): contiene il nome dell'anime e l'episodio visualizzato.
+        ep (int): il numero dell'episodio visualizzato.
 
     Returns:
         flag (bool): assume valore True se l'anime è già presente, altrimenti False.
@@ -213,13 +213,13 @@ def checkCronologia(nome_file: str, nome_video: str) -> bool:
         nuove_righe = []
         for riga in csv_reader:
             #se l'ep riprodotto è l'ultimo allora non lo inserisco più
-            if int(nome_video.split("Ep. ")[1]) == anime.ep:
+            if ep == anime.ep and riga[2] == anime.url:
                 flag = True
                 continue 
             #se l'anime è presente sovrascrivo la riga
-            elif riga[1]== anime.url:
+            elif riga[2] == anime.url:
                 flag = True
-                nuova_riga = [nome_video, anime.url]
+                nuova_riga = [anime.name, ep, anime.url]
             else:
                 nuova_riga = riga
             nuove_righe.append(nuova_riga)
@@ -231,7 +231,7 @@ def checkCronologia(nome_file: str, nome_video: str) -> bool:
     return flag
 
 
-def addToCronologia(nome_video: str):
+def addToCronologia(ep: int):
     """
     Viene aggiunta alla cronologia locale il nome del video
     e il link di AnimeWorld relativo all'anime.
@@ -239,15 +239,16 @@ def addToCronologia(nome_video: str):
     directory dello script. Se il file non esiste viene creato.
 
     Args:
-        nome_video (str): contiene il nome dell'anime e l'episodio visualizzato.
+        ep (int): il numero dell'episodio visualizzato.
     """
+
     nome_file = f"{os.path.dirname(__file__)}/aw-cronologia.csv"
-    esiste = checkCronologia(nome_file, nome_video)
+    esiste = checkCronologia(nome_file, ep)
     if not esiste:
         informazioni = []
         with open(nome_file, 'a', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
-            informazioni = [nome_video, anime.url]
+            informazioni = [anime.name, ep, anime.url]
             csv_writer.writerow(informazioni)
 
 
@@ -281,15 +282,17 @@ def openVideos(ep_iniziale: int, ep_finale: int):
         OpenPlayer(url_server, nome_video)
         #se non sono in modalità offline aggiungo l'anime alla cronologia
         if not offline:
-            addToCronologia(nome_video)
+            addToCronologia(ep)
 
 
-def getCronologia() -> list[Anime]:
+def getCronologia() -> tuple[list, list]:
     """
     Prende i dati dalla cronologia.
 
     Returns:
-        list[Anime]: la lista degli anime trovati
+        tuple[list, list]: una tupla con la lista degli anime trovati e
+        la lista degli ultimi episodi visualizzati.
+
     """
     
     nome_file = f"{os.path.dirname(__file__)}/aw-cronologia.csv"
@@ -297,17 +300,19 @@ def getCronologia() -> list[Anime]:
     if not os.path.exists(nome_file):
         my_print("Cronologia inesistente!", color='rosso')
         exit()
-
+    
+    episodi = []
     with open(nome_file, 'r') as csv_file_read:
         csv_reader = csv.reader(csv_file_read)
         animes = []
         for riga in csv_reader:
-            animes.append(Anime(riga[0], riga[1]))
+            episodi.append(riga[1])
+            animes.append(Anime(riga[0], riga[2]))
     #se il file esiste ma non contiene dati stampo un messaggio di errore
     if len(animes) == 0:
         my_print("Cronologia inesistente!", color='rosso')
         exit()
-    return animes
+    return animes, episodi
 
 
 def main():
@@ -341,14 +346,20 @@ def main():
         cronologia = True
 
     try:
-        animes = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else getCronologia() if cronologia else RicercaAnime()
-
+        if not cronologia:
+            animes = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
+        else:
+            animes, episodi = getCronologia() 
+            episodi.reverse()
         while True:
             my_print("", end="", cls=True)
             # stampo i nomi degli anime
             for i, anime in reversed(list(enumerate(animes))):
                 my_print(f"{i + 1} ", color="verde", end=" ")
-                my_print(anime.name)
+                if not cronologia:
+                    my_print(anime.name)
+                else:
+                    my_print(f"{anime.name} Ep. {episodi[i]}")
 
             def check_index(s: str):
                 if s.isdigit():
@@ -372,9 +383,8 @@ def main():
         if not cronologia:
             ep_iniziale, ep_finale = scegliEpisodi()
         else:
-            ep_iniziale = int(anime.name.split("Ep. ")[1]) + 1
+            ep_iniziale = int(episodi[scelta]) + 1
             ep_finale = ep_iniziale
-            anime.name = anime.name.split(" Ep. ")[0]
 
         # se syncplay è stato scelto allora non chiedo
         # di fare il download ed esco dalla funzione
