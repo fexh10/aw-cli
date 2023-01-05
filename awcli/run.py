@@ -241,9 +241,13 @@ def checkCronologia(nome_file: str, nome_video: str) -> bool:
         csv_reader = csv.reader(csv_file_read)
         nuove_righe = []
         for riga in csv_reader:
-            if riga[0].split("Ep. ")[0] == nome_video.split("Ep. ")[0]:
-                nuova_riga = [nome_video, anime.url]
+            #se il l'anime è presente sovrascrivo la riga
+            if riga[1]== anime.url:
                 flag = True
+                #se l'ep riprodotto è l'ultimo allora non lo inserisco più
+                if int(nome_video.split("Ep. ")[1]) == anime.ep:
+                    continue 
+                nuova_riga = [nome_video, anime.url]
             else:
                 nuova_riga = riga
             nuove_righe.append(nuova_riga)
