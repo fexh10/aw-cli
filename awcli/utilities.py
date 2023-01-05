@@ -65,11 +65,13 @@ class Anime:
         nomi_episodi = os.listdir(path)
         togli = f"{self.name} Ep. "
         if len(nomi_episodi) != 0:
-            minimo = int(nomi_episodi[0].replace(togli, ""))
-            massimo = int(nomi_episodi[0].replace(togli, ""))
+            temp = nomi_episodi[0].replace(togli, "")
+            minimo = int(temp.replace(".mp4", ""))
+            massimo = minimo
 
             for stringa in nomi_episodi:
-                stringa = int(stringa.replace(togli, ""))
+                stringa = stringa.replace(togli, "")
+                stringa = int(stringa.replace(".mp4", ""))
                 if stringa < minimo:
                     minimo = stringa
                 if stringa > massimo:

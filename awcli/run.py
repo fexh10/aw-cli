@@ -119,8 +119,8 @@ def scaricaEpisodio(ep: int, path: str):
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
     my_print(nome_video, color="blu", end="")
     my_print(":\n" if nome_os == "Android" else ": ", end="")
-    if not os.path.exists(f"{path}/{nome_video}"):
-        SDL = SmartDL(url_ep, f"{path}/{nome_video}")
+    if not os.path.exists(f"{path}/{nome_video}.mp4"):
+        SDL = SmartDL(url_ep, f"{path}/{nome_video}.mp4")
         SDL.start()
     else:
         my_print("già scaricato, skippo...", color="giallo")
@@ -187,39 +187,6 @@ def OpenPlayer(url_server: str, nome_video: str):
         player.terminate()
 
 
-def openVideos(ep_iniziale: int, ep_finale: int):
-    """
-    Riproduce gli episodi dell'anime, a partire da ep_iniziale fino a ep_finale.
-    Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
-    Altrimenti, viene riprodotto in streaming.
-
-    Args:
-        ep_iniziale (int): il numero di episodio iniziale da riprodurre.
-        ep_finale (int): il numero di episodio finale da riprodurre.
-    """
-
-    for ep in range(ep_iniziale, ep_finale+1):
-
-        nome_video = anime.ep_name(ep)
-        #se il video è già stato scaricato lo riproduco invece di farlo in streaming
-        path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}"
-        if offline:
-            if os.path.exists(path):
-                url_server = path
-            else:
-                my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
-                sleep(1)
-                continue
-        else:
-            url_server = path if os.path.exists(path) else anime.get_episodio(ep)
-
-        my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-        OpenPlayer(url_server, nome_video)
-        #se non sono in modalità offline aggiungo l'anime alla cronologia
-        if not offline:
-            addToCronologia(nome_video)
-
-
 def checkCronologia(nome_file: str, nome_video: str) -> bool:
     """
     Controlli da fare prima di inserire un anime in cronologia.\n
@@ -282,6 +249,39 @@ def addToCronologia(nome_video: str):
             csv_writer = csv.writer(csv_file)
             informazioni = [nome_video, anime.url]
             csv_writer.writerow(informazioni)
+
+
+def openVideos(ep_iniziale: int, ep_finale: int):
+    """
+    Riproduce gli episodi dell'anime, a partire da ep_iniziale fino a ep_finale.
+    Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
+    Altrimenti, viene riprodotto in streaming.
+
+    Args:
+        ep_iniziale (int): il numero di episodio iniziale da riprodurre.
+        ep_finale (int): il numero di episodio finale da riprodurre.
+    """
+
+    for ep in range(ep_iniziale, ep_finale+1):
+
+        nome_video = anime.ep_name(ep)
+        #se il video è già stato scaricato lo riproduco invece di farlo in streaming
+        path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}.mp4"
+        if offline:
+            if os.path.exists(path):
+                url_server = path
+            else:
+                my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
+                sleep(1)
+                continue
+        else:
+            url_server = path if os.path.exists(path) else anime.get_episodio(ep)
+
+        my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
+        OpenPlayer(url_server, nome_video)
+        #se non sono in modalità offline aggiungo l'anime alla cronologia
+        if not offline:
+            addToCronologia(nome_video)
 
 
 def getCronologia() -> list[Anime]:
