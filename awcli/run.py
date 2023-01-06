@@ -95,7 +95,7 @@ def downloadPath(create: bool = True) -> str:
     """
 
     if (nome_os == "Android"):
-        path = f"storage/downloads"
+        path = f"/sdcard/Movies/Anime"
     else:
         path = f"{Path.home()}/Videos/Anime"
     if create and not os.path.exists(path):
@@ -170,9 +170,10 @@ def OpenPlayer(url_server: str, nome_video: str):
         # apro il player utilizzando bash e riproduco un video
         # os.system("am start --user 0 -a android.intent.action.VIEW -d \"" +
         # url_server+"\" -n org.videolan.vlc/org.videolan.vlc.gui.video.VideoPlayerActivity -e \""+a.name+"ep "+str(a.ep)+"\" \"$trackma_title\" > /dev/null 2>&1 &")
-
-        os.system("am start --user 0 -a android.intent.action.VIEW -d \"" +
-                  url_server+"\" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &")
+        if "/sdcard" in url_server:
+            os.system(f'''am start --user 0 -a android.intent.action.VIEW -d file://"{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
+        else:
+            os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
     else:
         player = mpv.MPV(input_default_bindings=True,
                          input_vo_keyboard=True, osc=True)
@@ -268,6 +269,7 @@ def openVideos(ep_iniziale: int, ep_finale: int):
         nome_video = anime.ep_name(ep)
         #se il video è già stato scaricato lo riproduco invece di farlo in streaming
         path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}.mp4"
+
         if offline:
             if os.path.exists(path):
                 url_server = path
@@ -325,12 +327,12 @@ def main():
 
     # args
     parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
-    if nome_os != "Android":
-        parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
+    parser.add_argument('-c', '--cronologia', action='store_true', dest='cronologia', help='continua a guardare un anime dalla cronologia')
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
     parser.add_argument('-o', '--offline', action='store_true', dest='offline', help='apri gli episodi scaricati precedentemente direttamente dal terminale')
-    parser.add_argument('-c', '--cronologia', action='store_true', dest='cronologia', help='continua a guardare un anime dalla cronologia')
+    if nome_os != "Android":
+        parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
     args = parser.parse_args()
 
     if nome_os != "Android":
@@ -395,7 +397,7 @@ def main():
 
             my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
             if nome_os == "Android":
-                my_print("Downloads", color="verde")
+                my_print("Movies/Anime", color="verde")
             else:
                 my_print("Video/Anime", color="verde")
                 
