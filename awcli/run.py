@@ -137,7 +137,7 @@ def open_Syncplay(url_ep: str, nome_video: str):
     if os.name == "nt":
         pid = 0
         #avvio syncplay tramite l'exe e passo gli argomenti necessari
-        comando = f"& 'C:\\Program Files (x86)\\Syncplay.\\Syncplay.exe' '{url_ep}' media-title='{nome_video}' -a syncplay.pl:8999"
+        comando = f"& 'C:\\Program Files (x86)\\Syncplay.\\Syncplay.exe' '{url_ep}' media-title='{nome_video}'"
         syncplay_exe =subprocess.Popen(['powershell.exe', comando])
 
         warnings.filterwarnings("ignore", category=UserWarning)
@@ -151,7 +151,7 @@ def open_Syncplay(url_ep: str, nome_video: str):
         app = Application().connect(process=pid)
         app.wait_for_process_exit(timeout=86400, retry_interval=0.1)
     else:
-        os.system(f'''syncplay \"{url_ep}" media-title="{nome_video}" -a syncplay.pl:8999 --language it &>/dev/null''')
+        os.system(f'''syncplay \"{url_ep}" media-title="{nome_video}" --language it &>/dev/null''')
 
 
 def OpenPlayer(url_server: str, nome_video: str):
@@ -168,15 +168,9 @@ def OpenPlayer(url_server: str, nome_video: str):
         open_Syncplay(url_server, nome_video)
     elif (nome_os == "Android"):
         # apro il player utilizzando bash e riproduco un video
-        # os.system("am start --user 0 -a android.intent.action.VIEW -d \"" +
-        # url_server+"\" -n org.videolan.vlc/org.videolan.vlc.gui.video.VideoPlayerActivity -e \""+a.name+"ep "+str(a.ep)+"\" \"$trackma_title\" > /dev/null 2>&1 &")
-        if "/sdcard" in url_server:
-            os.system(f'''am start --user 0 -a android.intent.action.VIEW -d file://"{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
-        else:
-            os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
     else:
-        player = mpv.MPV(input_default_bindings=True,
-                         input_vo_keyboard=True, osc=True)
+        player = mpv.MPV(input_default_bindings=True,input_vo_keyboard=True, osc=True)
 
         # avvio il player
         player.fullscreen = True
@@ -269,16 +263,15 @@ def openVideos(ep_iniziale: int, ep_finale: int):
         nome_video = anime.ep_name(ep)
         #se il video è già stato scaricato lo riproduco invece di farlo in streaming
         path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}.mp4"
-
-        if offline:
-            if os.path.exists(path):
-                url_server = path
-            else:
-                my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
-                sleep(1)
-                continue
+        
+        if os.path.exists(path):
+            url_server = "file://" + path if nome_os == "Android" else path
+        elif offline:
+            my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
+            sleep(1)
+            continue
         else:
-            url_server = path if os.path.exists(path) else anime.get_episodio(ep)
+            url_server = anime.get_episodio(ep)
 
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         OpenPlayer(url_server, nome_video)
