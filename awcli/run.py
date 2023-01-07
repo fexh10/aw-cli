@@ -15,6 +15,10 @@ from pySmartDL import SmartDL
 from pathlib import Path
 from awcli.utilities import *
 
+def safeExit():
+    with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='') as file:
+        csv.writer(file).writerows(log)
+    exit()
 
 def RicercaAnime() -> list[Anime]:
     """
@@ -27,14 +31,35 @@ def RicercaAnime() -> list[Anime]:
 
     def check_search(s: str):
         if s == "exit":
-            exit() 
+            safeExit() 
         result = search(s)
         if len(result) != 0:
             return result
 
     my_print("", end="", cls=True)
     return my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
-    
+
+def animeScaricati(path: str) -> list[Anime]:
+    """
+    Prende i nomi degli anime scaricati nella cartella Video/Anime.
+
+    Args:
+        path (str): il path relativo alla cartella Video/Anime
+
+    Returns:
+        list[Anime]: la lista degli anime trovati
+    """
+    nomi = os.listdir(path)
+
+    if len(nomi) == 0:
+        my_print("Nessun anime scaricato", color='rosso')
+        safeExit()
+
+    animes = list[Anime]()
+    for name in nomi:
+        animes.append(Anime(name, f"{path}/{name}"))
+    return animes
+
 
 def scegliEpisodi() -> tuple[int, int]:
     """
@@ -207,52 +232,7 @@ def openVLC(url_server: str, nome_video: str):
         subprocess.Popen(['powershell.exe', comando])
         isRunning("vlc.exe")
     elif nome_os == "Android":
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')
-    
-
-def checkCronologia(nome_file: str, ep: int) -> bool:
-    """
-    Controlli da fare prima di inserire un anime in cronologia.\n
-    Se si sta riproducendo l'ultimo episodio di un anime, quest'ultimo viene rimosso dalla cronologia.\n
-    Se l'anime è già presente nel file, la riga viene sostituita con il nuovo episodio.\n
-    Se il file non esiste viene creato.
-
-    Args:
-        nome_file (str): il nome del file csv.
-        ep (int): il numero dell'episodio visualizzato.
-
-    Returns:
-        flag (bool): assume valore True se l'anime è già presente, altrimenti False.
-    """
-    # creo il file se non esiste
-    if not os.path.exists(nome_file):
-        with open(nome_file, 'w') as csv_file:
-            pass
-
-    flag = False
-    #apro il file in lettura per controllare se l'anime esiste già
-    with open(nome_file, 'r') as csv_file_read:
-        csv_reader = csv.reader(csv_file_read)
-        nuove_righe = []
-        for riga in csv_reader:
-            #se l'ep riprodotto è l'ultimo allora non lo inserisco più
-            if ep == anime.ep and riga[2] == anime.url:
-                flag = True
-                continue 
-            #se l'anime è presente sovrascrivo la riga
-            elif riga[2] == anime.url:
-                flag = True
-                nuova_riga = [anime.name, ep, anime.url]
-            else:
-                nuova_riga = riga
-            nuove_righe.append(nuova_riga)
-
-    if flag:
-        with open(nome_file, 'w', newline='') as csv_file_write:
-            csv_writer = csv.writer(csv_file_write)
-            csv_writer.writerows(nuove_righe)
-    return flag
-
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
 
 def addToCronologia(ep: int):
     """
@@ -264,15 +244,18 @@ def addToCronologia(ep: int):
     Args:
         ep (int): il numero dell'episodio visualizzato.
     """
+    for i, riga in enumerate(log):
+        #se l'anime è presente
+        if riga[2] == anime.url:
+            #se l'ep riprodotto è l'ultimo allora non lo inserisco più
+            if ep == anime.ep:
+                log.pop(i)
+            else: 
+                #sovrascrivo la riga   
+                log[i][1] = ep
+            return
 
-    nome_file = f"{os.path.dirname(__file__)}/aw-cronologia.csv"
-    esiste = checkCronologia(nome_file, ep)
-    if not esiste:
-        informazioni = []
-        with open(nome_file, 'a', newline='') as csv_file:
-            csv_writer = csv.writer(csv_file)
-            informazioni = [anime.name, ep, anime.url]
-            csv_writer.writerow(informazioni)
+    log.append([anime.name, ep, anime.url])
 
 
 def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
@@ -318,24 +301,15 @@ def getCronologia() -> tuple[list, list]:
         la lista degli ultimi episodi visualizzati.
 
     """
-    
-    nome_file = f"{os.path.dirname(__file__)}/aw-cronologia.csv"
-    #se il file non esiste stampo un messaggio di errore
-    if not os.path.exists(nome_file):
-        my_print("Cronologia inesistente!", color='rosso')
-        exit()
-    
     episodi = []
-    with open(nome_file, 'r') as csv_file_read:
-        csv_reader = csv.reader(csv_file_read)
-        animes = []
-        for riga in csv_reader:
-            episodi.append(riga[1])
-            animes.append(Anime(riga[0], riga[2]))
+    animes = []
+    for riga in log:
+        episodi.append(riga[1])
+        animes.append(Anime(riga[0], riga[2]))
     #se il file esiste ma non contiene dati stampo un messaggio di errore
     if len(animes) == 0:
         my_print("Cronologia inesistente!", color='rosso')
-        exit()
+        safeExit()
     return animes, episodi
 
 
@@ -355,13 +329,18 @@ def getConfig() -> bool:
 
 
 def main():
+    global log
     global syncpl
     global downl
     global lista
     global offline
     global cronologia
     global anime
-
+    try:
+        with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv") as file:
+            log = [riga for riga in csv.reader(file)]
+    except FileNotFoundError:
+        pass
     # args
     parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
     parser.add_argument('-c', '--cronologia', action='store_true', dest='cronologia', help='continua a guardare un anime dalla cronologia')
@@ -443,7 +422,7 @@ def main():
                 #chiedi all'utente se aprire ora i video scaricati
                 if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
                     openVideos(ep_iniziale, ep_finale, mpv)
-            exit()
+            safeExit()
 
         ris_valida = True
         while True:
@@ -473,13 +452,13 @@ def main():
             elif scelta_menu == 's':
                 ep_iniziale, ep_finale = scegliEpisodi()
             elif scelta_menu == 'e':
-                exit()
+                safeExit()
             else:
                 my_print("", end="", cls=True)
                 ris_valida = False
 
     except KeyboardInterrupt:
-        exit()
+        safeExit()
 
 # controllo il tipo del dispositivo
 nome_os = hpcomt.Name()
@@ -489,6 +468,7 @@ downl = False
 lista = False
 offline = False
 cronologia = False
+log = []
 
 anime = Anime("", "")
 

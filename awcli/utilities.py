@@ -15,9 +15,10 @@ class Anime:
         ep_ini (int): il numero dell'episodio di inizio. Valore predefinito 1
     """ 
 
-    def __init__(self, name, url) -> None:
+    def __init__(self, name, url, ep=0) -> None:
         self.name = name
         self.url = url
+        self.ep = ep
 
     def load_episodes(self) -> None:
         """
@@ -221,25 +222,3 @@ def episodes(url_ep: str) -> list[str]:
             temp = "https://www.animeworld.tv" + (li.a.get('href'))
             url_episodi.append(temp)
     return url_episodi
-
-def animeScaricati(path: str) -> list[Anime]:
-    """
-    Prende i nomi degli anime scaricati nella cartella Video/Anime.
-
-    Args:
-        path (str): il path relativo alla cartella Video/Anime
-
-    Returns:
-        list[Anime]: la lista degli anime trovati
-    """
-    nomi = os.listdir(path)
-
-    if len(nomi) == 0:
-        my_print("Nessun anime scaricato", color='rosso')
-        exit()
-
-    animes = list[Anime]()
-    for name in nomi:
-        animes.append(Anime(name, f"{path}/{name}"))
-    return animes
-
