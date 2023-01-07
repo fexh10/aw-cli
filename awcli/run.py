@@ -310,6 +310,20 @@ def getCronologia() -> tuple[list, list]:
     return animes, episodi
 
 
+def getConfig() -> bool:
+    """
+    Prende il nome del player scelto dal file di configurazione.
+
+    Returns:
+        bool: True se mpv è stato scelto, False se è stato scelto vlc.
+    """
+
+    config = f"{os.path.dirname(__file__)}/aw.config"
+    with open(config, 'r') as config_file:
+        for line in config_file:
+            mpv = True if line == 'Player: MPV' else False
+    return mpv
+
 def main():
     global syncpl
     global downl
@@ -339,6 +353,8 @@ def main():
         offline = True
     elif args.cronologia:
         cronologia = True
+
+    mpv = getConfig()
 
     try:
         if not cronologia:
