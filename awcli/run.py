@@ -3,8 +3,6 @@ import os
 if os.name == "nt":
     script_directory = os.path.dirname(os.path.realpath(__file__))
     os.environ["PATH"] = script_directory + os.pathsep + os.environ["PATH"]
-    from pywinauto import Application
-    import psutil
 
 import mpv
 import time
@@ -126,6 +124,27 @@ def scaricaEpisodio(ep: int, path: str):
         my_print("già scaricato, skippo...", color="giallo")
 
 
+def isRunning(PROCNAME: str):
+    """
+    Viene preso il pid di un processo per poter attendere 
+    che l'applicazione venga chiusa prima di poter proseguire
+    con il programma. Viene impostato un timeout di 86400 secondi (24 ore).
+
+    Args:
+        PROCNAME (str): il nome del processo.
+    """
+
+    import psutil
+    from pywinauto import Application
+
+    sleep(1)
+    for proc in psutil.process_iter():
+        if proc.name() == PROCNAME:
+            pid = proc.pid
+    app = Application().connect(process=pid)
+    app.wait_for_process_exit(timeout=86400)
+
+
 def open_Syncplay(url_ep: str, nome_video: str):
     """
     Avvia Syncplay.
@@ -141,28 +160,19 @@ def open_Syncplay(url_ep: str, nome_video: str):
         syncplay_exe =subprocess.Popen(['powershell.exe', comando])
 
         warnings.filterwarnings("ignore", category=UserWarning)
-        #ricerco il PID di Syncplay.exe in modo da poter aspettare 
-        #che venga chiuso per poter continuare con l'esecuzione del programma 
-        PROCNAME = "Syncplay.exe"
-        time.sleep(1)
-        for proc in psutil.process_iter():
-            if proc.name() == PROCNAME:
-                pid = proc.pid
-        app = Application().connect(process=pid)
-        app.wait_for_process_exit(timeout=86400, retry_interval=0.1)
+        isRunning("Syncplay.exe")
     else:
         os.system(f'''syncplay \"{url_ep}" media-title="{nome_video}" --language it &>/dev/null''')
 
 
-def OpenPlayer(url_server: str, nome_video: str):
+def OpenMPV(url_server: str, nome_video: str):
     """
-    Apre il player per riprodurre il video.
+    Apre MPV per riprodurre il video.
 
     Args:
         url_server (str): il link del video o il percorso del file.
         nome_video (str): il nome del video.
     """
-
 
     if syncpl:
         open_Syncplay(url_server, nome_video)
@@ -247,7 +257,7 @@ def addToCronologia(ep: int):
             csv_writer.writerow(informazioni)
 
 
-def openVideos(ep_iniziale: int, ep_finale: int):
+def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
     """
     Riproduce gli episodi dell'anime, a partire da ep_iniziale fino a ep_finale.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
@@ -256,6 +266,7 @@ def openVideos(ep_iniziale: int, ep_finale: int):
     Args:
         ep_iniziale (int): il numero di episodio iniziale da riprodurre.
         ep_finale (int): il numero di episodio finale da riprodurre.
+        mpv (bool): True se il player di default è MPV, False se è VLC.
     """
 
     for ep in range(ep_iniziale, ep_finale+1):
@@ -274,7 +285,7 @@ def openVideos(ep_iniziale: int, ep_finale: int):
             url_server = anime.get_episodio(ep)
 
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-        OpenPlayer(url_server, nome_video)
+        OpenMPV(url_server, nome_video)
         #se non sono in modalità offline aggiungo l'anime alla cronologia
         if not offline:
             addToCronologia(ep)
@@ -412,13 +423,13 @@ def main():
                 
                 #chiedi all'utente se aprire ora i video scaricati
                 if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
-                    openVideos(ep_iniziale, ep_finale)
+                    openVideos(ep_iniziale, ep_finale, mpv)
             exit()
 
         ris_valida = True
         while True:
             if ris_valida:
-                openVideos(ep_iniziale,ep_finale)
+                openVideos(ep_iniziale,ep_finale, mpv)
             else:
                 my_print("Seleziona una risposta valida", color="rosso")
                 ris_valida = True
