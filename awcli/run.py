@@ -138,6 +138,7 @@ def isRunning(PROCNAME: str):
     from pywinauto import Application
 
     sleep(1)
+    pid = 0
     for proc in psutil.process_iter():
         if proc.name() == PROCNAME:
             pid = proc.pid
@@ -154,18 +155,16 @@ def open_Syncplay(url_ep: str, nome_video: str):
         nome_video (str): il nome dell'episodio.
     """
     if os.name == "nt":
-        pid = 0
         #avvio syncplay tramite l'exe e passo gli argomenti necessari
         comando = f"& 'C:\\Program Files (x86)\\Syncplay.\\Syncplay.exe' '{url_ep}' media-title='{nome_video}'"
-        syncplay_exe =subprocess.Popen(['powershell.exe', comando])
-
+        subprocess.Popen(['powershell.exe', comando])
         warnings.filterwarnings("ignore", category=UserWarning)
         isRunning("Syncplay.exe")
     else:
         os.system(f'''syncplay \"{url_ep}" media-title="{nome_video}" --language it &>/dev/null''')
 
 
-def OpenMPV(url_server: str, nome_video: str):
+def openMPV(url_server: str, nome_video: str):
     """
     Apre MPV per riprodurre il video.
 
@@ -191,6 +190,25 @@ def OpenMPV(url_server: str, nome_video: str):
         player.wait_for_shutdown()
         player.terminate()
 
+
+def openVLC(url_server: str, nome_video: str):
+    """
+    Apre VLC per riprodurre il video.
+
+    Args:
+        url_server (str): il link del video o il percorso del file.
+        nome_video (str): il nome del video.
+    """
+
+    if nome_os == 'Linux':
+        os.system(f'''vlc "{url_server}" --meta-title "{nome_video}" --fullscreen &>/dev/null''')
+    elif nome_os == "Windows":
+        comando = f"& 'C:\\Program Files\\VideoLAN\\VLC\\vlc.exe' '{url_server}' --fullscreen --meta-title='{nome_video}'"
+        subprocess.Popen(['powershell.exe', comando])
+        isRunning("vlc.exe")
+    elif nome_os == "Android":
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')
+    
 
 def checkCronologia(nome_file: str, ep: int) -> bool:
     """
@@ -285,7 +303,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
             url_server = anime.get_episodio(ep)
 
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-        OpenMPV(url_server, nome_video)
+        openMPV(url_server, nome_video) if mpv else openVLC(url_server, nome_video)
         #se non sono in modalità offline aggiungo l'anime alla cronologia
         if not offline:
             addToCronologia(ep)
@@ -334,6 +352,7 @@ def getConfig() -> bool:
         for line in config_file:
             mpv = True if line == 'Player: MPV' else False
     return mpv
+
 
 def main():
     global syncpl

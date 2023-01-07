@@ -27,4 +27,5 @@ setup(
         "pywinauto",
     ],
     entry_points="[console_scripts]\naw-cli=awcli.run:main",
+    include_package_data=True,
 )
