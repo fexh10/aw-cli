@@ -5,6 +5,7 @@ if os.name == "nt":
     os.environ["PATH"] = script_directory + os.pathsep + os.environ["PATH"]
 
 import mpv
+import sys
 import time
 import hpcomt
 import argparse
@@ -59,7 +60,6 @@ def animeScaricati(path: str) -> list[Anime]:
     for name in nomi:
         animes.append(Anime(name, f"{path}/{name}"))
     return animes
-
 
 def scegliEpisodi() -> tuple[int, int]:
     """
@@ -234,6 +234,7 @@ def openVLC(url_server: str, nome_video: str):
     elif nome_os == "Android":
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
 
+
 def addToCronologia(ep: int):
     """
     Viene aggiunta alla cronologia locale il nome del video
@@ -254,8 +255,8 @@ def addToCronologia(ep: int):
                 #sovrascrivo la riga   
                 log[i][1] = ep
             return
-
-    log.append([anime.name, ep, anime.url])
+    if ep != anime.ep:
+        log.append([anime.name, ep, anime.url])
 
 
 def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
@@ -305,7 +306,7 @@ def getCronologia() -> tuple[list, list]:
     animes = []
     for riga in log:
         episodi.append(riga[1])
-        animes.append(Anime(riga[0], riga[2]))
+        animes.append(Anime(riga[0], riga[2], riga[1]))
     #se il file esiste ma non contiene dati stampo un messaggio di errore
     if len(animes) == 0:
         my_print("Cronologia inesistente!", color='rosso')
@@ -351,6 +352,10 @@ def main():
         parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
     args = parser.parse_args()
 
+    
+    if  '-l' in sys.argv and args.lista == None:
+        args.lista = 'a'
+
     if nome_os != "Android":
         if args.syncpl:
             syncpl = True
@@ -367,29 +372,28 @@ def main():
 
     try:
         if not cronologia:
-            animes = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
+            animelist = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
         else:
-            animes, episodi = getCronologia() 
-            episodi.reverse()
+            animelist, episodi = getCronologia()
+
         while True:
             my_print("", end="", cls=True)
             # stampo i nomi degli anime
-            for i, anime in reversed(list(enumerate(animes))):
+            for i, a in reversed(list(enumerate(animelist))):
                 my_print(f"{i + 1} ", color="verde", end=" ")
-                if not cronologia:
-                    my_print(anime.name)
+                if lista or cronologia:
+                    my_print(f"{a.name} [Ep {a.ep}]")
                 else:
-                    my_print(f"{anime.name} Ep. {episodi[i]}")
+                    my_print(a.name)
 
             def check_index(s: str):
                 if s.isdigit():
                     index = int(s) - 1
-                    if index in range(len(animes)):
+                    if index in range(len(animelist)):
                         return index
-
-            #scelta = my_input("Scegli un anime", lambda i: res if i.isdigit() and (res:=int(i)-1) in range(len(animes)) else None)
+            
             scelta = my_input("Scegli un anime", check_index)
-            anime = animes[scelta]
+            anime = animelist[scelta]
 
             anime.load_episodes() if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
 

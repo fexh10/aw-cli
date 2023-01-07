@@ -154,23 +154,23 @@ def search(input: str) -> list[Anime]:
 
     return animes
 
-def latest(filter = "a") -> list[Anime]:
+def latest(filter = "all") -> list[Anime]:
     """
     Restituisce le ultime uscite anime su AnimeWorld.
 
     Args:
-        filter (str, optional): può essere "d" o "s" per filtrare i risultati per versione dubbed o subbed. Valore predefinito: "a" (nessun filtro).
+        filter (str, optional): filtra i risultati per versione dubbed o subbed.
 
     Returns:
         list[Anime]: la lista degli anime trovati
     """
-    bs = BeautifulSoup(requests.get(_url).text, "lxml")
 
-    match filter:
+    match filter[0]:
         case 's': data_name = "sub"
         case 'd': data_name = "dub"
         case  _ : data_name = "all"
-    
+
+    bs = BeautifulSoup(requests.get(_url).text, "lxml")
     animes = list[Anime]()
 
     div = bs.find("div", {"data-name": data_name})
@@ -180,9 +180,9 @@ def latest(filter = "a") -> list[Anime]:
         for a in div.find_all(class_='name'):
             name = a.text
         for div in div.find_all(class_='ep'):
-            name += " [" + div.text + "]"
+            ep = int(div.text[3:])
+        animes.append(Anime(name, url, ep))
         
-        animes.append(Anime(name, url))
 
     return animes
 
