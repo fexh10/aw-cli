@@ -21,6 +21,7 @@ def safeExit():
         csv.writer(file).writerows(log)
     exit()
 
+
 def RicercaAnime() -> list[Anime]:
     """
     Dato in input un nome di un anime inserito dall'utente, restituisce una lista con gli URL degli anime
@@ -39,6 +40,7 @@ def RicercaAnime() -> list[Anime]:
 
     my_print("", end="", cls=True)
     return my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
+
 
 def animeScaricati(path: str) -> list[Anime]:
     """
@@ -60,6 +62,7 @@ def animeScaricati(path: str) -> list[Anime]:
     for name in nomi:
         animes.append(Anime(name, f"{path}/{name}"))
     return animes
+
 
 def scegliEpisodi() -> tuple[int, int]:
     """
@@ -249,14 +252,14 @@ def addToCronologia(ep: int):
         #se l'anime è presente
         if riga[2] == anime.url:
             #se l'ep riprodotto è l'ultimo allora non lo inserisco più
-            if ep == anime.ep:
+            if ep == anime.ep and anime.status == 1:
                 log.pop(i)
             else: 
                 #sovrascrivo la riga   
                 log[i][1] = ep
             return
-    if ep != anime.ep:
-        log.append([anime.name, ep, anime.url])
+    if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
+        log.append([anime.name, ep, anime.url]) 
 
 
 def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
@@ -409,7 +412,9 @@ def main():
         else:
             ep_iniziale = int(episodi[scelta]) + 1
             ep_finale = ep_iniziale
-
+            if ep_finale > anime.ep:
+                my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
+                exit()
         # se syncplay è stato scelto allora non chiedo
         # di fare il download ed esco dalla funzione
         if not syncpl and downl:

@@ -24,7 +24,7 @@ class Anime:
         """
         Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati.
         """
-        self.url_episodi = episodes(self.url)
+        self.url_episodi, self.status = episodes(self.url)
         self.ep = len(self.url_episodi)
         self.ep_ini = 1
 
@@ -203,7 +203,8 @@ def download(url_ep: str) -> str:
 
 def episodes(url_ep: str) -> list[str]:
     """
-    Cerca i link degli episodi dell'anime nella pagina selezionata.
+    Cerca i link degli episodi dell'anime nella pagina selezionata e 
+    controlla se è ancora in corso.
 
     Args:
         url_ep (str): indica la pagina dell'episodio
@@ -221,4 +222,12 @@ def episodes(url_ep: str) -> list[str]:
         for li in div.find_all(class_="episode"):
             temp = "https://www.animeworld.tv" + (li.a.get('href'))
             url_episodi.append(temp)
-    return url_episodi
+    #cerco lo stato dell'anime. 1 se è finito, altrimenti 0
+    status = 1
+    dl = bs.find_all(class_='meta col-sm-6')
+    for a in dl[1].find_all("a"):
+        if "filter?status=0"in a.get('href'):
+            status = 0
+            break
+
+    return url_episodi, status
