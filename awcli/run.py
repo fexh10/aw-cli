@@ -82,9 +82,6 @@ def scegliEpisodi() -> tuple[int, int]:
     if anime.ep == 1:
         return 1, 1
 
-    if lista:
-        return anime.ep, anime.ep
-
     # faccio decire all'utente il range di ep
     if (nome_os == "Android"):
         my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color="giallo")
@@ -397,7 +394,11 @@ def main():
             
             scelta = my_input("Scegli un anime", check_index)
             anime = animelist[scelta]
-
+            #se la lista è stata selezionata, inserisco come ep_iniziale e ep_finale quello scelto dall'utente
+            #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
+            if lista:
+                ep_iniziale = anime.ep
+                ep_finale = ep_iniziale
             anime.load_episodes() if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
 
             if anime.ep != 0:
@@ -408,7 +409,8 @@ def main():
             time.sleep(1)
 
         if not cronologia:
-            ep_iniziale, ep_finale = scegliEpisodi()
+            if not lista:
+                ep_iniziale, ep_finale = scegliEpisodi()
         else:
             ep_iniziale = int(episodi[scelta]) + 1
             ep_finale = ep_iniziale
