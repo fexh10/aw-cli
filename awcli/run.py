@@ -247,7 +247,7 @@ def addToCronologia(ep: int):
     """
     for i, riga in enumerate(log):
         #se l'anime è presente
-        if riga[2] == anime.url:
+        if riga[0] == anime.name:
             #se l'ep riprodotto è l'ultimo allora non lo inserisco più
             if ep == anime.ep and anime.status == 1:
                 log.pop(i)
@@ -361,7 +361,7 @@ def main():
             syncpl = True
     if args.download:
         downl = True
-    elif args.lista:
+    if args.lista:
         lista = True
     elif args.offline:
         offline = True
