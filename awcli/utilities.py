@@ -140,7 +140,7 @@ def search(input: str) -> list[Anime]:
     # cerco l'anime su animeworld
     my_print("Ricerco...", color="giallo")
     url_ricerca = _url + "/search?keyword=" + input.replace(" ", "+")
-    bs = BeautifulSoup(requests.get(url_ricerca).text, "lxml")
+    bs = BeautifulSoup(requests.get(url_ricerca, headers=headers).text, "lxml")
 
     animes = list[Anime]()
     # prendo i link degli anime relativi alla ricerca
@@ -170,7 +170,7 @@ def latest(filter = "all") -> list[Anime]:
         case 'd': data_name = "dub"
         case  _ : data_name = "all"
 
-    bs = BeautifulSoup(requests.get(_url).text, "lxml")
+    bs = BeautifulSoup(requests.get(_url, headers=headers).text, "lxml")
     animes = list[Anime]()
 
     div = bs.find("div", {"data-name": data_name})
@@ -196,7 +196,7 @@ def download(url_ep: str) -> str:
     Returns:
         str: il link di download
     """
-    bs = BeautifulSoup(requests.get(url_ep).text, "lxml")
+    bs = BeautifulSoup(requests.get(url_ep, headers=headers).text, "lxml")
 
     links = bs.find(id="download").find_all("a")
     return links[1].get('href')
@@ -214,7 +214,7 @@ def episodes(url_ep: str) -> list[str]:
     """
 
     # prendo l'html dalla pagina web di AW
-    bs = BeautifulSoup(requests.get(url_ep).text, "lxml")
+    bs = BeautifulSoup(requests.get(url_ep, headers=headers).text, "lxml")
 
     url_episodi = list[str]()
     # cerco gli url di tutti gli episodi
@@ -231,3 +231,7 @@ def episodes(url_ep: str) -> list[str]:
             break
 
     return url_episodi, status
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+}
