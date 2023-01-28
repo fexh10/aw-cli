@@ -19,7 +19,7 @@ https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-
 ## Installazione
 
 Lo script funziona tramite il lettore video <a href="https://mpv.io/installation/">MPV</a>, quindi installarlo se non lo si ha già. <br /> 
-Su Windows, inoltre, occorre installare "mpv-2.dll", scaricabile da questo [link](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/), e copiarlo nella stessa directory dello script.
+Su Windows, inoltre, occorre installare "mpv-2.dll", scaricabile da questo [link](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/), e aggiungerlo al path.
 
 È possibile installare aw-cli da sorgente (potrebbe essere più aggiornato):
 ```

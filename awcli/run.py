@@ -1,10 +1,4 @@
 import os
-
-if os.name == "nt":
-    script_directory = os.path.dirname(os.path.realpath(__file__))
-    os.environ["PATH"] = script_directory + os.pathsep + os.environ["PATH"]
-
-import mpv
 import sys
 import time
 import hpcomt
@@ -204,6 +198,8 @@ def openMPV(url_server: str, nome_video: str):
         # apro il player utilizzando bash e riproduco un video
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
     else:
+        import mpv
+        
         player = mpv.MPV(input_default_bindings=True,input_vo_keyboard=True, osc=True)
 
         # avvio il player
