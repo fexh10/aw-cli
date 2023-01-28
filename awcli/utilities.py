@@ -180,7 +180,7 @@ def latest(filter = "all") -> list[Anime]:
         for a in div.find_all(class_='name'):
             name = a.text
         for div in div.find_all(class_='ep'):
-            ep = int(div.text[3:])
+            ep = int(float(div.text[3:]))
         animes.append(Anime(name, url, ep))
         
 
