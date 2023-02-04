@@ -233,7 +233,8 @@ def openVLC(url_server: str, nome_video: str):
 
 def addToCronologia(ep: int):
     """
-    Viene aggiunta alla cronologia locale il nome del video
+    Viene aggiunta alla cronologia locale il nome del video,
+    il numero dell'ultimo episodio visualizzato
     e il link di AnimeWorld relativo all'anime.
     La cronologia viene salvata su un file csv nella stessa 
     directory dello script. Se il file non esiste viene creato.
@@ -250,9 +251,11 @@ def addToCronologia(ep: int):
             else: 
                 #sovrascrivo la riga   
                 log[i][1] = ep
+                temp = log.pop(i)
+                log.insert(0, temp)
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
-        log.append([anime.name, ep, anime.url]) 
+        log.insert(0, [anime.name, ep, anime.url]) 
 
 
 def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
