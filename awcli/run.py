@@ -369,106 +369,124 @@ def main():
 
     mpv = getConfig()
 
-    try:
-        if not cronologia:
-            animelist = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
-        else:
-            animelist, episodi = getCronologia()
-
-        while True:
-            my_print("", end="", cls=True)
-            # stampo i nomi degli anime
-            for i, a in reversed(list(enumerate(animelist))):
-                my_print(f"{i + 1} ", color="verde", end=" ")
-                if lista or cronologia:
-                    my_print(f"{a.name} [Ep {a.ep}]")
-                else:
-                    my_print(a.name)
-
-            def check_index(s: str):
-                if s.isdigit():
-                    index = int(s) - 1
-                    if index in range(len(animelist)):
-                        return index
-            
-            scelta = my_input("Scegli un anime", check_index)
-            anime = animelist[scelta]
-            #se la lista è stata selezionata, inserisco come ep_iniziale e ep_finale quello scelto dall'utente
-            #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
-            if lista:
-                ep_iniziale = anime.ep
-                ep_finale = ep_iniziale
-            anime.load_episodes() if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
-
-            if anime.ep != 0:
-                break
-
-            # se l'anime non ha episodi non può essere selezionato
-            my_print("Eh, volevi! L'anime non ha episodi", color="rosso")
-            time.sleep(1)
-
-        if not cronologia:
-            if not lista:
-                ep_iniziale, ep_finale = scegliEpisodi()
-        else:
-            ep_iniziale = int(episodi[scelta]) + 1
-            ep_finale = ep_iniziale
-            if ep_finale > anime.ep:
-                my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
-                exit()
-        # se syncplay è stato scelto allora non chiedo
-        # di fare il download ed esco dalla funzione
-        if not syncpl and downl:
-            path = f"{downloadPath()}/{anime.name}"
-            for ep in range(ep_iniziale, ep_finale+1):
-                scaricaEpisodio(ep, path)
-
-            my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
-            if nome_os == "Android":
-                my_print("Movies/Anime", color="verde")
+    while True:
+        try:
+            if not cronologia:
+                animelist = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
             else:
-                my_print("Video/Anime", color="verde")
-                
-                #chiedi all'utente se aprire ora i video scaricati
-                if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
-                    openVideos(ep_iniziale, ep_finale, mpv)
-            safeExit()
+                animelist, episodi = getCronologia()
 
-        ris_valida = True
-        while True:
-            if ris_valida:
-                openVideos(ep_iniziale,ep_finale, mpv)
-            else:
-                my_print("Seleziona una risposta valida", color="rosso")
-                ris_valida = True
-            # menù che si visualizza dopo aver finito la riproduzione
-            my_print("(p) prossimo", color="azzurro")
-            my_print("(r) riguarda", color="blu")
-            my_print("(a) antecedente", color="azzurro")
-            my_print("(s) seleziona", color="verde")
-            my_print("(e) esci", color="rosso")
-            my_print(">", color="magenta", end=" ")
-            scelta_menu = input().lower()
-            if (scelta_menu == 'p' or scelta_menu == '') and ep_iniziale < anime.ep - (ep_finale - ep_iniziale):
-                ep_iniziale = ep_finale + 1
-                ep_finale = ep_iniziale
-                continue
-            elif scelta_menu == 'r':
-                continue            
-            elif scelta_menu == 'a' and ep_finale > anime.ep_ini:
-                ep_iniziale = ep_finale - 1
-                ep_finale = ep_iniziale
-                continue
-            elif scelta_menu == 's':
-                ep_iniziale, ep_finale = scegliEpisodi()
-            elif scelta_menu == 'e':
-                safeExit()
-            else:
+            while True:
                 my_print("", end="", cls=True)
-                ris_valida = False
+                # stampo i nomi degli anime
+                for i, a in reversed(list(enumerate(animelist))):
+                    my_print(f"{i + 1} ", color="verde", end=" ")
+                    if lista or cronologia:
+                        my_print(f"{a.name} [Ep {a.ep}]")
+                    else:
+                        my_print(a.name)
 
-    except KeyboardInterrupt:
-        safeExit()
+                def check_index(s: str):
+                    if s.isdigit():
+                        index = int(s) - 1
+                        if index in range(len(animelist)):
+                            return index
+                
+                scelta = my_input("Scegli un anime", check_index)
+                anime = animelist[scelta]
+                #se la lista è stata selezionata, inserisco come ep_iniziale e ep_finale quello scelto dall'utente
+                #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
+                if lista:
+                    ep_iniziale = anime.ep
+                    ep_finale = ep_iniziale
+                anime.load_episodes() if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
+
+                if anime.ep != 0:
+                    break
+
+                # se l'anime non ha episodi non può essere selezionato
+                my_print("Eh, volevi! L'anime non ha episodi", color="rosso")
+                time.sleep(1)
+
+            if not cronologia:
+                if not lista:
+                    ep_iniziale, ep_finale = scegliEpisodi()
+            else:
+                ep_iniziale = int(episodi[scelta]) + 1
+                ep_finale = ep_iniziale
+                if ep_finale > anime.ep:
+                    my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
+                    exit()
+            # se syncplay è stato scelto allora non chiedo
+            # di fare il download ed esco dalla funzione
+            if not syncpl and downl:
+                path = f"{downloadPath()}/{anime.name}"
+                for ep in range(ep_iniziale, ep_finale+1):
+                    scaricaEpisodio(ep, path)
+
+                my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
+                if nome_os == "Android":
+                    my_print("Movies/Anime", color="verde")
+                else:
+                    my_print("Video/Anime", color="verde")
+                    
+                    #chiedi all'utente se aprire ora i video scaricati
+                    if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
+                        openVideos(ep_iniziale, ep_finale, mpv)
+                safeExit()
+
+            ris_valida = True
+            while True:
+                if ris_valida:
+                    openVideos(ep_iniziale,ep_finale, mpv)
+                else:
+                    my_print("Seleziona una risposta valida", color="rosso")
+                    ris_valida = True
+
+                prossimo = True
+                antecedente = True
+                seleziona = True
+
+                # menù che si visualizza dopo aver finito la riproduzione
+                if ep_finale != anime.ep:
+                    my_print("(p) prossimo", color="azzurro")
+                else:
+                    prossimo = False
+                my_print("(r) riguarda", color="blu")
+                if ep_finale != anime.ep_ini:
+                    my_print("(a) antecedente", color="azzurro")
+                else:
+                    antecedente = False
+                if anime.ep != 1:
+                    my_print("(s) seleziona", color="verde")
+                else:
+                    seleziona = False
+                my_print("(i) indietro", color='magenta')
+                my_print("(e) esci", color="rosso")
+                my_print(">", color="magenta", end=" ")
+                scelta_menu = input().lower()
+                if (scelta_menu == 'p' or scelta_menu == '') and prossimo:
+                    ep_iniziale = ep_finale + 1
+                    ep_finale = ep_iniziale
+                    continue
+                elif scelta_menu == 'r':
+                    continue            
+                elif scelta_menu == 'a' and antecedente:
+                    ep_iniziale = ep_finale - 1
+                    ep_finale = ep_iniziale
+                    continue
+                elif scelta_menu == 's' and seleziona:
+                    ep_iniziale, ep_finale = scegliEpisodi()
+                elif scelta_menu == 'i':
+                    break
+                elif scelta_menu == 'e':
+                    safeExit()
+                else:
+                    my_print("", end="", cls=True)
+                    ris_valida = False
+
+        except KeyboardInterrupt:
+            safeExit()
 
 # controllo il tipo del dispositivo
 nome_os = hpcomt.Name()
