@@ -252,7 +252,12 @@ def addToCronologia(ep: int):
                 #sovrascrivo la riga   
                 log[i][1] = ep
                 temp = log.pop(i)
-                log.insert(0, temp)
+                #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
+                if anime.status == 0 and ep == anime.ep:
+                    log.insert(len(log), temp)
+                #altrimenti all'inizio
+                else:
+                    log.insert(0, temp)
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
         log.insert(0, [anime.name, ep, anime.url]) 
@@ -405,7 +410,7 @@ def main():
                     break
 
                 # se l'anime non ha episodi non può essere selezionato
-                my_print("Eh, volevi! L'anime non ha episodi", color="rosso")
+                my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
                 time.sleep(1)
 
             if not cronologia:
@@ -416,7 +421,11 @@ def main():
                 ep_finale = ep_iniziale
                 if ep_finale > anime.ep:
                     my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
-                    exit()
+                    if len(log) == 1:
+                        exit()
+                    else:
+                        sleep(1)
+                        continue
             # se syncplay è stato scelto allora non chiedo
             # di fare il download ed esco dalla funzione
             if not syncpl and downl:
