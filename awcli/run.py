@@ -260,7 +260,10 @@ def addToCronologia(ep: int):
                     log.insert(0, temp)
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
-        log.insert(0, [anime.name, ep, anime.url]) 
+        if anime.status == 0 and ep == anime.ep:
+            log.insert(len(log), [anime.name, ep, anime.url])
+        else:
+            log.insert(0, [anime.name, ep, anime.url]) 
 
 
 def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
