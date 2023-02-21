@@ -446,6 +446,7 @@ def main():
         pass
     # args
     parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
+    parser.add_argument('-a', '--configurazione', action='store_true', dest='avvia_config', help='avvia il menu di configurazione')
     parser.add_argument('-c', '--cronologia', action='store_true', dest='cronologia', help='continua a guardare un anime dalla cronologia')
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
@@ -461,6 +462,8 @@ def main():
     if nome_os != "Android":
         if args.syncpl:
             syncpl = True
+    if args.avvia_config:
+        setupConfig()
     if args.download:
         downl = True
     if args.lista:
