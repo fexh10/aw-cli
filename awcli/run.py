@@ -373,19 +373,27 @@ def setupConfig():
         config_file.write("ratingAnilist: True") if ratingAnilist else config_file.write("ratingAnilist: False")
 
 
-def getConfig() -> bool:
+def getConfig() -> tuple[bool, str, bool]:
     """
-    Prende il nome del player scelto dal file di configurazione.
+    Prende le impostazioni scelte dall'utente
+    dal file di configurazione.
 
     Returns:
-        bool: True se mpv è stato scelto, False se è stato scelto vlc.
+        tuple[bool, str, bool]: mpv ritorna True se è stato scelto mpv, altrimenti false se è VLC.
+        tokenAnilist ritorna il token di Anilist se è stato inserito. ratingAnilist ritorna True
+        se l'utente ha scelto di votare gli anime, altrimenti False.
     """
 
     config = f"{os.path.dirname(__file__)}/aw.config"
     with open(config, 'r') as config_file:
-        for line in config_file:
-            mpv = True if line == 'Player: MPV' else False
-    return mpv
+        lines = config_file.readlines()
+        mpv = True if lines[0].strip() == "Player: MPV" else False
+        my_print(mpv, color='rosso')
+        sleep(10)
+        tokenAnilist = lines[1].strip()
+        ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
+
+    return mpv, tokenAnilist, ratingAnilist
 
 
 def main():
@@ -427,7 +435,10 @@ def main():
     elif args.cronologia:
         cronologia = True
 
-    mpv = getConfig()
+    #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
+    if not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
+        setupConfig()
+    mpv, tokenAnilist, ratingAnilist = getConfig()
 
     while True:
         try:
