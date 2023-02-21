@@ -396,9 +396,9 @@ def setupConfig():
     tokenAnilist = "tokenAnilist: False"
     ratingAnilist = False
     if anilist:
-        if nome_os == "Linux":
+        if nome_os == "Linux" or nome_os == "Android":
             os.system("xdg-open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
-        else:
+        elif nome_os == "Windows":
             subprocess.Popen(['powershell.exe', "explorer https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"])
         tokenAnilist = my_input("Inserire il token di AniList", cls=True)
         ratingAnilist = my_input("Votare l'anime una volta completato? (s/N)", check_string)
