@@ -388,8 +388,6 @@ def getConfig() -> tuple[bool, str, bool]:
     with open(config, 'r') as config_file:
         lines = config_file.readlines()
         mpv = True if lines[0].strip() == "Player: MPV" else False
-        my_print(mpv, color='rosso')
-        sleep(10)
         tokenAnilist = lines[1].strip()
         ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
 
@@ -470,7 +468,7 @@ def main():
                 if lista:
                     ep_iniziale = anime.ep
                     ep_finale = ep_iniziale
-                anime.load_episodes() if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
+                anime.load_episodes(tokenAnilist) if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
 
                 if anime.ep != 0:
                     break

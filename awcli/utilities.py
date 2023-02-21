@@ -20,11 +20,11 @@ class Anime:
         self.url = url
         self.ep = ep
 
-    def load_episodes(self) -> None:
+    def load_episodes(self, tokenAnilist) -> None:
         """
         Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati.
         """
-        self.url_episodi, self.status = episodes(self.url)
+        self.url_episodi, self.status, self.id_anilist = episodes(self.url, tokenAnilist)
         self.ep = len(self.url_episodi)
         self.ep_ini = 1
 
@@ -201,7 +201,7 @@ def download(url_ep: str) -> str:
     links = bs.find(id="download").find_all("a")
     return links[1].get('href')
 
-def episodes(url_ep: str) -> list[str]:
+def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
     """
     Cerca i link degli episodi dell'anime nella pagina selezionata e 
     controlla se è ancora in corso.
@@ -210,7 +210,8 @@ def episodes(url_ep: str) -> list[str]:
         url_ep (str): indica la pagina dell'episodio
 
     Returns:
-        list[str]: la lista con gli URL dei vari episodi trovati
+        tuple[str, int, int]: la lista con gli URL dei vari episodi trovati
+        , lo stato dell'anime e l'id di AniList se si ha effettuato l'acesso.
     """
 
     # prendo l'html dalla pagina web di AW
@@ -229,8 +230,32 @@ def episodes(url_ep: str) -> list[str]:
         if "filter?status=0"in a.get('href'):
             status = 0
             break
+    #cerco l'id di anilist
+    id_anilist = 0
+    if tokenAnilist != 'tokenAnilist: False':
+        id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
+    return url_episodi, status, id_anilist
 
-    return url_episodi, status
+def updateAnilist(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str):
+    query = """
+    mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
+        SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
+            status
+            progress
+            score
+        }
+    }
+    """
+    
+    var = {
+        "idAnime" : id_anilist,
+        "status" : status_list,
+        "episodio" : ep,
+        "score" : voto
+    }
+
+    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+    requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
