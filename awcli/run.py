@@ -321,6 +321,58 @@ def getCronologia() -> tuple[list, list]:
     return animes, episodi
 
 
+def setupConfig():
+    """
+    Crea un file di configurazione chiamato "aw.config"
+    nella stessa directory dello script.
+    Le informazioni riportate saranno scelte dall'utente.
+    Sarà possibile scegliere il Player predefinito
+    e se collegare il proprio profilo AniList. 
+    """
+
+    #player predefinito
+    my_print("", end="", cls=True)
+    my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
+    my_print("1", color="verde", end="  ")
+    my_print("MPV")
+    my_print("2", color="verde", end="  ")
+    my_print("VLC")
+
+    def check_index(s: str):
+        if s == "1":
+            return "Player: MPV"
+        elif s == "2":
+            return "Player: VLC"
+
+    player = my_input("Scegli un player predefinito", check_index)
+
+    #animelist
+    def check_string(s: str):
+        s = s.lower()
+        if s == "s":
+            return True
+        elif s == "n" or s == "":
+            return False
+
+    anilist = my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string)
+    
+    tokenAnilist = "tokenAnilist: False"
+    ratingAnilist = False
+    if anilist:
+        if nome_os == "Linux":
+            os.system("xdg-open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
+        else:
+            subprocess.Popen(['powershell.exe', "explorer https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"])
+        tokenAnilist = my_input("Inserire il token di AniList", cls=True)
+        ratingAnilist = my_input("Votare l'anime una volta completato? (s/N)", check_string)
+    #creo il file
+    config = f"{os.path.dirname(__file__)}/aw.config"
+    with open(config, 'w') as config_file:
+        config_file.write(f"{player}\n")
+        config_file.write(f"{tokenAnilist}\n") if tokenAnilist else config_file.write("tokenAnilist: False\n")
+        config_file.write("ratingAnilist: True") if ratingAnilist else config_file.write("ratingAnilist: False")
+
+
 def getConfig() -> bool:
     """
     Prende il nome del player scelto dal file di configurazione.
@@ -359,7 +411,7 @@ def main():
         parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
     args = parser.parse_args()
 
-    
+
     if  '-l' in sys.argv and args.lista == None:
         args.lista = 'a'
 
