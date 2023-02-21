@@ -207,11 +207,12 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
     controlla se è ancora in corso.
 
     Args:
-        url_ep (str): indica la pagina dell'episodio
+        url_ep (str): indica la pagina dell'episodio.
+        tokenAnilist (str): il token di accesso ad AniList.
 
     Returns:
-        tuple[str, int, int]: la lista con gli URL dei vari episodi trovati
-        , lo stato dell'anime e l'id di AniList se si ha effettuato l'acesso.
+        tuple[str, int, int]: la lista con gli URL dei vari episodi trovati, 
+        lo stato dell'anime e l'id di AniList se si ha effettuato l'accesso.
     """
 
     # prendo l'html dalla pagina web di AW
@@ -236,7 +237,19 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
         id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
     return url_episodi, status, id_anilist
 
-def updateAnilist(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str):
+def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str):
+    """
+    Collegamento alle API di AniList per aggiornare
+    automaticamente gli anime.
+
+    Args:
+        tokenAnilist (str): il token di accesso ad AniList.
+        id_anilist (int): l'id dell'anime su AniList.
+        ep (int): il numero dell'episodio visualizzato.
+        voto (float): il voto dell'anime.
+        status_list (str): lo stato dell'anime per l'utente. Se è in corso verrà impostato su "CURRENT", se completato su "COMPLETED".
+    """
+
     query = """
     mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
         SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
@@ -246,7 +259,7 @@ def updateAnilist(tokenAnilist: str, id_anilist: int, ep: int, voto: float, stat
         }
     }
     """
-    
+
     var = {
         "idAnime" : id_anilist,
         "status" : status_list,

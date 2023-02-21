@@ -266,7 +266,37 @@ def addToCronologia(ep: int):
             log.insert(0, [anime.name, ep, anime.url]) 
 
 
-def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
+def updateAnilist(tokenAnilist: str, ratingAnilist: bool, ep: int):
+    """
+    Procede ad aggiornare l'anime su AniList.
+    Se l'episodio riprodotto è l'ultimo e
+    l'utente ha scelto di votare gli anime,
+    verrà chiesto il voto da dare.
+
+    Args:
+        tokenAnilist (str): il token di accesso ad AniList.
+        ratingAnilist (bool): valore impostato a True se l'utente ha scelto di votare l'anime una volta finito, altrimenti False.
+        ep (int): il numero dell'episodio visualizzato.
+    """
+
+    voto = 0
+    status_list = 'CURRENT'
+    #se ho finito di vedere l'anime chiedo di votare
+    if ratingAnilist and ep == anime.ep and anime.status == 1:
+
+        def is_number(n):
+            if n.isdigit():
+                return n
+
+        voto = my_input("Inserisci un voto per l'anime", is_number)
+        status_list = 'COMPLETED'
+    
+    voto = float(voto)
+
+    anilistApi(tokenAnilist, anime.id_anilist, ep, voto, status_list)
+
+
+def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, ratingAnilist: bool):
     """
     Riproduce gli episodi dell'anime, a partire da ep_iniziale fino a ep_finale.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
@@ -276,6 +306,8 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
         ep_iniziale (int): il numero di episodio iniziale da riprodurre.
         ep_finale (int): il numero di episodio finale da riprodurre.
         mpv (bool): True se il player di default è MPV, False se è VLC.
+        tokenAnilist (str): il token di accesso ad AniList.
+        ratingAnilist (bool): valore impostato a True se l'utente ha scelto di votare l'anime una volta finito, altrimenti False.
     """
 
     for ep in range(ep_iniziale, ep_finale+1):
@@ -295,9 +327,14 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool):
 
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         openMPV(url_server, nome_video) if mpv else openVLC(url_server, nome_video)
+
         #se non sono in modalità offline aggiungo l'anime alla cronologia
         if not offline:
             addToCronologia(ep)
+
+        #update watchlist anilist se ho fatto l'accesso
+        if tokenAnilist != 'tokenAnilist: False':
+           updateAnilist(tokenAnilist, ratingAnilist, ep)
 
 
 def getCronologia() -> tuple[list, list]:
@@ -505,13 +542,13 @@ def main():
                     
                     #chiedi all'utente se aprire ora i video scaricati
                     if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
-                        openVideos(ep_iniziale, ep_finale, mpv)
+                        openVideos(ep_iniziale, ep_finale, mpv, tokenAnilist, ratingAnilist)
                 safeExit()
 
             ris_valida = True
             while True:
                 if ris_valida:
-                    openVideos(ep_iniziale,ep_finale, mpv)
+                    openVideos(ep_iniziale,ep_finale, mpv, tokenAnilist, ratingAnilist)
                 else:
                     my_print("Seleziona una risposta valida", color="rosso")
                     ris_valida = True
