@@ -237,7 +237,7 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
         id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
     return url_episodi, status, id_anilist
 
-def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str):
+def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool):
     """
     Collegamento alle API di AniList per aggiornare
     automaticamente gli anime.
@@ -248,17 +248,37 @@ def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_
         ep (int): il numero dell'episodio visualizzato.
         voto (float): il voto dell'anime.
         status_list (str): lo stato dell'anime per l'utente. Se è in corso verrà impostato su "CURRENT", se completato su "COMPLETED".
+        preferiti (bool) : True se l'utente ha scelto di mettere l'anime tra i preferiti, altrimenti False.
     """
 
-    query = """
-    mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-        SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
-            status
-            progress
-            score
+    #query in base alla scelta del preferito
+    if not preferiti:
+        query = """
+        mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
+            SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
+                status
+                progress
+                score
+            }
         }
-    }
-    """
+        """
+    else:
+        query = """
+            mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
+                SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
+                    status
+                    progress
+                    score
+                },
+                ToggleFavourite(animeId:$idAnime){
+                    anime {
+                        nodes {
+                            id
+                        }
+                    }
+                }
+            }
+            """
 
     var = {
         "idAnime" : id_anilist,
