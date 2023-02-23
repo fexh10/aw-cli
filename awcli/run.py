@@ -8,6 +8,7 @@ import subprocess
 import csv
 from pySmartDL import SmartDL
 from pathlib import Path
+from threading import Thread
 from awcli.utilities import *
 
 def safeExit():
@@ -304,8 +305,10 @@ def updateAnilist(tokenAnilist: str, ratingAnilist: bool, preferitoAnilist: bool
                 elif s == "n" or s == "":
                     return False
 
-            preferiti = my_input("Mettere l'anime tra i preferiti? (s/N)")
-    anilistApi(tokenAnilist, anime.id_anilist, ep, voto, status_list, preferiti)
+            preferiti = my_input("Mettere l'anime tra i preferiti? (s/N)", check_string)
+    
+    thread = Thread(target=anilistApi, args=(tokenAnilist, anime.id_anilist, ep, voto, status_list, preferiti))
+    thread.start()
 
 
 def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, ratingAnilist: bool, preferitoAnilist: bool):
@@ -347,7 +350,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, r
 
         #update watchlist anilist se ho fatto l'accesso
         if tokenAnilist != 'tokenAnilist: False':
-           updateAnilist(tokenAnilist, ratingAnilist, preferitoAnilist, ep)
+            updateAnilist(tokenAnilist, ratingAnilist, preferitoAnilist, ep)
 
 
 def getCronologia() -> tuple[list, list]:
