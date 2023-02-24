@@ -284,9 +284,9 @@ def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_
         "idAnime" : id_anilist,
         "status" : status_list,
         "episodio" : ep,
-        "score" : voto
     }
-
+    if voto != 0:
+        var["score"] = voto
     header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
     requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
 
