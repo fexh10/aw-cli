@@ -374,7 +374,7 @@ def getCronologia() -> tuple[list, list]:
     return animes, episodi
 
 
-def setupConfig():
+def setupConfig() -> None:
     """
     Crea un file di configurazione chiamato "aw.config"
     nella stessa directory dello script.
@@ -463,6 +463,7 @@ def main():
     global lista
     global offline
     global cronologia
+    global info
     global anime
     try:
         with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv") as file:
@@ -474,6 +475,7 @@ def main():
     parser.add_argument('-a', '--configurazione', action='store_true', dest='avvia_config', help='avvia il menu di configurazione')
     parser.add_argument('-c', '--cronologia', action='store_true', dest='cronologia', help='continua a guardare un anime dalla cronologia')
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
+    parser.add_argument('-i', '--info', action='store_true', dest='info', help='visualizza le informazioni e la trama di un anime')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
     parser.add_argument('-o', '--offline', action='store_true', dest='offline', help='apri gli episodi scaricati precedentemente direttamente dal terminale')
     if nome_os != "Android":
@@ -489,6 +491,8 @@ def main():
             syncpl = True
     if args.avvia_config:
         setupConfig()
+    if args.info:
+        info = True
     if args.download:
         downl = True
     if args.lista:
@@ -533,6 +537,11 @@ def main():
                 if lista:
                     ep_iniziale = anime.ep
                     ep_finale = ep_iniziale
+                scelta_info = ""
+                if info:
+                    scelta_info = anime.getAnimeInfo()
+                    if scelta_info == 'i':
+                        break
                 anime.load_episodes(tokenAnilist) if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
 
                 if anime.ep != 0:
@@ -541,7 +550,9 @@ def main():
                 # se l'anime non ha episodi non può essere selezionato
                 my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
                 time.sleep(1)
-
+            #se ho l'args -i e ho scelto di tornare indietro, faccio una continue sul ciclo while True
+            if scelta_info == 'i':
+                continue
             if not cronologia:
                 if not lista:
                     ep_iniziale, ep_finale = scegliEpisodi()
@@ -634,6 +645,7 @@ downl = False
 lista = False
 offline = False
 cronologia = False
+info = False
 log = []
 
 anime = Anime("", "")

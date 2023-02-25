@@ -11,7 +11,8 @@ installRequires = [
         "lxml",
         "pySmartDL",
         "hpcomt",
-        "wheel",]
+        "wheel",
+        "regex",]
 if os.name == 'nt':
     installRequires.append("psutil")
     installRequires.append("pywinauto")

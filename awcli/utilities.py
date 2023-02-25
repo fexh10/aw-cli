@@ -2,7 +2,7 @@ import os
 import requests
 from time import sleep
 from bs4 import BeautifulSoup
-
+import re
 
 class Anime:
     """
@@ -83,6 +83,23 @@ class Anime:
             self.ep = 0
             self.ep_ini = 0
 
+    def getAnimeInfo(self) -> str:
+        """
+        Prende le informazioni e la trama relative all'anime selezionato.
+
+        Returns:
+            str: la scelta dell'utente nel menu.
+        """
+
+        bs = BeautifulSoup(requests.get(self.url, headers=headers).text, "lxml")
+        row = bs.find(class_='info col-md-9').find(class_='row')
+        my_print(self.name, cls=True)
+        
+        dt = row.find_all("dt")
+        dd = row.find_all("dd")
+        trama = bs.find(class_='desc')
+        return printAnimeInfo(dt, dd, trama)
+    
 _url = "https://www.animeworld.tv"
 
 def my_print(text: str, format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
@@ -236,6 +253,45 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
     if tokenAnilist != 'tokenAnilist: False':
         id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
     return url_episodi, status, id_anilist
+
+def printAnimeInfo(dt: list, dd: list, trama: str) -> str:
+    """
+    Stampa a schermo le informazioni
+    e la trama relative all'anime selezioanto.
+    Chiede all'utente se guardare l'anime oppure tornare indietro.
+
+    Args:
+        dt (list): i campi "dt" della pagina che contengono le informazioni.
+        dd (list): i campi "dd" della pagina che contengono le informazioni.
+        trama (str): la trama dell'anime.
+
+    Returns:
+        str: la scelta dell'utente nel menu.
+    """
+
+    #stampo dl e dt
+    for i in range(len(dt)):
+            if i != 6:
+                my_print(dt[i].text.strip(), end=" ", color="azzurro")
+            else:
+                my_print(dt[i].text.strip().replace(":", " medio: "), end=" ", color="azzurro")
+            if i != 5:
+                my_print(dd[i].text.strip(), format=0)
+            else:
+                my_print(re.sub("\s\s+" , " ", dd[i].text.strip()), format=0)
+    #stampo la trama
+    my_print("Trama:", color="azzurro", end=" ")
+    my_print(trama.text, format=0)
+    #stampo piccolo menu
+    def check_string(s: str):
+        s.lower()
+        if s == "g" or s == 'i' or s == "":
+            return s
+
+
+    my_print("\n(g) guardare", color='verde')
+    my_print("(i) indietro", color='magenta', end="")
+    return my_input("", check_string)
 
 def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool):
     """
