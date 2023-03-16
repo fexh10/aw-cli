@@ -18,16 +18,16 @@ https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-
 
 ## Installazione
 
-Lo script funziona tramite il lettore video <a href="https://mpv.io/installation/">MPV</a>, quindi installarlo se non lo si ha già. <br /> 
-Su Windows, inoltre, occorre installare "mpv-2.dll", scaricabile da questo [link](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/), e aggiungerlo al path.
+Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html). <br /> 
+Se si utilizza Windows e MPV, occorrerà scaricare inoltre "mpv-2.dll" (scaricabile da questo [link](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/)) e aggiungerlo al path.
 
-È possibile installare aw-cli da sorgente (potrebbe essere più aggiornato):
-```
-python3 -m pip install git+https://github.com/fexh10/aw-cli.git
-```
-O se si preferisce da pip:
+È possibile installare aw-cli da pip:
 ```
 python3 -m pip install aw-cli --upgrade
+```
+O se si preferisce da sorgente (potrebbe essere più aggiornato):
+```
+python3 -m pip install git+https://github.com/fexh10/aw-cli.git
 ```
 ## Disinstallazione 
 
