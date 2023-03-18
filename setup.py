@@ -7,7 +7,6 @@ with open("README.md", "r", encoding="utf-8") as fh:
 installRequires = [
         "bs4",
         "requests",
-        "python-mpv",
         "lxml",
         "pySmartDL",
         "hpcomt",
@@ -16,6 +15,7 @@ installRequires = [
 if os.name == 'nt':
     installRequires.append("psutil")
     installRequires.append("pywinauto")
+    installRequires.append("python-mpv")
 
 setup(
     name="aw-cli",

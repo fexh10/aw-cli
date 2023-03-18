@@ -198,7 +198,7 @@ def openMPV(url_server: str, nome_video: str):
     elif (nome_os == "Android"):
         # apro il player utilizzando bash e riproduco un video
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
-    else:
+    elif nome_os == "Windows":
         import mpv
         
         player = mpv.MPV(input_default_bindings=True,input_vo_keyboard=True, osc=True)
@@ -211,6 +211,8 @@ def openMPV(url_server: str, nome_video: str):
         player.play(url_server)
         player.wait_for_shutdown()
         player.terminate()
+    elif nome_os == "Linux":
+        os.system(f'''mpv "{url_server}" --force-media-title="{nome_video}" --fullscreen --keep-open &>/dev/null''')
 
 
 def openVLC(url_server: str, nome_video: str):
