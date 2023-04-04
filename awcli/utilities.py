@@ -250,8 +250,12 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
             break
     #cerco l'id di anilist
     id_anilist = 0
-    if tokenAnilist != 'tokenAnilist: False':
-        id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
+    try:
+        if tokenAnilist != 'tokenAnilist: False':
+            id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
+    except AttributeError:
+        pass
+
     return url_episodi, status, id_anilist
 
 def printAnimeInfo(dt: list, dd: list, trama: str) -> str:
