@@ -1,5 +1,8 @@
 # aw-cli
 <h3 align="center">
+
+# MOMENTANEAMENTE NON FUNZIONANTE A CAUSA DI CAMBIAMENTI DEL SITO DA PARTE DI AW
+
 Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a href="https://www.animeworld.tv/">AnimeWorld</a>
 
 </h3>
