@@ -135,8 +135,7 @@ def scaricaEpisodio(ep: int, path: str):
     nome_video = anime.ep_name(ep)
     
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
-    my_print(nome_video, color="blu", end="")
-    my_print(":\n" if nome_os == "Android" else ": ", end="")
+    my_print(nome_video, color="blu", end=":\n")
     if not os.path.exists(f"{path}/{nome_video}.mp4"):
         SDL = SmartDL(url_ep, f"{path}/{nome_video}.mp4")
         SDL.start()
