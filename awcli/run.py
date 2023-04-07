@@ -350,7 +350,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, r
             addToCronologia(ep)
 
         #update watchlist anilist se ho fatto l'accesso
-        if tokenAnilist != 'tokenAnilist: False':
+        if tokenAnilist != 'tokenAnilist: False' and not offline:
             updateAnilist(tokenAnilist, ratingAnilist, preferitoAnilist, ep)
 
 
