@@ -345,12 +345,12 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, r
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
         openMPV(url_server, nome_video) if mpv else openVLC(url_server, nome_video)
 
-        #se non sono in modalità offline aggiungo l'anime alla cronologia
-        if not offline:
+        #se non sono in modalità offline o privata aggiungo l'anime alla cronologia
+        if not offline and not privato:
             addToCronologia(ep)
 
         #update watchlist anilist se ho fatto l'accesso
-        if tokenAnilist != 'tokenAnilist: False' and not offline:
+        if tokenAnilist != 'tokenAnilist: False' and not offline and not privato:
             updateAnilist(tokenAnilist, ratingAnilist, preferitoAnilist, ep)
 
 
@@ -465,6 +465,7 @@ def main():
     global offline
     global cronologia
     global info
+    global privato
     global anime
     try:
         with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv") as file:
@@ -479,6 +480,8 @@ def main():
     parser.add_argument('-i', '--info', action='store_true', dest='info', help='visualizza le informazioni e la trama di un anime')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
     parser.add_argument('-o', '--offline', action='store_true', dest='offline', help='apri gli episodi scaricati precedentemente direttamente dal terminale')
+    parser.add_argument('-p', '--privato', action='store_true', dest='privato', help="guarda un episodio senza che si aggiorni la cronologia o AniList")
+
     if nome_os != "Android":
         parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
     args = parser.parse_args()
@@ -498,6 +501,8 @@ def main():
         downl = True
     if args.lista:
         lista = True
+    if args.privato:
+        privato = True
     elif args.offline:
         offline = True
     elif args.cronologia:
@@ -647,6 +652,7 @@ lista = False
 offline = False
 cronologia = False
 info = False
+privato = False
 log = []
 
 anime = Anime("", "")
