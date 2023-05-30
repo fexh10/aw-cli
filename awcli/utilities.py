@@ -239,6 +239,8 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
     # cerco gli url di tutti gli episodi
     for div in bs.find_all(class_='server active'):
         for li in div.find_all(class_="episode"):
+            if ".5" in li.a.get('data-num'):
+                continue
             temp = "https://www.animeworld.tv" + (li.a.get('href'))
             url_episodi.append(temp)
     #cerco lo stato dell'anime. 1 se è finito, altrimenti 0
