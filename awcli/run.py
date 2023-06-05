@@ -226,7 +226,7 @@ def openVLC(url_server: str, nome_video: str):
     if nome_os == 'Linux':
         os.system(f'''vlc "{url_server}" --meta-title "{nome_video}" --fullscreen &>/dev/null''')
     elif nome_os == "Windows":
-        comando = f"& 'C:\\Program Files\\VideoLAN\\VLC\\vlc.exe' '{url_server}' --fullscreen --meta-title='{nome_video}'"
+        comando = f"""& 'C:\\Program Files\\VideoLAN\\VLC\\vlc.exe' "{url_server}" --fullscreen --meta-title="{nome_video}" """
         subprocess.Popen(['powershell.exe', comando])
         isRunning("vlc.exe")
     elif nome_os == "Android":
