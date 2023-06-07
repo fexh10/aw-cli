@@ -236,8 +236,9 @@ def openVLC(url_server: str, nome_video: str):
 def addToCronologia(ep: int):
     """
     Viene aggiunta alla cronologia locale il nome del video,
-    il numero dell'ultimo episodio visualizzato
-    e il link di AnimeWorld relativo all'anime.
+    il numero dell'ultimo episodio visualizzato,
+    il link di AnimeWorld relativo all'anime
+    e il numero reale di episodi totali della serie.
     La cronologia viene salvata su un file csv nella stessa 
     directory dello script. Se il file non esiste viene creato.
 
@@ -254,6 +255,7 @@ def addToCronologia(ep: int):
                 #sovrascrivo la riga   
                 log[i][1] = ep
                 temp = log.pop(i)
+                temp[-1] = anime.ep_totali
                 #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
                 if anime.status == 0 and ep == anime.ep:
                     log.insert(len(log), temp)
@@ -263,9 +265,9 @@ def addToCronologia(ep: int):
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
         if anime.status == 0 and ep == anime.ep:
-            log.insert(len(log), [anime.name, ep, anime.url])
+            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali])
         else:
-            log.insert(0, [anime.name, ep, anime.url]) 
+            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali]) 
 
 
 def updateAnilist(tokenAnilist: str, ratingAnilist: bool, preferitoAnilist: bool,  ep: int):
@@ -354,7 +356,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, r
             updateAnilist(tokenAnilist, ratingAnilist, preferitoAnilist, ep)
 
 
-def getCronologia() -> tuple[list, list]:
+def getCronologia() -> tuple[list, list, list]:
     """
     Prende i dati dalla cronologia.
 
@@ -366,8 +368,11 @@ def getCronologia() -> tuple[list, list]:
     episodi = []
     animes = []
     for riga in log:
+        if len(riga) == 3:
+            riga.append("??")
         episodi.append(riga[1])
-        animes.append(Anime(riga[0], riga[2], riga[1]))
+        animes.append(Anime(riga[0], riga[2], riga[1], riga[3]))
+
     #se il file esiste ma non contiene dati stampo un messaggio di errore
     if len(animes) == 0:
         my_print("Cronologia inesistente!", color='rosso')
@@ -525,8 +530,10 @@ def main():
                 # stampo i nomi degli anime
                 for i, a in reversed(list(enumerate(animelist))):
                     my_print(f"{i + 1} ", color="verde", end=" ")
-                    if lista or cronologia:
-                        my_print(f"{a.name} [Ep {a.ep}]")
+                    if cronologia:
+                        my_print(f"{a.name} [Ep {a.ep}/{a.ep_totali}]")
+                    elif lista:
+                       my_print(f"{a.name} [Ep {a.ep}]") 
                     else:
                         my_print(a.name)
 

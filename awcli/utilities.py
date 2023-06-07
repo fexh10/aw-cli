@@ -12,19 +12,20 @@ class Anime:
         name (str): il nome dell'anime.
         url (str): l'URL della pagina dell'anime su AnimeWorld.
         ep (int): il numero di episodi dell'anime.
-        ep_ini (int): il numero dell'episodio di inizio. Valore predefinito 1
+        ep_totali (str): il numero reale di episodi totali dell'anime.
     """ 
 
-    def __init__(self, name, url, ep=0) -> None:
+    def __init__(self, name, url, ep=0, ep_totali="") -> None:
         self.name = name
         self.url = url
         self.ep = ep
+        self.ep_totali = ep_totali
 
     def load_episodes(self, tokenAnilist) -> None:
         """
         Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati.
         """
-        self.url_episodi, self.status, self.id_anilist = episodes(self.url, tokenAnilist)
+        self.url_episodi, self.status, self.id_anilist, self.ep_totali = episodes(self.url, tokenAnilist)
         self.ep = len(self.url_episodi)
         self.ep_ini = 1
 
@@ -218,7 +219,7 @@ def download(url_ep: str) -> str:
     links = bs.find(id="download").find_all("a")
     return links[1].get('href')
 
-def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
+def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int, str]:
     """
     Cerca i link degli episodi dell'anime nella pagina selezionata e 
     controlla se è ancora in corso.
@@ -228,8 +229,9 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
         tokenAnilist (str): il token di accesso ad AniList.
 
     Returns:
-        tuple[str, int, int]: la lista con gli URL dei vari episodi trovati, 
-        lo stato dell'anime e l'id di AniList se si ha effettuato l'accesso.
+        tuple[str, int, int, str]: la lista con gli URL dei vari episodi trovati, 
+        lo stato dell'anime, l'id di AniList se si ha effettuato l'accesso
+        e il numero reale degli episodi totali dell'anime.
     """
 
     # prendo l'html dalla pagina web di AW
@@ -250,6 +252,8 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
         if "filter?status=0"in a.get('href'):
             status = 0
             break
+    #cerco il numero reale di episodi totali dell'anime
+    ep_totali = bs.find_all("dd")[12].string if status == 0 else len(url_episodi) 
     #cerco l'id di anilist
     id_anilist = 0
     try:
@@ -258,7 +262,7 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int]:
     except AttributeError:
         pass
 
-    return url_episodi, status, id_anilist
+    return url_episodi, status, id_anilist, ep_totali
 
 def printAnimeInfo(dt: list, dd: list, trama: str) -> str:
     """
