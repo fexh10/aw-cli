@@ -303,7 +303,7 @@ def printAnimeInfo(dt: list, dd: list, trama: str) -> str:
     my_print("(i) indietro", color='magenta', end="")
     return my_input("", check_string)
 
-def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool):
+def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:
     """
     Collegamento alle API di AniList per aggiornare
     automaticamente gli anime.
@@ -355,6 +355,65 @@ def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_
         var["score"] = voto
     header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
     requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
+
+def getAnilistUserId(tokenAnilist: str) -> int: 
+    """
+    Collegamento alle API di AniList per trovare
+    l'id dell'utente.
+
+    Args:
+        tokenAnilist (str): il token di accesso ad AniList.
+
+    Returns:
+        int: l'id dell'utente.
+    """
+
+    query = """
+        query {
+            Viewer {
+                id
+            }
+        }
+    """
+
+    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query}) 
+    user_id = int(risposta.json()["data"]["Viewer"]["id"])
+
+    return user_id
+
+def getAnimePrivateRating(tokenAnilist: str, user_id: int, id_anime: int) -> str:
+    """
+    Collegamento alle API di AniList per trovare
+    il voto dato all'anime dall'utente.
+
+    Args:
+        tokenAnilist (str): il token di accesso ad AniList.
+        user_id (int): l'id dell'utente su AniList.
+        id_anime (int): l'id dell'anime su Anilist.
+
+    Returns:
+        str: il voto dell'utente sotto forma di stringa.
+    """
+
+    query = """
+    query ($idAnime: Int, $userId: Int) {
+        MediaList(userId: $userId, mediaId: $idAnime) {
+            score
+        }
+    }
+    """
+    var = {
+    "idAnime": id_anime,
+    "userId": user_id
+}
+
+    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
+    voto = str(risposta.json()["data"]["MediaList"]["score"])
+    if voto == "0":
+        voto = "n.d."
+    return voto
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
