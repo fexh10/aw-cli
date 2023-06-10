@@ -352,7 +352,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, r
         # e ottengo il voto dell'anime se già inserito in precedenza
         #prendo l'id dell'utente tramite query
         voto_anilist = "n.d."
-        if ep == anime.ep and ratingAnilist == True:         
+        if ep == anime.ep and ratingAnilist == True and not offline and not privato:         
             #prendo il voto se presente
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future_rating = executor.submit(getAnimePrivateRating, tokenAnilist, user_id, anime.id_anilist)
