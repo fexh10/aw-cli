@@ -198,8 +198,9 @@ def latest(filter = "all") -> list[Anime]:
         for a in div.find_all(class_='name'):
             name = a.text
         for div in div.find_all(class_='ep'):
-            ep = int(float(div.text[3:]))
-        animes.append(Anime(name, url, ep))
+            ep = div.text[3:]
+            if ".5" not in ep:
+                animes.append(Anime(name, url, int(ep)))
         
 
     return animes
