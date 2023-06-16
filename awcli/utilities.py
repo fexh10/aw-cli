@@ -167,6 +167,11 @@ def search(input: str) -> list[Anime]:
         
         for a in div.find_all(class_='name'):
             name =a.text
+            if os.name == "nt":
+                caratteri_proibiti = '"*/:<>?\|'
+                caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
+                for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
+                    name = name.replace(a, b)
 
         animes.append(Anime(name, url))
 
@@ -197,6 +202,11 @@ def latest(filter = "all") -> list[Anime]:
         
         for a in div.find_all(class_='name'):
             name = a.text
+            if os.name == "nt":
+                caratteri_proibiti = '"*/:<>?\|'
+                caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
+                for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
+                    name = name.replace(a, b)
         for div in div.find_all(class_='ep'):
             ep = div.text[3:]
             if ".5" not in ep:

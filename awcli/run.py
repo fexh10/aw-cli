@@ -13,7 +13,7 @@ from threading import Thread
 from awcli.utilities import *
 
 def safeExit():
-    with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='') as file:
+    with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='', encoding='utf-8') as file:
         csv.writer(file).writerows(log)
     exit()
 
@@ -369,7 +369,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, r
             updateAnilist(tokenAnilist, ratingAnilist, preferitoAnilist, ep, voto_anilist)
 
 
-def getCronologia() -> tuple[list, list, list]:
+def getCronologia() -> tuple[list, list]:
     """
     Prende i dati dalla cronologia.
 
@@ -508,7 +508,7 @@ def main():
     global privato
     global anime
     try:
-        with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv") as file:
+        with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", encoding='utf-8') as file:
             log = [riga for riga in csv.reader(file)]
     except FileNotFoundError:
         pass
