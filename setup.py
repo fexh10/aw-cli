@@ -9,7 +9,6 @@ installRequires = [
         "requests",
         "lxml",
         "pySmartDL",
-        "hpcomt",
         "wheel",
         "regex",]
 if os.name == 'nt':

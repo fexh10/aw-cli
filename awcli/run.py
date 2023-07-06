@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-import hpcomt
+import platform
 import argparse
 import warnings
 import subprocess
@@ -686,7 +686,11 @@ def main():
             safeExit()
 
 # controllo il tipo del dispositivo
-nome_os = hpcomt.Name()
+nome_os = platform.system()
+if nome_os == "Linux":
+    if "com.termux" in os.popen("type -p python3").read().strip():
+        nome_os = "Android"
+
 #args
 syncpl = False
 downl = False
