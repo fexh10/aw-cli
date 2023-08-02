@@ -30,7 +30,7 @@ def RicercaAnime() -> list[Anime]:
     def check_search(s: str):
         if s == "exit":
             safeExit() 
-        result = search(s)
+        result = search(s, nome_os)
         if len(result) != 0:
             return result
 
@@ -556,7 +556,7 @@ def main():
     while True:
         try:
             if not cronologia:
-                animelist = latest(args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
+                animelist = latest(nome_os, args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
             else:
                 animelist, episodi = getCronologia()
 

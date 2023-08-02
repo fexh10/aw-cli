@@ -145,12 +145,13 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             my_print("",end="", cls=True)
     return i
 
-def search(input: str) -> list[Anime]:
+def search(input: str, nome_os: str) -> list[Anime]:
     """
     Ricerca l'anime selezionato su AnimeWorld.
 
     Args:
-        input (str): la stringa di ricerca da effettuare
+        input (str): la stringa di ricerca da effettuare.
+        nome_os (str): il nome del sistema operativo in uso.
 
     Returns:
         list[Anime]: la lista degli anime trovati
@@ -167,7 +168,7 @@ def search(input: str) -> list[Anime]:
         
         for a in div.find_all(class_='name'):
             name =a.text
-            if os.name == "nt":
+            if nome_os == "Windows" or nome_os == "Android":
                 caratteri_proibiti = '"*/:<>?\|'
                 caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
                 for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
@@ -177,11 +178,12 @@ def search(input: str) -> list[Anime]:
 
     return animes
 
-def latest(filter = "all") -> list[Anime]:
+def latest(nome_os: str ,filter = "all") -> list[Anime]:
     """
     Restituisce le ultime uscite anime su AnimeWorld.
 
     Args:
+        nome_os (str): il nome del sistema operativo in uso.
         filter (str, optional): filtra i risultati per versione dubbed o subbed.
 
     Returns:
@@ -202,7 +204,7 @@ def latest(filter = "all") -> list[Anime]:
         
         for a in div.find_all(class_='name'):
             name = a.text
-            if os.name == "nt":
+            if nome_os == "Windows" or nome_os == "Android":
                 caratteri_proibiti = '"*/:<>?\|'
                 caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
                 for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
