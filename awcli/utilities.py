@@ -110,7 +110,7 @@ class Anime:
         trama = bs.find(class_='desc')
         return printAnimeInfo(dt, dd, trama)
     
-_url = "https://www.animeworld.tv"
+_url = "https://www.animeworld.so"
 # controllo il tipo del dispositivo
 nome_os = system()
 if nome_os == "Linux":
@@ -270,7 +270,7 @@ def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int, str]:
         for li in div.find_all(class_="episode"):
             if ".5" in li.a.get('data-num'):
                 continue
-            temp = "https://www.animeworld.tv" + (li.a.get('href'))
+            temp = _url + (li.a.get('href'))
             url_episodi.append(temp)
     #cerco lo stato dell'anime. 1 se è finito, altrimenti 0
     status = 1
