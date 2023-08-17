@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import platform
 import argparse
 import warnings
 import subprocess
@@ -255,6 +254,7 @@ def addToCronologia(ep: int):
             else: 
                 #sovrascrivo la riga   
                 log[i][1] = ep
+                log[i][2] = anime.url
                 temp = log.pop(i)
                 temp[-1] = anime.ep_totali
                 #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
@@ -610,7 +610,7 @@ def main():
                 if ep_finale > anime.ep:
                     my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                     if len(log) == 1:
-                        exit()
+                        safeExit()
                     else:
                         sleep(1)
                         continue
@@ -684,12 +684,6 @@ def main():
 
         except KeyboardInterrupt:
             safeExit()
-
-# controllo il tipo del dispositivo
-nome_os = platform.system()
-if nome_os == "Linux":
-    if "com.termux" in os.popen("type -p python3").read().strip():
-        nome_os = "Android"
 
 #args
 syncpl = False

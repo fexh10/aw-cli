@@ -1,5 +1,6 @@
 import os
 import requests
+from platform import system
 from time import sleep
 from bs4 import BeautifulSoup
 import re
@@ -23,9 +24,17 @@ class Anime:
 
     def load_episodes(self, tokenAnilist) -> None:
         """
-        Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati.
+        Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati
         """
-        self.url_episodi, self.status, self.id_anilist, self.ep_totali = episodes(self.url, tokenAnilist)
+
+        try:
+            res = episodes(self.url, tokenAnilist)
+        except IndexError:
+            my_print("Il link è stato cambiato", color="rosso", end="\n")
+            self.url = search(self.name, nome_os)[0].url
+            res = episodes(self.url, tokenAnilist)
+            
+        self.url_episodi, self.status, self.id_anilist, self.ep_totali = res
         self.ep = len(self.url_episodi)
         self.ep_ini = 1
 
@@ -102,6 +111,11 @@ class Anime:
         return printAnimeInfo(dt, dd, trama)
     
 _url = "https://www.animeworld.tv"
+# controllo il tipo del dispositivo
+nome_os = system()
+if nome_os == "Linux":
+    if "com.termux" in os.popen("type -p python3").read().strip():
+        nome_os = "Android"
 
 def my_print(text: str, format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
     """
