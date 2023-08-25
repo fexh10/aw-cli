@@ -38,7 +38,7 @@ python3 -m pip uninstall aw-cli
 
 ## Utilizzo
 ```
-usage: aw-cli [-h] [-a] [-c] [-d] [-i] [-l [{a,s,d}]] [-o] [-p] [-s]
+usage: aw-cli [-h] [-a] [-c] [-d] [-i] [-l [{a,s,d}]] [-o] [-p] [-s] [-v]
 
 Guarda anime dal terminale e molto altro!
 
@@ -53,6 +53,7 @@ options:
   -o, --offline         apri gli episodi scaricati precedentemente direttamente dal terminale
   -p, --privato         guarda un episodio senza che si aggiorni la cronologia o AniList
   -s, --syncplay        usa syncplay per guardare un anime insieme ai tuoi amici
+  -v, --versione        stampa la versione del programma
                                                              
 ```
 

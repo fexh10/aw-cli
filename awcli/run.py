@@ -521,18 +521,17 @@ def main():
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd'], dest='lista', help='lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub')
     parser.add_argument('-o', '--offline', action='store_true', dest='offline', help='apri gli episodi scaricati precedentemente direttamente dal terminale')
     parser.add_argument('-p', '--privato', action='store_true', dest='privato', help="guarda un episodio senza che si aggiorni la cronologia o AniList")
-
     if nome_os != "Android":
         parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
+    parser.add_argument('-v', '--versione', action='store_true', dest='versione', help="stampa la versione del programma")
+    
     args = parser.parse_args()
-
 
     if  '-l' in sys.argv and args.lista == None:
         args.lista = 'a'
 
-    if nome_os != "Android":
-        if args.syncpl:
-            syncpl = True
+    if nome_os != "Android" and args.syncpl:
+        syncpl = True
     if args.avvia_config:
         setupConfig()
     if args.info:
@@ -541,6 +540,9 @@ def main():
         downl = True
     if args.lista:
         lista = True
+    if args.versione:
+        my_print(f"aw-cli versione: {versione}", cls=True)
+        safeExit()
     if args.privato:
         privato = True
     elif args.offline:
@@ -693,6 +695,7 @@ offline = False
 cronologia = False
 info = False
 privato = False
+versione = "1.6c7"
 log = []
 
 anime = Anime("", "")
