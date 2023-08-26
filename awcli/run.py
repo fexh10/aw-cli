@@ -695,7 +695,7 @@ offline = False
 cronologia = False
 info = False
 privato = False
-versione = "1.6c7"
+versione = "1.7"
 log = []
 
 anime = Anime("", "")
