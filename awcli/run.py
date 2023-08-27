@@ -295,12 +295,14 @@ def updateAnilist(tokenAnilist: str, ratingAnilist: bool, preferitoAnilist: bool
         #chiedo di votare
         if ratingAnilist:
             def is_number(n):
-                if n.isdigit():
-                    return n
+                try:
+                    float(n)
+                    return float(n)
+                except ValueError:
+                    pass
 
             voto = my_input(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})", is_number)
     
-            voto = float(voto)
         #chiedo di mettere tra i preferiti
         if preferitoAnilist:
             def check_string(s: str):
@@ -695,7 +697,7 @@ offline = False
 cronologia = False
 info = False
 privato = False
-versione = "1.7"
+versione = "1.7c1"
 log = []
 
 anime = Anime("", "")
