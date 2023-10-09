@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import argparse
 import warnings
 import subprocess
@@ -237,8 +236,8 @@ def addToCronologia(ep: int):
     """
     Viene aggiunta alla cronologia locale il nome del video,
     il numero dell'ultimo episodio visualizzato,
-    il link di AnimeWorld relativo all'anime
-    e il numero reale di episodi totali della serie.
+    il link di AnimeWorld relativo all'anime, 
+    il numero reale di episodi totali della serie e lo stato dell'anime.
     La cronologia viene salvata su un file csv nella stessa 
     directory dello script. Se il file non esiste viene creato.
 
@@ -256,7 +255,8 @@ def addToCronologia(ep: int):
                 log[i][1] = ep
                 log[i][2] = anime.url
                 temp = log.pop(i)
-                temp[-1] = anime.ep_totali
+                temp[-2] = anime.ep_totali
+                temp[-1] = anime.status
                 #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
                 if anime.status == 0 and ep == anime.ep:
                     log.insert(len(log), temp)
@@ -266,10 +266,9 @@ def addToCronologia(ep: int):
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
         if anime.status == 0 and ep == anime.ep:
-            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali])
+            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status])
         else:
-            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali]) 
-
+            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status]) 
 
 def updateAnilist(tokenAnilist: str, ratingAnilist: bool, preferitoAnilist: bool,  ep: int, voto_anilist: str):
     """
@@ -382,17 +381,21 @@ def getCronologia() -> tuple[list, list]:
     """
     episodi = []
     animes = []
+    stati = []
     for riga in log:
         if len(riga) == 3:
             riga.append("??")
+        elif len(riga) == 4:
+                riga.append("0")
         episodi.append(riga[1])
         animes.append(Anime(riga[0], riga[2], riga[1], riga[3]))
+        stati.append(riga[4])
 
     #se il file esiste ma non contiene dati stampo un messaggio di errore
     if len(animes) == 0:
         my_print("Cronologia inesistente!", color='rosso')
         safeExit()
-    return animes, episodi
+    return animes, episodi, stati
 
 
 def setupConfig() -> None:
@@ -562,7 +565,7 @@ def main():
             if not cronologia:
                 animelist = latest(nome_os, args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
             else:
-                animelist, episodi = getCronologia()
+                animelist, episodi, stati = getCronologia()
 
             while True:
                 my_print("", end="", cls=True)
@@ -601,7 +604,7 @@ def main():
 
                 # se l'anime non ha episodi non può essere selezionato
                 my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
-                time.sleep(1)
+                sleep(1)
             #se ho l'args -i e ho scelto di tornare indietro, faccio una continue sul ciclo while True
             if scelta_info == 'i':
                 continue
