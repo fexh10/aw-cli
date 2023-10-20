@@ -12,13 +12,14 @@ class Anime:
     Attributes:
         name (str): il nome dell'anime.
         url (str): l'URL della pagina dell'anime su AnimeWorld.
-        ep (int): il numero di episodi dell'anime.
+        ep (int):
         ep_totali (str): il numero reale di episodi totali dell'anime.
     """ 
 
     def __init__(self, name, url, ep=0, ep_totali="") -> None:
         self.name = name
         self.url = url
+        self.ep_corrente = ep
         self.ep = ep
         self.ep_totali = ep_totali
 

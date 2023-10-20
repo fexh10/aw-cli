@@ -254,9 +254,10 @@ def addToCronologia(ep: int):
                 #sovrascrivo la riga   
                 log[i][1] = ep
                 log[i][2] = anime.url
+                log[i][3] = anime.ep_totali
+                log[i][4] = anime.status
+                log[i][5] = anime.ep
                 temp = log.pop(i)
-                temp[-2] = anime.ep_totali
-                temp[-1] = anime.status
                 #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
                 if anime.status == 0 and ep == anime.ep:
                     log.insert(len(log), temp)
@@ -381,11 +382,15 @@ def getCronologia() -> list[Anime]:
     """
     animes = []
     for riga in log:
-        if len(riga) == 3:
+        if len(riga) < 4:
             riga.append("??")
-        elif len(riga) == 4:
+        if len(riga) < 5:
             riga.append(0)
-        a = Anime(riga[0], riga[2], int(riga[1]), riga[3])
+        if len(riga) < 6:
+            riga.append(riga[1])    
+        
+        a = Anime(name=riga[0], url=riga[2], ep=int(riga[5]), ep_totali=riga[3])
+        a.ep_corrente = int(riga[1])
         a.status = int(riga[4])
         animes.append(a)
 
@@ -576,17 +581,17 @@ def main():
                 for i, a in reversed(list(enumerate(animelist))):
                     if cronologia:
                         colore = "rosso"
-                        if a.status == 1:
+                        if a.status == 1 or a.ep_corrente < a.ep:
                             colore = "verde"
                         else:    
                             for anime_latest in ultime_uscite:
-                                if a.name == anime_latest.name and a.ep < anime_latest.ep:
+                                if a.name == anime_latest.name and a.ep_corrente < anime_latest.ep:
                                     colore = "verde"
                                     break
                     
                     my_print(f"{i + 1} ", color=colore, end=" ")
                     if cronologia:
-                        my_print(f"{a.name} [Ep {a.ep}/{a.ep_totali}]")
+                        my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
                     elif lista:
                        my_print(f"{a.name} [Ep {a.ep}]") 
                     else:
@@ -611,7 +616,6 @@ def main():
                     if scelta_info == 'i':
                         break
 
-                episodes = anime.ep
                 anime.load_episodes(tokenAnilist) if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
 
                 if anime.ep != 0:
@@ -627,7 +631,7 @@ def main():
                 if not lista:
                     ep_iniziale, ep_finale = scegliEpisodi()
             else:
-                ep_iniziale = episodes + 1
+                ep_iniziale = anime.ep_corrente + 1
                 ep_finale = ep_iniziale
                 if ep_finale > anime.ep:
                     my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
