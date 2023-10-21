@@ -118,7 +118,7 @@ if nome_os == "Linux":
     if "com.termux" in os.popen("type -p python3").read().strip():
         nome_os = "Android"
 
-def my_print(text: str, format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
+def my_print(text: str = "", format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
     """
     Stampa il testo con il formato, colore e lo sfondo specificato.
 

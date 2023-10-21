@@ -504,6 +504,39 @@ def getConfig() -> tuple[bool, str, bool, bool, int]:
 
     return mpv, tokenAnilist, ratingAnilist, preferitoAnilist, user_id
 
+def reloadCrono(cronologia: list[Anime]):
+    """
+    Aggiorna la cronologia degli anime con le ultime uscite disponibili e la ristampa.
+
+    Questa funzione esamina ciascun anime nella lista `animelist` e verifica se sono disponibili nuove uscite.
+    Se trova nuove uscite per un anime, ne aggiorna lo stato.
+
+    Args:
+        cronologia (list[anime]): Una lista Anime in cronologia.
+
+    """
+    if 0 not in [anime.status for anime in cronologia]:
+        return
+    
+    my_print("Ricerco le nuove uscite...", color="giallo")
+    ultime_uscite = latest(nome_os)
+    my_print(end="", cls=True)
+                
+    for i, a in reversed(list(enumerate(cronologia))):
+        colore = "rosso"
+        if a.status == 1 or a.ep_corrente < a.ep:
+            colore = "verde"
+        else:    
+            for anime_latest in ultime_uscite:
+                if a.name == anime_latest.name and a.ep_corrente < anime_latest.ep:
+                    log[i][5] = anime_latest.ep
+                    colore = "verde"
+                    break
+                
+        my_print(f"{i + 1} ", color=colore, end=" ")
+        my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
+        
+    my_print("Scegli un anime\n> ", end=" ", color="magenta")
 
 def main():
     global log
@@ -565,15 +598,15 @@ def main():
 
     while True:
         try:
-            if not cronologia:
-                animelist = latest(nome_os, args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
-            else:
+            if cronologia:
                 animelist = getCronologia()
-                if 0 in [anime.status for anime in animelist]:
-                    my_print("", end="", cls=True)
-                    my_print("Ricerco le nuove uscite...", color="giallo")
-                    ultime_uscite = latest(nome_os)
-
+            elif lista:
+                animelist = latest(nome_os, args.lista)
+            elif offline:
+                animelist = animeScaricati(downloadPath())
+            else:
+                animelist = RicercaAnime()
+                
             while True:
                 my_print("", end="", cls=True)
                 # stampo i nomi degli anime
@@ -583,11 +616,6 @@ def main():
                         colore = "rosso"
                         if a.status == 1 or a.ep_corrente < a.ep:
                             colore = "verde"
-                        else:    
-                            for anime_latest in ultime_uscite:
-                                if a.name == anime_latest.name and a.ep_corrente < anime_latest.ep:
-                                    colore = "verde"
-                                    break
                     
                     my_print(f"{i + 1} ", color=colore, end=" ")
                     if cronologia:
@@ -596,6 +624,9 @@ def main():
                        my_print(f"{a.name} [Ep {a.ep}]") 
                     else:
                         my_print(a.name)
+                if cronologia:
+                    thread = Thread(target=reloadCrono, args=[animelist])    
+                    thread.start()
 
                 def check_index(s: str):
                     if s.isdigit():
