@@ -12,13 +12,14 @@ class Anime:
     Attributes:
         name (str): il nome dell'anime.
         url (str): l'URL della pagina dell'anime su AnimeWorld.
-        ep (int): il numero di episodi dell'anime.
+        ep (int):
         ep_totali (str): il numero reale di episodi totali dell'anime.
     """ 
 
     def __init__(self, name, url, ep=0, ep_totali="") -> None:
         self.name = name
         self.url = url
+        self.ep_corrente = ep
         self.ep = ep
         self.ep_totali = ep_totali
 
@@ -117,7 +118,7 @@ if nome_os == "Linux":
     if "com.termux" in os.popen("type -p python3").read().strip():
         nome_os = "Android"
 
-def my_print(text: str, format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
+def my_print(text: str = "", format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
     """
     Stampa il testo con il formato, colore e lo sfondo specificato.
 
@@ -192,12 +193,11 @@ def search(input: str, nome_os: str) -> list[Anime]:
 
     return animes
 
-def latest(nome_os: str ,filter = "all") -> list[Anime]:
+def latest(filter = "all") -> list[Anime]:
     """
     Restituisce le ultime uscite anime su AnimeWorld.
 
     Args:
-        nome_os (str): il nome del sistema operativo in uso.
         filter (str, optional): filtra i risultati per versione dubbed o subbed.
 
     Returns:

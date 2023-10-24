@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import argparse
 import warnings
 import subprocess
@@ -237,8 +236,8 @@ def addToCronologia(ep: int):
     """
     Viene aggiunta alla cronologia locale il nome del video,
     il numero dell'ultimo episodio visualizzato,
-    il link di AnimeWorld relativo all'anime
-    e il numero reale di episodi totali della serie.
+    il link di AnimeWorld relativo all'anime, 
+    il numero reale di episodi totali della serie e lo stato dell'anime.
     La cronologia viene salvata su un file csv nella stessa 
     directory dello script. Se il file non esiste viene creato.
 
@@ -255,8 +254,10 @@ def addToCronologia(ep: int):
                 #sovrascrivo la riga   
                 log[i][1] = ep
                 log[i][2] = anime.url
+                log[i][3] = anime.ep_totali
+                log[i][4] = anime.status
+                log[i][5] = anime.ep
                 temp = log.pop(i)
-                temp[-1] = anime.ep_totali
                 #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
                 if anime.status == 0 and ep == anime.ep:
                     log.insert(len(log), temp)
@@ -266,9 +267,9 @@ def addToCronologia(ep: int):
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
         if anime.status == 0 and ep == anime.ep:
-            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali])
+            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status])
         else:
-            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali]) 
+            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status]) 
 
 
 def updateAnilist(tokenAnilist: str, ratingAnilist: bool, preferitoAnilist: bool,  ep: int, voto_anilist: str):
@@ -371,28 +372,33 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, tokenAnilist: str, r
             updateAnilist(tokenAnilist, ratingAnilist, preferitoAnilist, ep, voto_anilist)
 
 
-def getCronologia() -> tuple[list, list]:
+def getCronologia() -> list[Anime]:
     """
     Prende i dati dalla cronologia.
 
     Returns:
-        tuple[list, list]: una tupla con la lista degli anime trovati e
-        la lista degli ultimi episodi visualizzati.
+        list[Anime]: la lista degli anime trovati 
 
     """
-    episodi = []
     animes = []
     for riga in log:
-        if len(riga) == 3:
+        if len(riga) < 4:
             riga.append("??")
-        episodi.append(riga[1])
-        animes.append(Anime(riga[0], riga[2], riga[1], riga[3]))
+        if len(riga) < 5:
+            riga.append(0)
+        if len(riga) < 6:
+            riga.append(riga[1])    
+        
+        a = Anime(name=riga[0], url=riga[2], ep=int(riga[5]), ep_totali=riga[3])
+        a.ep_corrente = int(riga[1])
+        a.status = int(riga[4])
+        animes.append(a)
 
     #se il file esiste ma non contiene dati stampo un messaggio di errore
     if len(animes) == 0:
         my_print("Cronologia inesistente!", color='rosso')
         safeExit()
-    return animes, episodi
+    return animes
 
 
 def setupConfig() -> None:
@@ -498,6 +504,39 @@ def getConfig() -> tuple[bool, str, bool, bool, int]:
 
     return mpv, tokenAnilist, ratingAnilist, preferitoAnilist, user_id
 
+def reloadCrono(cronologia: list[Anime]):
+    """
+    Aggiorna la cronologia degli anime con le ultime uscite disponibili e la ristampa.
+
+    Questa funzione esamina ciascun anime nella lista `animelist` e verifica se sono disponibili nuove uscite.
+    Se trova nuove uscite per un anime, ne aggiorna lo stato.
+
+    Args:
+        cronologia (list[anime]): Una lista Anime in cronologia.
+
+    """
+    if 0 not in [anime.status for anime in cronologia]:
+        return
+    
+    my_print("Ricerco le nuove uscite...", color="giallo")
+    ultime_uscite = latest()
+    my_print(end="", cls=True)
+                
+    for i, a in reversed(list(enumerate(cronologia))):
+        colore = "rosso"
+        if a.status == 1 or a.ep_corrente < a.ep:
+            colore = "verde"
+        else:    
+            for anime_latest in ultime_uscite:
+                if a.name == anime_latest.name and a.ep_corrente < anime_latest.ep:
+                    log[i][5] = anime_latest.ep
+                    colore = "verde"
+                    break
+                
+        my_print(f"{i + 1} ", color=colore, end=" ")
+        my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
+        
+    my_print("Scegli un anime\n> ", end=" ", color="magenta")
 
 def main():
     global log
@@ -559,22 +598,35 @@ def main():
 
     while True:
         try:
-            if not cronologia:
-                animelist = latest(nome_os, args.lista) if lista else animeScaricati(downloadPath()) if offline else RicercaAnime()
+            if cronologia:
+                animelist = getCronologia()
+            elif lista:
+                animelist = latest(args.lista)
+            elif offline:
+                animelist = animeScaricati(downloadPath())
             else:
-                animelist, episodi = getCronologia()
-
+                animelist = RicercaAnime()
+                
             while True:
                 my_print("", end="", cls=True)
                 # stampo i nomi degli anime
+                colore = "verde"
                 for i, a in reversed(list(enumerate(animelist))):
-                    my_print(f"{i + 1} ", color="verde", end=" ")
                     if cronologia:
-                        my_print(f"{a.name} [Ep {a.ep}/{a.ep_totali}]")
+                        colore = "rosso"
+                        if a.status == 1 or a.ep_corrente < a.ep:
+                            colore = "verde"
+                    
+                    my_print(f"{i + 1} ", color=colore, end=" ")
+                    if cronologia:
+                        my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
                     elif lista:
                        my_print(f"{a.name} [Ep {a.ep}]") 
                     else:
                         my_print(a.name)
+                if cronologia:
+                    thread = Thread(target=reloadCrono, args=[animelist])    
+                    thread.start()
 
                 def check_index(s: str):
                     if s.isdigit():
@@ -594,6 +646,7 @@ def main():
                     scelta_info = anime.getAnimeInfo()
                     if scelta_info == 'i':
                         break
+
                 anime.load_episodes(tokenAnilist) if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
 
                 if anime.ep != 0:
@@ -601,7 +654,7 @@ def main():
 
                 # se l'anime non ha episodi non può essere selezionato
                 my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
-                time.sleep(1)
+                sleep(1)
             #se ho l'args -i e ho scelto di tornare indietro, faccio una continue sul ciclo while True
             if scelta_info == 'i':
                 continue
@@ -609,7 +662,7 @@ def main():
                 if not lista:
                     ep_iniziale, ep_finale = scegliEpisodi()
             else:
-                ep_iniziale = int(episodi[scelta]) + 1
+                ep_iniziale = anime.ep_corrente + 1
                 ep_finale = ep_iniziale
                 if ep_finale > anime.ep:
                     my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
