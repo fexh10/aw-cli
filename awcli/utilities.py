@@ -207,6 +207,7 @@ def latest(filter = "all") -> list[Anime]:
     match filter[0]:
         case 's': data_name = "sub"
         case 'd': data_name = "dub"
+        case 't': data_name = "trending"
         case  _ : data_name = "all"
 
     bs = BeautifulSoup(requests.get(_url, headers=headers).text, "lxml")
