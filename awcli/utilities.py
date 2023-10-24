@@ -193,12 +193,11 @@ def search(input: str, nome_os: str) -> list[Anime]:
 
     return animes
 
-def latest(nome_os: str ,filter = "all") -> list[Anime]:
+def latest(filter = "all") -> list[Anime]:
     """
     Restituisce le ultime uscite anime su AnimeWorld.
 
     Args:
-        nome_os (str): il nome del sistema operativo in uso.
         filter (str, optional): filtra i risultati per versione dubbed o subbed.
 
     Returns:

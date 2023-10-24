@@ -519,7 +519,7 @@ def reloadCrono(cronologia: list[Anime]):
         return
     
     my_print("Ricerco le nuove uscite...", color="giallo")
-    ultime_uscite = latest(nome_os)
+    ultime_uscite = latest()
     my_print(end="", cls=True)
                 
     for i, a in reversed(list(enumerate(cronologia))):
@@ -601,7 +601,7 @@ def main():
             if cronologia:
                 animelist = getCronologia()
             elif lista:
-                animelist = latest(nome_os, args.lista)
+                animelist = latest(args.lista)
             elif offline:
                 animelist = animeScaricati(downloadPath())
             else:
