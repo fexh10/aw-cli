@@ -267,9 +267,9 @@ def addToCronologia(ep: int):
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
         if anime.status == 0 and ep == anime.ep:
-            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status])
+            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep])
         else:
-            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status]) 
+            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep]) 
 
 
 def updateAnilist(ratingAnilist: bool, preferitoAnilist: bool,  ep: int, voto_anilist: str):
