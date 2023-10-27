@@ -23,17 +23,17 @@ class Anime:
         self.ep = ep
         self.ep_totali = ep_totali
 
-    def load_episodes(self, tokenAnilist) -> None:
+    def load_episodes(self) -> None:
         """
         Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati
         """
 
         try:
-            res = episodes(self.url, tokenAnilist)
+            res = episodes(self.url)
         except IndexError:
             my_print("Il link è stato cambiato", color="rosso", end="\n")
             self.url = search(self.name, nome_os)[0].url
-            res = episodes(self.url, tokenAnilist)
+            res = episodes(self.url)
             
         self.url_episodi, self.status, self.id_anilist, self.ep_totali = res
         self.ep = len(self.url_episodi)
@@ -112,6 +112,7 @@ class Anime:
         return printAnimeInfo(dt, dd, trama)
     
 _url = "https://www.animeworld.so"
+tokenAnilist = None
 # controllo il tipo del dispositivo
 nome_os = system()
 if nome_os == "Linux":
@@ -247,14 +248,13 @@ def download(url_ep: str) -> str:
     links = bs.find(id="download").find_all("a")
     return links[1].get('href')
 
-def episodes(url_ep: str, tokenAnilist: str) -> tuple[str, int, int, str]:
+def episodes(url_ep: str) -> tuple[str, int, int, str]:
     """
     Cerca i link degli episodi dell'anime nella pagina selezionata e 
     controlla se è ancora in corso.
 
     Args:
         url_ep (str): indica la pagina dell'episodio.
-        tokenAnilist (str): il token di accesso ad AniList.
 
     Returns:
         tuple[str, int, int, str]: la lista con gli URL dei vari episodi trovati, 
@@ -331,13 +331,12 @@ def printAnimeInfo(dt: list, dd: list, trama: str) -> str:
     my_print("(i) indietro", color='magenta', end="")
     return my_input("", check_string)
 
-def anilistApi(tokenAnilist: str, id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:
+def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:
     """
     Collegamento alle API di AniList per aggiornare
     automaticamente gli anime.
 
     Args:
-        tokenAnilist (str): il token di accesso ad AniList.
         id_anilist (int): l'id dell'anime su AniList.
         ep (int): il numero dell'episodio visualizzato.
         voto (float): il voto dell'anime.
@@ -390,7 +389,7 @@ def getAnilistUserId(tokenAnilist: str) -> int:
     l'id dell'utente.
 
     Args:
-        tokenAnilist (str): il token di accesso ad AniList.
+        tokenAnilist: il token AniList dell'utente.
 
     Returns:
         int: l'id dell'utente.
@@ -410,13 +409,43 @@ def getAnilistUserId(tokenAnilist: str) -> int:
 
     return user_id
 
-def getAnimePrivateRating(tokenAnilist: str, user_id: int, id_anime: int) -> str:
+def getConfig() -> tuple[bool, bool, bool, int]:
+    """
+    Prende le impostazioni scelte dall'utente
+    dal file di configurazione.
+
+    Returns:
+        tuple[bool, bool, bool, int]: mpv ritorna True se è stato scelto mpv, altrimenti false se è VLC.
+        True  se l'utente ha scelto di votare gli anime, altrimenti False. preferitoAnilist ritorna
+        True se l'utente ha scelto di chiedere se l'anime deve essere aggiunto tra i preferiti,
+        altrimenti False. user_id ritorna l'id dell'utente.  
+    """
+
+    global tokenAnilist
+    config = f"{os.path.dirname(__file__)}/aw.config"
+
+    with open(config, 'r+') as config_file:
+        lines = config_file.readlines()
+        mpv = True if lines[0].strip() == "Player: MPV" else False
+        tokenAnilist = lines[1].strip()
+        ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
+        preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
+        if len(lines) == 4 and ratingAnilist == False:
+            user_id = 0
+        elif len(lines) == 4 and ratingAnilist == True:
+            user_id = getAnilistUserId()
+            config_file.write(f"{user_id}")
+        else:
+            user_id = lines[4]
+
+    return mpv, ratingAnilist, preferitoAnilist, user_id
+
+def getAnimePrivateRating(user_id: int, id_anime: int) -> str:
     """
     Collegamento alle API di AniList per trovare
     il voto dato all'anime dall'utente.
 
     Args:
-        tokenAnilist (str): il token di accesso ad AniList.
         user_id (int): l'id dell'utente su AniList.
         id_anime (int): l'id dell'anime su Anilist.
 
