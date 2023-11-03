@@ -14,7 +14,6 @@ installRequires = [
 if os.name == 'nt':
     installRequires.append("psutil")
     installRequires.append("pywinauto")
-    installRequires.append("python-mpv")
 
 setup(
     name="aw-cli",

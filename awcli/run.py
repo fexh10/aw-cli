@@ -165,8 +165,13 @@ def isRunning(PROCNAME: str):
 
 
 def winOpen(processo, comando):
+    """
+    Viene eseguito il comando per aprire un'applicazione
+    su Windows.
+    """
     subprocess.Popen(['powershell.exe', comando])
     isRunning(processo)
+
 
 def openSyncplay(url_ep: str, nome_video: str):
     """
@@ -216,10 +221,13 @@ def openVLC(url_server: str, nome_video: str):
 
     if nome_os == "Android":
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
-    elif nome_os == "Windows":        
-        winOpen("vlc.exe", f"""& '{player_path}' "{url_server}" --fullscreen --meta-title="{nome_video}" """)
-    elif nome_os == 'Linux':
-        os.system(f'''{player_path} "{url_server}" --meta-title "{nome_video}" --fullscreen &>/dev/null''')
+        return
+    
+    comando = f''''{player_path}' "{url_server}" --meta-title "{nome_video}" --fullscreen'''
+    if nome_os == "Windows":        
+        winOpen("vlc.exe", f"""& {comando} """)
+    else:
+        os.system(f'''{comando} &>/dev/null''')
 
 
 def addToCronologia(ep: int):
@@ -408,9 +416,10 @@ def setupConfig() -> None:
 
         def check_index(s: str):
             if s == "1":
-                return "Player: MPV"
+                return "mpv" if nome_os == "Linux" else my_input("Inserisci il path del player")
             elif s == "2":
-                return "Player: VLC"
+                return "vlc" if nome_os == "Linux" else my_input("Inserisci il path del player")
+
 
         player = my_input("Scegli un player predefinito", check_index)
 
@@ -495,6 +504,7 @@ def reloadCrono(cronologia: list[Anime]):
         
     my_print("Scegli un anime\n> ", end=" ", color="magenta")
 
+
 def main():
     global log
     global syncpl
@@ -505,6 +515,7 @@ def main():
     global info
     global privato
     global anime
+    global player_path
     global openPlayer
 
     try:
@@ -531,7 +542,18 @@ def main():
     if  '-l' in sys.argv and args.lista == None:
         args.lista = 'a'
     
-    mpv, ratingAnilist, preferitoAnilist, user_id = getConfig()
+    #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
+    if not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
+        setupConfig()
+
+    mpv, player_path, ratingAnilist, preferitoAnilist, user_id = getConfig()
+    #se la prima riga del config corrisponde a una versione vecchia, faccio rifare il config
+    if player_path == "Player: MPV" or player_path == "Player: VLC":
+        my_print("Ci sono stati dei cambiamenti nella configurazione...", color="giallo")
+        sleep(1)
+        setupConfig()
+        mpv, player_path, ratingAnilist, preferitoAnilist, user_id = getConfig()
+
    
     openPlayer = openMPV if mpv else openVLC
 
@@ -555,10 +577,6 @@ def main():
         offline = True
     elif args.cronologia:
         cronologia = True
-
-    #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
-    if not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
-        setupConfig()
 
     while True:
         try:
@@ -714,7 +732,7 @@ info = False
 privato = False
 versione = "1.7c1"
 log = []
-player_path = "mpv"
+player_path = ""
 openPlayer = None
 
 anime = Anime("", "")

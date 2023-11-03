@@ -409,16 +409,19 @@ def getAnilistUserId(tokenAnilist: str) -> int:
 
     return user_id
 
-def getConfig() -> tuple[bool, bool, bool, int]:
+def getConfig() -> tuple[bool, str, bool, bool, int]:
     """
     Prende le impostazioni scelte dall'utente
     dal file di configurazione.
 
     Returns:
-        tuple[bool, bool, bool, int]: mpv ritorna True se è stato scelto mpv, altrimenti false se è VLC.
-        True  se l'utente ha scelto di votare gli anime, altrimenti False. preferitoAnilist ritorna
-        True se l'utente ha scelto di chiedere se l'anime deve essere aggiunto tra i preferiti,
-        altrimenti False. user_id ritorna l'id dell'utente.  
+        tuple[bool, str, bool, bool, int]: 
+        mpv restituisce True se è stato scelto mpv, altrimenti false se è VLC.
+        player_path restituisce il path del player predefinito.
+        ratingAnilist restituisce True  se l'utente ha scelto di votare gli anime, altrimenti False. preferitoAnilist ritorna
+        preferitoAnilist restituisce True se l'utente ha scelto di chiedere se l'anime deve essere aggiunto tra i preferiti,
+        altrimenti False.
+        user_id ritorna l'id dell'utente.  
     """
 
     global tokenAnilist
@@ -426,7 +429,10 @@ def getConfig() -> tuple[bool, bool, bool, int]:
 
     with open(config, 'r+') as config_file:
         lines = config_file.readlines()
-        mpv = True if lines[0].strip() == "Player: MPV" else False
+
+        mpv = True if "mpv" in lines[0].strip() else False
+        player_path = lines[0].strip()
+
         tokenAnilist = lines[1].strip()
         ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
         preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
@@ -438,7 +444,7 @@ def getConfig() -> tuple[bool, bool, bool, int]:
         else:
             user_id = lines[4]
 
-    return mpv, ratingAnilist, preferitoAnilist, user_id
+    return mpv, player_path, ratingAnilist, preferitoAnilist, user_id
 
 def getAnimePrivateRating(user_id: int, id_anime: int) -> str:
     """
