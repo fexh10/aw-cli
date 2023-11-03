@@ -438,6 +438,9 @@ def setupConfig() -> None:
                 os.system("xdg-open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
             elif nome_os == "Windows":
                 subprocess.Popen(['powershell.exe', "explorer https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"])
+            else: 
+                os.system("open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
+
             #inserimento token
             global tokenAnilist
             tokenAnilist = my_input("Inserire il token di AniList", cls=True)
@@ -538,7 +541,9 @@ def main():
     parser.add_argument('-v', '--versione', action='store_true', dest='versione', help="stampa la versione del programma")
     
     args = parser.parse_args()
-
+    
+    if args.avvia_config:
+        setupConfig()
     if  '-l' in sys.argv and args.lista == None:
         args.lista = 'a'
     
@@ -560,8 +565,6 @@ def main():
 
     if nome_os != "Android" and args.syncpl:
         openPlayer = openSyncplay
-    if args.avvia_config:
-        setupConfig()
     if args.info:
         info = True
     if args.download:

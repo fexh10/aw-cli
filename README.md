@@ -20,7 +20,6 @@ https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-
 ## Installazione
 
 Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html). <br /> 
-Se si utilizza Windows e MPV, occorrerà scaricare inoltre "mpv-2.dll" (scaricabile da questo [link](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/)) e aggiungerlo al path.
 
 È possibile installare aw-cli da pip:
 ```
@@ -53,7 +52,7 @@ options:
                         dub, t = tendenze. Default 'a'
   -o, --offline         apri gli episodi scaricati precedentemente direttamente dal terminale
   -p, --privato         guarda un episodio senza che si aggiorni la cronologia o AniList
-  -s, --syncplay        usa syncplay per guardare un anime insieme ai tuoi amici
+  -s, --syncplay        usa syncplay per guardare un anime insieme ai tuoi amici (solo MPV)
   -v, --versione        stampa la versione del programma
                                                              
 ```
