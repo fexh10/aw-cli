@@ -164,7 +164,11 @@ def isRunning(PROCNAME: str):
     app.wait_for_process_exit(timeout=86400)
 
 
-def open_Syncplay(url_ep: str, nome_video: str):
+def winOpen(processo, comando):
+    subprocess.Popen(['powershell.exe', comando])
+    isRunning(processo)
+
+def openSyncplay(url_ep: str, nome_video: str):
     """
     Avvia Syncplay.
 
@@ -174,10 +178,8 @@ def open_Syncplay(url_ep: str, nome_video: str):
     """
     if os.name == "nt":
         #avvio syncplay tramite l'exe e passo gli argomenti necessari
-        comando = f"& 'C:\\Program Files (x86)\\Syncplay.\\Syncplay.exe' '{url_ep}' media-title='{nome_video}'"
-        subprocess.Popen(['powershell.exe', comando])
         warnings.filterwarnings("ignore", category=UserWarning)
-        isRunning("Syncplay.exe")
+        winOpen("Syncplay.exe", f"& 'C:\\Program Files (x86)\\Syncplay.\\Syncplay.exe' '{url_ep}' media-title='{nome_video}'")
     else:
         os.system(f'''syncplay \"{url_ep}" media-title="{nome_video}" --language it &>/dev/null''')
 
@@ -191,26 +193,16 @@ def openMPV(url_server: str, nome_video: str):
         nome_video (str): il nome del video.
     """
 
-    if syncpl:
-        open_Syncplay(url_server, nome_video)
-    elif (nome_os == "Android"):
-        # apro il player utilizzando bash e riproduco un video
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
-    elif nome_os == "Windows":
-        import mpv
-        
-        player = mpv.MPV(input_default_bindings=True,input_vo_keyboard=True, osc=True)
 
-        # avvio il player
-        player.fullscreen = True
-        player.playlist_pos = 0
-        player["keep-open"] = True
-        player["media-title"] = nome_video
-        player.play(url_server)
-        player.wait_for_shutdown()
-        player.terminate()
-    elif nome_os == "Linux":
-        os.system(f'''mpv "{url_server}" --force-media-title="{nome_video}" --fullscreen --keep-open &>/dev/null''')
+    if (nome_os == "Android"):
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
+        return
+    
+    comando = f"""'{player_path}' "{url_server}" --force-media-title="{nome_video}" --fullscreen --keep-open"""
+    if nome_os == "Windows":
+        winOpen("mpv.exe", f"""& {comando}""")
+    else:
+        os.system(f'''{comando} &>/dev/null''')
 
 
 def openVLC(url_server: str, nome_video: str):
@@ -222,14 +214,12 @@ def openVLC(url_server: str, nome_video: str):
         nome_video (str): il nome del video.
     """
 
-    if nome_os == 'Linux':
-        os.system(f'''vlc "{url_server}" --meta-title "{nome_video}" --fullscreen &>/dev/null''')
-    elif nome_os == "Windows":
-        comando = f"""& 'C:\\Program Files\\VideoLAN\\VLC\\vlc.exe' "{url_server}" --fullscreen --meta-title="{nome_video}" """
-        subprocess.Popen(['powershell.exe', comando])
-        isRunning("vlc.exe")
-    elif nome_os == "Android":
+    if nome_os == "Android":
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
+    elif nome_os == "Windows":        
+        winOpen("vlc.exe", f"""& '{player_path}' "{url_server}" --fullscreen --meta-title="{nome_video}" """)
+    elif nome_os == 'Linux':
+        os.system(f'''{player_path} "{url_server}" --meta-title "{nome_video}" --fullscreen &>/dev/null''')
 
 
 def addToCronologia(ep: int):
@@ -359,7 +349,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, ratingAnilist: bool,
                 future_rating = executor.submit(getAnimePrivateRating, user_id, anime.id_anilist)
                 voto_anilist = future_rating.result()
 
-        openMPV(url_server, nome_video) if mpv else openVLC(url_server, nome_video)
+        openPlayer(url_server, nome_video)
 
         #se non sono in modalità offline o privata aggiungo l'anime alla cronologia
         if not offline and not privato:
@@ -515,6 +505,7 @@ def main():
     global info
     global privato
     global anime
+    global openPlayer
 
     try:
         with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", encoding='utf-8') as file:
@@ -539,9 +530,14 @@ def main():
 
     if  '-l' in sys.argv and args.lista == None:
         args.lista = 'a'
+    
+    mpv, ratingAnilist, preferitoAnilist, user_id = getConfig()
+   
+    openPlayer = openMPV if mpv else openVLC
+
 
     if nome_os != "Android" and args.syncpl:
-        syncpl = True
+        openPlayer = openSyncplay
     if args.avvia_config:
         setupConfig()
     if args.info:
@@ -563,7 +559,6 @@ def main():
     #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
     if not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
         setupConfig()
-    mpv, ratingAnilist, preferitoAnilist, user_id = getConfig()
 
     while True:
         try:
@@ -640,9 +635,8 @@ def main():
                     else:
                         sleep(1)
                         continue
-            # se syncplay è stato scelto allora non chiedo
-            # di fare il download ed esco dalla funzione
-            if not syncpl and downl:
+            
+            if downl:
                 path = f"{downloadPath()}/{anime.name}"
                 for ep in range(ep_iniziale, ep_finale+1):
                     scaricaEpisodio(ep, path)
@@ -712,7 +706,6 @@ def main():
             safeExit()
 
 #args
-syncpl = False
 downl = False
 lista = False
 offline = False
@@ -721,6 +714,8 @@ info = False
 privato = False
 versione = "1.7c1"
 log = []
+player_path = "mpv"
+openPlayer = None
 
 anime = Anime("", "")
 
