@@ -181,12 +181,17 @@ def openSyncplay(url_ep: str, nome_video: str):
         url_ep (str): l'URL dell'episodio da riprodurre.
         nome_video (str): il nome dell'episodio.
     """
-    if os.name == "nt":
-        #avvio syncplay tramite l'exe e passo gli argomenti necessari
+
+    if syncplay_path == "Syncplay: None":
+        my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
+        safeExit()
+
+    comando = f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}"'''
+    if nome_os == "Windows":
         warnings.filterwarnings("ignore", category=UserWarning)
-        winOpen("Syncplay.exe", f"& 'C:\\Program Files (x86)\\Syncplay.\\Syncplay.exe' '{url_ep}' media-title='{nome_video}'")
+        winOpen("Syncplay.exe", f"& {comando}")
     else:
-        os.system(f'''syncplay \"{url_ep}" media-title="{nome_video}" --language it &>/dev/null''')
+        os.system(f"{comando} --language it &>/dev/null")
 
 
 def openMPV(url_server: str, nome_video: str):
@@ -402,8 +407,9 @@ def setupConfig() -> None:
     Crea un file di configurazione chiamato "aw.config"
     nella stessa directory dello script.
     Le informazioni riportate saranno scelte dall'utente.
-    Sarà possibile scegliere il Player predefinito
-    e se collegare il proprio profilo AniList. 
+    Sarà possibile scegliere il Player predefinito, 
+    se collegare il proprio profilo AniList e 
+    se inserire il path di syncplay.  
     """
     try:
         #player predefinito
@@ -461,6 +467,13 @@ def setupConfig() -> None:
             ratingAnilist = "ratingAnilist: False"
             preferitoAnilist = "preferitoAnilist: False"
             user_id = 0
+
+        if nome_os == "Linux":
+            syncplay= "syncplay"
+        else:
+            syncplay = my_input("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)")
+            if syncplay == "":
+                syncplay = "Syncplay: None"
     except KeyboardInterrupt:
         safeExit()
     #creo il file
@@ -470,7 +483,8 @@ def setupConfig() -> None:
         config_file.write(f"{tokenAnilist}\n")
         config_file.write(f"{ratingAnilist}\n")
         config_file.write(f"{preferitoAnilist}\n")
-        config_file.write(f"{user_id}")
+        config_file.write(f"{user_id}\n")
+        config_file.write(f"{syncplay}")
 
 
 def reloadCrono(cronologia: list[Anime]):
@@ -519,6 +533,7 @@ def main():
     global privato
     global anime
     global player_path
+    global syncplay_path
     global openPlayer
 
     try:
@@ -551,13 +566,13 @@ def main():
     if not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
         setupConfig()
 
-    mpv, player_path, ratingAnilist, preferitoAnilist, user_id = getConfig()
+    mpv, player_path, ratingAnilist, preferitoAnilist, user_id, syncplay_path = getConfig()
     #se la prima riga del config corrisponde a una versione vecchia, faccio rifare il config
-    if player_path == "Player: MPV" or player_path == "Player: VLC":
+    if player_path == "Player: MPV" or player_path == "Player: VLC" or syncplay_path == None:
         my_print("Ci sono stati dei cambiamenti nella configurazione...", color="giallo")
         sleep(1)
         setupConfig()
-        mpv, player_path, ratingAnilist, preferitoAnilist, user_id = getConfig()
+        mpv, player_path, ratingAnilist, preferitoAnilist, user_id, syncplay_path = getConfig()
 
    
     openPlayer = openMPV if mpv else openVLC
@@ -736,6 +751,7 @@ privato = False
 versione = "1.7c1"
 log = []
 player_path = ""
+syncplay_path = ""
 openPlayer = None
 
 anime = Anime("", "")

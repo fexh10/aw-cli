@@ -409,7 +409,7 @@ def getAnilistUserId(tokenAnilist: str) -> int:
 
     return user_id
 
-def getConfig() -> tuple[bool, str, bool, bool, int]:
+def getConfig() -> tuple[bool, str, bool, bool, int, str]:
     """
     Prende le impostazioni scelte dall'utente
     dal file di configurazione.
@@ -421,7 +421,8 @@ def getConfig() -> tuple[bool, str, bool, bool, int]:
         ratingAnilist restituisce True  se l'utente ha scelto di votare gli anime, altrimenti False. preferitoAnilist ritorna
         preferitoAnilist restituisce True se l'utente ha scelto di chiedere se l'anime deve essere aggiunto tra i preferiti,
         altrimenti False.
-        user_id ritorna l'id dell'utente.  
+        user_id restituisce l'id dell'utente. 
+        syncplay_path restituisce il path di syncplay.
     """
 
     global tokenAnilist
@@ -443,8 +444,12 @@ def getConfig() -> tuple[bool, str, bool, bool, int]:
             config_file.write(f"{user_id}")
         else:
             user_id = lines[4]
+        if len(lines) == 5:
+            syncplay_path = None
+        else:
+            syncplay_path = lines[5]
 
-    return mpv, player_path, ratingAnilist, preferitoAnilist, user_id
+    return mpv, player_path, ratingAnilist, preferitoAnilist, user_id, syncplay_path
 
 def getAnimePrivateRating(user_id: int, id_anime: int) -> str:
     """
