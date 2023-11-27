@@ -30,7 +30,7 @@ def RicercaAnime() -> list[Anime]:
     def check_search(s: str):
         if s == "exit":
             safeExit() 
-        result = search(s, nome_os)
+        result = search(s)
         if len(result) != 0:
             return result
 
@@ -613,11 +613,11 @@ def main():
                     ep_finale = ep_iniziale
                 scelta_info = ""
                 if info:
-                    scelta_info = anime.getAnimeInfo()
+                    scelta_info = getAnimeInfo(anime)
                     if scelta_info == 'i':
                         break
 
-                anime.load_episodes() if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
+                anime.load_episodes() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
                 if anime.ep != 0:
                     break

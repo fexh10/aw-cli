@@ -4,113 +4,8 @@ from platform import system
 from time import sleep
 from bs4 import BeautifulSoup
 import re
-
-class Anime:
-    """
-    Classe che rappresenta un anime.
-
-    Attributes:
-        name (str): il nome dell'anime.
-        url (str): l'URL della pagina dell'anime su AnimeWorld.
-        ep (int):
-        ep_totali (str): il numero reale di episodi totali dell'anime.
-    """ 
-
-    def __init__(self, name, url, ep=0, ep_totali="") -> None:
-        self.name = name
-        self.url = url
-        self.ep_corrente = ep
-        self.ep = ep
-        self.ep_totali = ep_totali
-
-    def load_episodes(self) -> None:
-        """
-        Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati
-        """
-
-        try:
-            res = episodes(self.url)
-        except IndexError:
-            my_print("Il link è stato cambiato", color="rosso", end="\n")
-            self.url = search(self.name, nome_os)[0].url
-            res = episodes(self.url)
-            
-        self.url_episodi, self.status, self.id_anilist, self.ep_totali = res
-        self.ep = len(self.url_episodi)
-        self.ep_ini = 1
-
-    def get_episodio(self, ep: int) -> str:
-        """
-        Restituisce il link dell'episodio specificato.
-
-        Args:
-            ep (int): il numero dell'episodio.
-
-        Returns:
-            str: il link dell'episodio.
-        """
-
-        ep -= 1
-        if ep in range(self.ep):
-            return download(self.url_episodi[ep])
-        
-    def ep_name(self, ep: int) -> str:
-        """
-        Restituisce il nome dell'episodio specificato.
-
-        Args:
-            ep (int): il numero dell'episodio.
-
-        Returns:
-            str: il nome dell'episodio.
-        """
-        return f"{self.name} Ep. {ep}"
-
-    def downloaded_episodes(self, path: str) -> None:
-        """
-        Prende i nomi degli episodi scaricati in base all'anime scelto e
-        ne ricava il primo e l'ultimo episodio riproducibili.
-
-        Args:
-            path (str): il path dell'anime scelto dall'utente.
-        """
-        nomi_episodi = os.listdir(path)
-        togli = f"{self.name} Ep. "
-        if len(nomi_episodi) != 0:
-            temp = nomi_episodi[0].replace(togli, "")
-            minimo = int(temp.replace(".mp4", ""))
-            massimo = minimo
-
-            for stringa in nomi_episodi:
-                stringa = stringa.replace(togli, "")
-                stringa = int(stringa.replace(".mp4", ""))
-                if stringa < minimo:
-                    minimo = stringa
-                if stringa > massimo:
-                    massimo = stringa
-            self.ep = massimo 
-            self.ep_ini = minimo
-        else:
-            self.ep = 0
-            self.ep_ini = 0
-
-    def getAnimeInfo(self) -> str:
-        """
-        Prende le informazioni e la trama relative all'anime selezionato.
-
-        Returns:
-            str: la scelta dell'utente nel menu.
-        """
-
-        bs = BeautifulSoup(requests.get(self.url, headers=headers).text, "lxml")
-        row = bs.find(class_='info col-md-9').find(class_='row')
-        my_print(self.name, cls=True)
-        
-        dt = row.find_all("dt")
-        dd = row.find_all("dd")
-        trama = bs.find(class_='desc')
-        return printAnimeInfo(dt, dd, trama)
-    
+from awcli.anime import Anime
+   
 _url = "https://www.animeworld.so"
 tokenAnilist = None
 # controllo il tipo del dispositivo
@@ -161,7 +56,7 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             my_print("",end="", cls=True)
     return i
 
-def search(input: str, nome_os: str) -> list[Anime]:
+def search(input: str) -> list[Anime]:
     """
     Ricerca l'anime selezionato su AnimeWorld.
 
@@ -292,20 +187,51 @@ def episodes(url_ep: str) -> tuple[str, int, int, str]:
 
     return url_episodi, status, id_anilist, ep_totali
 
-def printAnimeInfo(dt: list, dd: list, trama: str) -> str:
-    """
-    Stampa a schermo le informazioni
-    e la trama relative all'anime selezioanto.
-    Chiede all'utente se guardare l'anime oppure tornare indietro.
 
-    Args:
-        dt (list): i campi "dt" della pagina che contengono le informazioni.
-        dd (list): i campi "dd" della pagina che contengono le informazioni.
-        trama (str): la trama dell'anime.
+def downloaded_episodes(anime: Anime, path: str) -> None:
+        """
+        Prende i nomi degli episodi scaricati in base all'anime scelto e
+        ne ricava il primo e l'ultimo episodio riproducibili.
+
+        Args:
+            path (str): il path dell'anime scelto dall'utente.
+        """
+        nomi_episodi = os.listdir(path)
+        togli = f"{anime.name} Ep. "
+        if len(nomi_episodi) != 0:
+            temp = nomi_episodi[0].replace(togli, "")
+            minimo = int(temp.replace(".mp4", ""))
+            massimo = minimo
+
+            for stringa in nomi_episodi:
+                stringa = stringa.replace(togli, "")
+                stringa = int(stringa.replace(".mp4", ""))
+                if stringa < minimo:
+                    minimo = stringa
+                if stringa > massimo:
+                    massimo = stringa
+            anime.ep = massimo 
+            anime.ep_ini = minimo
+        else:
+            anime.ep = 0
+            anime.ep_ini = 0
+
+
+def getAnimeInfo(anime: Anime) -> str:
+    """
+    Prende le informazioni e la trama relative all'anime selezionato.
 
     Returns:
         str: la scelta dell'utente nel menu.
     """
+
+    bs = BeautifulSoup(requests.get(anime.url, headers=headers).text, "lxml")
+    row = bs.find(class_='info col-md-9').find(class_='row')
+    my_print(anime.name, cls=True)
+    
+    dt = row.find_all("dt")
+    dd = row.find_all("dd")
+    trama = bs.find(class_='desc')
 
     #stampo dl e dt
     for i in range(len(dt)):
