@@ -7,7 +7,9 @@ import concurrent.futures
 from pySmartDL import SmartDL
 from pathlib import Path
 from threading import Thread
-from awcli.utilities import *  
+from awcli.utilities import * 
+import awcli.anilist as anilist
+
 
 if nome_os == "Windows":
     from windows import *
@@ -288,7 +290,7 @@ def updateAnilist(ratingAnilist: bool, preferitoAnilist: bool,  ep: int, voto_an
 
             preferiti = my_input("Mettere l'anime tra i preferiti? (s/N)", check_string)
     
-    thread = Thread(target=anilistApi, args=(anime.id_anilist, ep, voto, status_list, preferiti))
+    thread = Thread(target=anilist.anilistApi, args=(anime.id_anilist, ep, voto, status_list, preferiti))
     thread.start()
 
 
@@ -329,7 +331,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, ratingAnilist: bool, preferitoA
         if ep == anime.ep and anime.status == 1 and ratingAnilist == True and not offline and not privato:         
             #prendo il voto se presente
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                future_rating = executor.submit(getAnimePrivateRating, user_id, anime.id_anilist)
+                future_rating = executor.submit(anilist.getAnimePrivateRating, user_id, anime.id_anilist)
                 voto_anilist = future_rating.result()
 
         openPlayer(url_server, nome_video)
@@ -339,7 +341,7 @@ def openVideos(ep_iniziale: int, ep_finale: int, ratingAnilist: bool, preferitoA
             addToCronologia(ep)
 
         #update watchlist anilist se ho fatto l'accesso
-        if tokenAnilist != 'tokenAnilist: False' and not offline and not privato:
+        if anilist.tokenAnilist != 'tokenAnilist: False' and not offline and not privato:
             updateAnilist(ratingAnilist, preferitoAnilist, ep, voto_anilist)
 
 
@@ -407,9 +409,9 @@ def setupConfig() -> None:
             elif s == "n" or s == "":
                 return False
 
-        anilist = my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string)
+        anilistChoise = my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string)
 
-        if anilist:
+        if anilistChoise:
             if nome_os == "Linux" or nome_os == "Android":
                 os.system("xdg-open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
             elif nome_os == "Windows":
@@ -418,14 +420,13 @@ def setupConfig() -> None:
                 os.system("open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
 
             #inserimento token
-            global tokenAnilist
-            tokenAnilist = my_input("Inserire il token di AniList", cls=True)
+            anilist.tokenAnilist = my_input("Inserire il token di AniList", cls=True)
             #chiede se votare l'anime
             if my_input("Votare l'anime una volta completato? (s/N)", check_string):
                 ratingAnilist = "ratingAnilist: True "
                 #prendo l'id dell'utente tramite query
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(getAnilistUserId, tokenAnilist)
+                    future = executor.submit(anilist.getAnilistUserId)
                     user_id = future.result()
             else:
                 ratingAnilist = "ratingAnilist: False"
@@ -433,7 +434,7 @@ def setupConfig() -> None:
             preferitoAnilist = "preferitoAnilist: True" if my_input("Chiedere se mettere l'anime tra i preferiti una volta completato? (s/N)", check_string) else "preferitoAnilist: False"
 
         else:
-            tokenAnilist = "tokenAnilist: False"
+            anilist.tokenAnilist = "tokenAnilist: False"
             ratingAnilist = "ratingAnilist: False"
             preferitoAnilist = "preferitoAnilist: False"
             user_id = 0
@@ -450,7 +451,7 @@ def setupConfig() -> None:
     config = f"{os.path.dirname(__file__)}/aw.config"
     with open(config, 'w') as config_file:
         config_file.write(f"{player}\n")
-        config_file.write(f"{tokenAnilist}\n")
+        config_file.write(f"{anilist.tokenAnilist}\n")
         config_file.write(f"{ratingAnilist}\n")
         config_file.write(f"{preferitoAnilist}\n")
         config_file.write(f"{user_id}\n")

@@ -1,13 +1,13 @@
 import os
+import re
 import requests
 from platform import system
 from time import sleep
 from bs4 import BeautifulSoup
-import re
 from awcli.anime import Anime
+import awcli.anilist as anilist
    
 _url = "https://www.animeworld.so"
-tokenAnilist = None
 # controllo il tipo del dispositivo
 nome_os = system()
 if nome_os == "Linux":
@@ -180,7 +180,7 @@ def episodes(url_ep: str) -> tuple[str, int, int, str]:
     #cerco l'id di anilist
     id_anilist = 0
     try:
-        if tokenAnilist != 'tokenAnilist: False':
+        if anilist.tokenAnilist != 'tokenAnilist: False':
             id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
     except AttributeError:
         pass
@@ -257,83 +257,6 @@ def getAnimeInfo(anime: Anime) -> str:
     my_print("(i) indietro", color='magenta', end="")
     return my_input("", check_string)
 
-def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:
-    """
-    Collegamento alle API di AniList per aggiornare
-    automaticamente gli anime.
-
-    Args:
-        id_anilist (int): l'id dell'anime su AniList.
-        ep (int): il numero dell'episodio visualizzato.
-        voto (float): il voto dell'anime.
-        status_list (str): lo stato dell'anime per l'utente. Se è in corso verrà impostato su "CURRENT", se completato su "COMPLETED".
-        preferiti (bool) : True se l'utente ha scelto di mettere l'anime tra i preferiti, altrimenti False.
-    """
-
-    #query in base alla scelta del preferito
-    if not preferiti:
-        query = """
-        mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-            SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
-                status
-                progress
-                score
-            }
-        }
-        """
-    else:
-        query = """
-            mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-                SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
-                    status
-                    progress
-                    score
-                },
-                ToggleFavourite(animeId:$idAnime){
-                    anime {
-                        nodes {
-                            id
-                        }
-                    }
-                }
-            }
-            """
-
-    var = {
-        "idAnime" : id_anilist,
-        "status" : status_list,
-        "episodio" : ep,
-    }
-    if voto != 0:
-        var["score"] = voto
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
-
-def getAnilistUserId(tokenAnilist: str) -> int: 
-    """
-    Collegamento alle API di AniList per trovare
-    l'id dell'utente.
-
-    Args:
-        tokenAnilist: il token AniList dell'utente.
-
-    Returns:
-        int: l'id dell'utente.
-    """
-
-    query = """
-        query {
-            Viewer {
-                id
-            }
-        }
-    """
-
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query}) 
-    user_id = int(risposta.json()["data"]["Viewer"]["id"])
-
-    return user_id
 
 def getConfig() -> tuple[bool, str, bool, bool, int, str]:
     """
@@ -351,7 +274,6 @@ def getConfig() -> tuple[bool, str, bool, bool, int, str]:
         syncplay_path restituisce il path di syncplay.
     """
 
-    global tokenAnilist
     config = f"{os.path.dirname(__file__)}/aw.config"
 
     with open(config, 'r+') as config_file:
@@ -360,13 +282,13 @@ def getConfig() -> tuple[bool, str, bool, bool, int, str]:
         mpv = True if "mpv" in lines[0].strip() else False
         player_path = lines[0].strip()
 
-        tokenAnilist = lines[1].strip()
+        anilist.tokenAnilist = lines[1].strip()
         ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
         preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
         if len(lines) == 4 and ratingAnilist == False:
             user_id = 0
         elif len(lines) == 4 and ratingAnilist == True:
-            user_id = getAnilistUserId()
+            user_id = anilist.getAnilistUserId()
             config_file.write(f"{user_id}")
         else:
             user_id = lines[4]
@@ -377,37 +299,6 @@ def getConfig() -> tuple[bool, str, bool, bool, int, str]:
 
     return mpv, player_path, ratingAnilist, preferitoAnilist, user_id, syncplay_path
 
-def getAnimePrivateRating(user_id: int, id_anime: int) -> str:
-    """
-    Collegamento alle API di AniList per trovare
-    il voto dato all'anime dall'utente.
-
-    Args:
-        user_id (int): l'id dell'utente su AniList.
-        id_anime (int): l'id dell'anime su Anilist.
-
-    Returns:
-        str: il voto dell'utente sotto forma di stringa.
-    """
-
-    query = """
-    query ($idAnime: Int, $userId: Int) {
-        MediaList(userId: $userId, mediaId: $idAnime) {
-            score
-        }
-    }
-    """
-    var = {
-    "idAnime": id_anime,
-    "userId": user_id
-}
-
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
-    voto = str(risposta.json()["data"]["MediaList"]["score"])
-    if voto == "0":
-        voto = "n.d."
-    return voto
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
