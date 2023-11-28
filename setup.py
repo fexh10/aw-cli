@@ -6,7 +6,6 @@ with open("README.md", "r", encoding="utf-8") as fh:
 installRequires = [
         "bs4",
         "requests",
-        "lxml",
         "pySmartDL",
         "wheel",
         "regex",]
@@ -15,7 +14,7 @@ setup(
     name="aw-cli",
     packages=find_packages(include=["awcli"]),
     version="1.7",
-    python_requires=">3.10",
+    python_requires=">3.9",
     description="guarda anime dal terminale e molto altro!",
     long_description=long_description,
     long_description_content_type="text/markdown",

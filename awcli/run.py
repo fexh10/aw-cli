@@ -156,7 +156,7 @@ def openSyncplay(url_ep: str, nome_video: str):
     os.system(f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}" --language it > /dev/null 2>&1''')
 
 
-def openMPV(url_ep: str, nome_video: str):
+def openMPV(url_server: str, nome_video: str):
     """
     Apre MPV per riprodurre il video.
 
@@ -611,7 +611,8 @@ def main():
         mpv, player_path, syncplay_path = getConfig()
 
    
-    openPlayer = openMPV if mpv else openVLC
+    #openPlayer = openMPV if mpv else openVLC
+    openPlayer = lambda url_ep, nome_video: os.system(f"printf \"\e]8;;vlc://%s\a~~~~~~~~~~~~~~~~~~~~\n~ Tap to open VLC ~\n~~~~~~~~~~~~~~~~~~~~\e]8;;\a\n\" \"{url_ep}\"")
 
     if nome_os != "Android" and args.syncpl:
         openPlayer = openSyncplay
