@@ -10,9 +10,8 @@ from threading import Thread
 from awcli.utilities import * 
 import awcli.anilist as anilist
 
-
 if nome_os == "Windows":
-    from windows import *
+    from awcli.windows import *
 
 def safeExit():
     with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='', encoding='utf-8') as file:

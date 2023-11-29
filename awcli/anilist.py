@@ -1,4 +1,5 @@
 import requests
+
 tokenAnilist = None
 
 def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:

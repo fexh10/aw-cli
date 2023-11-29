@@ -291,7 +291,7 @@ def getConfig() -> tuple[bool, str, bool, bool, int, str]:
             user_id = anilist.getAnilistUserId()
             config_file.write(f"{user_id}")
         else:
-            user_id = lines[4]
+            user_id = int(lines[4])
         if len(lines) == 5:
             syncplay_path = None
         else:
