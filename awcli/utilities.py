@@ -181,7 +181,7 @@ def episodes(url_ep: str) -> tuple[str, int, int, str]:
     id_anilist = 0
     try:
         if anilist.tokenAnilist != 'tokenAnilist: False':
-            id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
+            id_anilist = int(bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", ""))
     except AttributeError:
         pass
 
@@ -258,19 +258,15 @@ def getAnimeInfo(anime: Anime) -> str:
     return my_input("", check_string)
 
 
-def getConfig() -> tuple[bool, str, bool, bool, int, str]:
+def getConfig() -> tuple[bool, str, str]:
     """
     Prende le impostazioni scelte dall'utente
     dal file di configurazione.
 
     Returns:
-        tuple[bool, str, bool, bool, int]: 
-        mpv restituisce True se è stato scelto mpv, altrimenti false se è VLC.
+        tuple[bool, str, int]: 
+        mpv restituisce True se è stato scelto MPV, altrimenti false se è VLC.
         player_path restituisce il path del player predefinito.
-        ratingAnilist restituisce True  se l'utente ha scelto di votare gli anime, altrimenti False. preferitoAnilist ritorna
-        preferitoAnilist restituisce True se l'utente ha scelto di chiedere se l'anime deve essere aggiunto tra i preferiti,
-        altrimenti False.
-        user_id restituisce l'id dell'utente. 
         syncplay_path restituisce il path di syncplay.
     """
 
@@ -283,21 +279,20 @@ def getConfig() -> tuple[bool, str, bool, bool, int, str]:
         player_path = lines[0].strip()
 
         anilist.tokenAnilist = lines[1].strip()
-        ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
-        preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
-        if len(lines) == 4 and ratingAnilist == False:
-            user_id = 0
-        elif len(lines) == 4 and ratingAnilist == True:
-            user_id = anilist.getAnilistUserId()
-            config_file.write(f"{user_id}")
+        anilist.ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
+        anilist.preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
+
+        if len(lines) == 4 and anilist.ratingAnilist == True:
+            anilist.user_id = anilist.getAnilistUserId()
+            config_file.write(f"{anilist.user_id}")
         else:
-            user_id = int(lines[4])
+            anilist.user_id = int(lines[4])
         if len(lines) == 5:
             syncplay_path = None
         else:
             syncplay_path = lines[5]
 
-    return mpv, player_path, ratingAnilist, preferitoAnilist, user_id, syncplay_path
+    return mpv, player_path, syncplay_path
 
 
 headers = {

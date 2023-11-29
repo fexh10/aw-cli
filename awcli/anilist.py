@@ -1,6 +1,10 @@
 import requests
 
-tokenAnilist = None
+tokenAnilist = "tokenAnilist: False"
+user_id = 0
+ratingAnilist = False
+preferitoAnilist = False
+
 
 def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:
     """
@@ -82,13 +86,12 @@ def getAnilistUserId() -> int:
     return user_id
 
 
-def getAnimePrivateRating(user_id: int, id_anime: int) -> str:
+def getAnimePrivateRating(id_anime: int) -> str:
     """
     Collegamento alle API di AniList per trovare
     il voto dato all'anime dall'utente.
 
     Args:
-        user_id (int): l'id dell'utente su AniList.
         id_anime (int): l'id dell'anime su Anilist.
 
     Returns:
