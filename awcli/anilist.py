@@ -5,6 +5,9 @@ user_id = 0
 ratingAnilist = False
 preferitoAnilist = False
 
+class TokenError(Exception):
+    pass
+
 
 def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:
     """
@@ -19,7 +22,7 @@ def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferit
         preferiti (bool) : True se l'utente ha scelto di mettere l'anime tra i preferiti, altrimenti False.
     """
 
-    #query in base alla scelta del preferito
+    # query in base alla scelta del preferito
     if not preferiti:
         query = """
         mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
@@ -49,23 +52,23 @@ def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferit
             """
 
     var = {
-        "idAnime" : id_anilist,
-        "status" : status_list,
-        "episodio" : ep,
+        "idAnime": id_anilist,
+        "status": status_list,
+        "episodio": ep,
     }
+    
     if voto != 0:
         var["score"] = voto
     header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
+    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var})
+    if risposta.status_code != 200:
+        print("Impossibile aggiornare AniList!")
  
 
-def getAnilistUserId() -> int: 
+def getAnilistUserId() -> int:
     """
     Collegamento alle API di AniList per trovare
-    l'id dell'utente.
-
-    Args:
-        tokenAnilist: il token AniList dell'utente.
+    l'id dell'utente in base al token AniList dell'utente.
 
     Returns:
         int: l'id dell'utente.
@@ -80,13 +83,16 @@ def getAnilistUserId() -> int:
     """
 
     header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query}) 
+    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query})
+    if risposta.status_code != 200:
+        raise TokenError("Errore: Token AniList sbagliato")
+
     user_id = int(risposta.json()["data"]["Viewer"]["id"])
 
     return user_id
 
 
-def getAnimePrivateRating(id_anime: int) -> str:
+def getAnimePrivateRating(id_anime: int) -> int:
     """
     Collegamento alle API di AniList per trovare
     il voto dato all'anime dall'utente.
@@ -95,7 +101,7 @@ def getAnimePrivateRating(id_anime: int) -> str:
         id_anime (int): l'id dell'anime su Anilist.
 
     Returns:
-        str: il voto dell'utente sotto forma di stringa.
+        int: il voto dell'utente.
     """
 
     query = """
@@ -106,13 +112,17 @@ def getAnimePrivateRating(id_anime: int) -> str:
     }
     """
     var = {
-    "idAnime": id_anime,
-    "userId": user_id
+        "idAnime": id_anime,
+        "userId": user_id
     }
 
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
-    voto = str(risposta.json()["data"]["MediaList"]["score"])
-    if voto == "0":
-        voto = "n.d."
-    return voto
+    header_anilist = {
+        'Authorization': 'Bearer ' + tokenAnilist,
+        'Content-Type': 'application/json', 'Accept': 'application/json'
+    }
+    
+    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist, json={'query': query, 'variables': var})
+    if risposta.status_code != 200:
+        return 0
+    
+    return str(risposta.json()["data"]["MediaList"]["score"])

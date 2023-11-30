@@ -4,8 +4,8 @@ import requests
 from platform import system
 from time import sleep
 from bs4 import BeautifulSoup
-from awcli.anime import Anime
 import awcli.anilist as anilist
+from awcli.anime import Anime
    
 _url = "https://www.animeworld.so"
 # controllo il tipo del dispositivo

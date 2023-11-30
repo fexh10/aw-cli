@@ -247,7 +247,7 @@ def addToCronologia(ep: int):
             log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep]) 
 
 
-def updateAnilist(ep: int, voto_anilist: str):
+def updateAnilist(ep: int):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -256,25 +256,34 @@ def updateAnilist(ep: int, voto_anilist: str):
 
     Args:
         ep (int): il numero dell'episodio visualizzato.
-        voto_anilist (str): il voto dato dall'utente all'anime su Anilist.
     """
-
+    
+    if anime.id_anilist == 0:
+        my_print("Impossibile aggiornare AniList: id anime non trovato!", color="rosso")
+        return
+    
     voto = 0
     preferiti = False
     status_list = 'CURRENT'
     #se ho finito di vedere l'anime
     if ep == anime.ep and anime.status == 1:
         status_list = 'COMPLETED'
+        
         #chiedo di votare
         if anilist.ratingAnilist:
-            def is_number(n):
-                try:
-                    float(n)
-                    return float(n)
-                except ValueError:
-                    pass
-
-            voto = my_input(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})", is_number)
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                def is_number(n):
+                    try:
+                        return float(n)
+                    except ValueError:
+                        pass
+                future_voto = executor.submit(my_input,f"Inserisci un voto per l'anime", is_number)
+                #ottengo il voto dell'anime se già inserito in precedenza
+                future_rating = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
+                voto_anilist = future_rating.result()
+                if voto_anilist != 0:
+                    my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})\n> ", end=" ", color="magenta", cls=True)
+                voto = future_voto.result()
     
         #chiedo di mettere tra i preferiti
         if anilist.preferitoAnilist:
@@ -321,20 +330,11 @@ def openVideos(ep_iniziale: int, ep_finale: int):
         openPlayer(url_ep, nome_video)
         if offline or privato: return
 
-        #se è l'episodio finale e l'utente deve votare l'anime
-        #ottengo il voto dell'anime se già inserito in precedenza
-        voto_anilist = "n.d."
-        if ep == anime.ep and anime.status == 1 and anilist.ratingAnilist == True:         
-            #prendo il voto se presente
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future_rating = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
-                voto_anilist = future_rating.result()
-
         addToCronologia(ep)
 
         #update watchlist anilist se ho fatto l'accesso
         if anilist.tokenAnilist != 'tokenAnilist: False':
-            updateAnilist(ep, voto_anilist)
+            updateAnilist(ep)
 
 
 def getCronologia() -> list[Anime]:
