@@ -1,118 +1,13 @@
 import os
+import re
 import requests
 from platform import system
 from time import sleep
 from bs4 import BeautifulSoup
-import re
-
-class Anime:
-    """
-    Classe che rappresenta un anime.
-
-    Attributes:
-        name (str): il nome dell'anime.
-        url (str): l'URL della pagina dell'anime su AnimeWorld.
-        ep (int):
-        ep_totali (str): il numero reale di episodi totali dell'anime.
-    """ 
-
-    def __init__(self, name, url, ep=0, ep_totali="") -> None:
-        self.name = name
-        self.url = url
-        self.ep_corrente = ep
-        self.ep = ep
-        self.ep_totali = ep_totali
-
-    def load_episodes(self) -> None:
-        """
-        Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati
-        """
-
-        try:
-            res = episodes(self.url)
-        except IndexError:
-            my_print("Il link è stato cambiato", color="rosso", end="\n")
-            self.url = search(self.name, nome_os)[0].url
-            res = episodes(self.url)
-            
-        self.url_episodi, self.status, self.id_anilist, self.ep_totali = res
-        self.ep = len(self.url_episodi)
-        self.ep_ini = 1
-
-    def get_episodio(self, ep: int) -> str:
-        """
-        Restituisce il link dell'episodio specificato.
-
-        Args:
-            ep (int): il numero dell'episodio.
-
-        Returns:
-            str: il link dell'episodio.
-        """
-
-        ep -= 1
-        if ep in range(self.ep):
-            return download(self.url_episodi[ep])
-        
-    def ep_name(self, ep: int) -> str:
-        """
-        Restituisce il nome dell'episodio specificato.
-
-        Args:
-            ep (int): il numero dell'episodio.
-
-        Returns:
-            str: il nome dell'episodio.
-        """
-        return f"{self.name} Ep. {ep}"
-
-    def downloaded_episodes(self, path: str) -> None:
-        """
-        Prende i nomi degli episodi scaricati in base all'anime scelto e
-        ne ricava il primo e l'ultimo episodio riproducibili.
-
-        Args:
-            path (str): il path dell'anime scelto dall'utente.
-        """
-        nomi_episodi = os.listdir(path)
-        togli = f"{self.name} Ep. "
-        if len(nomi_episodi) != 0:
-            temp = nomi_episodi[0].replace(togli, "")
-            minimo = int(temp.replace(".mp4", ""))
-            massimo = minimo
-
-            for stringa in nomi_episodi:
-                stringa = stringa.replace(togli, "")
-                stringa = int(stringa.replace(".mp4", ""))
-                if stringa < minimo:
-                    minimo = stringa
-                if stringa > massimo:
-                    massimo = stringa
-            self.ep = massimo 
-            self.ep_ini = minimo
-        else:
-            self.ep = 0
-            self.ep_ini = 0
-
-    def getAnimeInfo(self) -> str:
-        """
-        Prende le informazioni e la trama relative all'anime selezionato.
-
-        Returns:
-            str: la scelta dell'utente nel menu.
-        """
-
-        bs = BeautifulSoup(requests.get(self.url, headers=headers).text, "lxml")
-        row = bs.find(class_='info col-md-9').find(class_='row')
-        my_print(self.name, cls=True)
-        
-        dt = row.find_all("dt")
-        dd = row.find_all("dd")
-        trama = bs.find(class_='desc')
-        return printAnimeInfo(dt, dd, trama)
-    
+import awcli.anilist as anilist
+from awcli.anime import Anime
+   
 _url = "https://www.animeworld.so"
-tokenAnilist = None
 # controllo il tipo del dispositivo
 nome_os = system()
 if nome_os == "Linux":
@@ -161,7 +56,7 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             my_print("",end="", cls=True)
     return i
 
-def search(input: str, nome_os: str) -> list[Anime]:
+def search(input: str) -> list[Anime]:
     """
     Ricerca l'anime selezionato su AnimeWorld.
 
@@ -285,27 +180,58 @@ def episodes(url_ep: str) -> tuple[str, int, int, str]:
     #cerco l'id di anilist
     id_anilist = 0
     try:
-        if tokenAnilist != 'tokenAnilist: False':
-            id_anilist = bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", "")
+        if anilist.tokenAnilist != 'tokenAnilist: False':
+            id_anilist = int(bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", ""))
     except AttributeError:
         pass
 
     return url_episodi, status, id_anilist, ep_totali
 
-def printAnimeInfo(dt: list, dd: list, trama: str) -> str:
-    """
-    Stampa a schermo le informazioni
-    e la trama relative all'anime selezioanto.
-    Chiede all'utente se guardare l'anime oppure tornare indietro.
 
-    Args:
-        dt (list): i campi "dt" della pagina che contengono le informazioni.
-        dd (list): i campi "dd" della pagina che contengono le informazioni.
-        trama (str): la trama dell'anime.
+def downloaded_episodes(anime: Anime, path: str) -> None:
+        """
+        Prende i nomi degli episodi scaricati in base all'anime scelto e
+        ne ricava il primo e l'ultimo episodio riproducibili.
+
+        Args:
+            path (str): il path dell'anime scelto dall'utente.
+        """
+        nomi_episodi = os.listdir(path)
+        togli = f"{anime.name} Ep. "
+        if len(nomi_episodi) != 0:
+            temp = nomi_episodi[0].replace(togli, "")
+            minimo = int(temp.replace(".mp4", ""))
+            massimo = minimo
+
+            for stringa in nomi_episodi:
+                stringa = stringa.replace(togli, "")
+                stringa = int(stringa.replace(".mp4", ""))
+                if stringa < minimo:
+                    minimo = stringa
+                if stringa > massimo:
+                    massimo = stringa
+            anime.ep = massimo 
+            anime.ep_ini = minimo
+        else:
+            anime.ep = 0
+            anime.ep_ini = 0
+
+
+def getAnimeInfo(anime: Anime) -> str:
+    """
+    Prende le informazioni e la trama relative all'anime selezionato.
 
     Returns:
         str: la scelta dell'utente nel menu.
     """
+
+    bs = BeautifulSoup(requests.get(anime.url, headers=headers).text, "lxml")
+    row = bs.find(class_='info col-md-9').find(class_='row')
+    my_print(anime.name, cls=True)
+    
+    dt = row.find_all("dt")
+    dd = row.find_all("dd")
+    trama = bs.find(class_='desc')
 
     #stampo dl e dt
     for i in range(len(dt)):
@@ -331,101 +257,19 @@ def printAnimeInfo(dt: list, dd: list, trama: str) -> str:
     my_print("(i) indietro", color='magenta', end="")
     return my_input("", check_string)
 
-def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:
-    """
-    Collegamento alle API di AniList per aggiornare
-    automaticamente gli anime.
 
-    Args:
-        id_anilist (int): l'id dell'anime su AniList.
-        ep (int): il numero dell'episodio visualizzato.
-        voto (float): il voto dell'anime.
-        status_list (str): lo stato dell'anime per l'utente. Se è in corso verrà impostato su "CURRENT", se completato su "COMPLETED".
-        preferiti (bool) : True se l'utente ha scelto di mettere l'anime tra i preferiti, altrimenti False.
-    """
-
-    #query in base alla scelta del preferito
-    if not preferiti:
-        query = """
-        mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-            SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
-                status
-                progress
-                score
-            }
-        }
-        """
-    else:
-        query = """
-            mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-                SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
-                    status
-                    progress
-                    score
-                },
-                ToggleFavourite(animeId:$idAnime){
-                    anime {
-                        nodes {
-                            id
-                        }
-                    }
-                }
-            }
-            """
-
-    var = {
-        "idAnime" : id_anilist,
-        "status" : status_list,
-        "episodio" : ep,
-    }
-    if voto != 0:
-        var["score"] = voto
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
-
-def getAnilistUserId(tokenAnilist: str) -> int: 
-    """
-    Collegamento alle API di AniList per trovare
-    l'id dell'utente.
-
-    Args:
-        tokenAnilist: il token AniList dell'utente.
-
-    Returns:
-        int: l'id dell'utente.
-    """
-
-    query = """
-        query {
-            Viewer {
-                id
-            }
-        }
-    """
-
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query}) 
-    user_id = int(risposta.json()["data"]["Viewer"]["id"])
-
-    return user_id
-
-def getConfig() -> tuple[bool, str, bool, bool, int, str]:
+def getConfig() -> tuple[bool, str, str]:
     """
     Prende le impostazioni scelte dall'utente
     dal file di configurazione.
 
     Returns:
-        tuple[bool, str, bool, bool, int]: 
-        mpv restituisce True se è stato scelto mpv, altrimenti false se è VLC.
+        tuple[bool, str, int]: 
+        mpv restituisce True se è stato scelto MPV, altrimenti false se è VLC.
         player_path restituisce il path del player predefinito.
-        ratingAnilist restituisce True  se l'utente ha scelto di votare gli anime, altrimenti False. preferitoAnilist ritorna
-        preferitoAnilist restituisce True se l'utente ha scelto di chiedere se l'anime deve essere aggiunto tra i preferiti,
-        altrimenti False.
-        user_id restituisce l'id dell'utente. 
         syncplay_path restituisce il path di syncplay.
     """
 
-    global tokenAnilist
     config = f"{os.path.dirname(__file__)}/aw.config"
 
     with open(config, 'r+') as config_file:
@@ -434,54 +278,22 @@ def getConfig() -> tuple[bool, str, bool, bool, int, str]:
         mpv = True if "mpv" in lines[0].strip() else False
         player_path = lines[0].strip()
 
-        tokenAnilist = lines[1].strip()
-        ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
-        preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
-        if len(lines) == 4 and ratingAnilist == False:
-            user_id = 0
-        elif len(lines) == 4 and ratingAnilist == True:
-            user_id = getAnilistUserId()
-            config_file.write(f"{user_id}")
+        anilist.tokenAnilist = lines[1].strip()
+        anilist.ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
+        anilist.preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
+
+        if len(lines) == 4 and anilist.ratingAnilist == True:
+            anilist.user_id = anilist.getAnilistUserId()
+            config_file.write(f"{anilist.user_id}")
         else:
-            user_id = lines[4]
+            anilist.user_id = int(lines[4])
         if len(lines) == 5:
             syncplay_path = None
         else:
             syncplay_path = lines[5]
 
-    return mpv, player_path, ratingAnilist, preferitoAnilist, user_id, syncplay_path
+    return mpv, player_path, syncplay_path
 
-def getAnimePrivateRating(user_id: int, id_anime: int) -> str:
-    """
-    Collegamento alle API di AniList per trovare
-    il voto dato all'anime dall'utente.
-
-    Args:
-        user_id (int): l'id dell'utente su AniList.
-        id_anime (int): l'id dell'anime su Anilist.
-
-    Returns:
-        str: il voto dell'utente sotto forma di stringa.
-    """
-
-    query = """
-    query ($idAnime: Int, $userId: Int) {
-        MediaList(userId: $userId, mediaId: $idAnime) {
-            score
-        }
-    }
-    """
-    var = {
-    "idAnime": id_anime,
-    "userId": user_id
-}
-
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var}) 
-    voto = str(risposta.json()["data"]["MediaList"]["score"])
-    if voto == "0":
-        voto = "n.d."
-    return voto
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'

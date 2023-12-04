@@ -2,13 +2,16 @@ import os
 import sys
 import argparse
 import warnings
-import subprocess
 import csv
 import concurrent.futures
 from pySmartDL import SmartDL
 from pathlib import Path
 from threading import Thread
-from awcli.utilities import *
+from awcli.utilities import * 
+import awcli.anilist as anilist
+
+if nome_os == "Windows":
+    from awcli.windows import *
 
 def safeExit():
     with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='', encoding='utf-8') as file:
@@ -28,7 +31,7 @@ def RicercaAnime() -> list[Anime]:
     def check_search(s: str):
         if s == "exit":
             safeExit() 
-        result = search(s, nome_os)
+        result = search(s)
         if len(result) != 0:
             return result
 
@@ -142,37 +145,6 @@ def scaricaEpisodio(ep: int, path: str):
         my_print("già scaricato, skippo...", color="giallo")
 
 
-def isRunning(PROCNAME: str):
-    """
-    Viene preso il pid di un processo per poter attendere 
-    che l'applicazione venga chiusa prima di poter proseguire
-    con il programma. Viene impostato un timeout di 86400 secondi (24 ore).
-
-    Args:
-        PROCNAME (str): il nome del processo.
-    """
-
-    import psutil
-    from pywinauto import Application
-
-    sleep(1)
-    pid = 0
-    for proc in psutil.process_iter():
-        if proc.name() == PROCNAME:
-            pid = proc.pid
-    app = Application().connect(process=pid)
-    app.wait_for_process_exit(timeout=86400)
-
-
-def winOpen(processo, comando):
-    """
-    Viene eseguito il comando per aprire un'applicazione
-    su Windows.
-    """
-    subprocess.Popen(['powershell.exe', comando])
-    isRunning(processo)
-
-
 def openSyncplay(url_ep: str, nome_video: str):
     """
     Avvia Syncplay.
@@ -194,7 +166,7 @@ def openSyncplay(url_ep: str, nome_video: str):
         os.system(f"{comando} --language it &>/dev/null")
 
 
-def openMPV(url_server: str, nome_video: str):
+def openMPV(url_ep: str, nome_video: str):
     """
     Apre MPV per riprodurre il video.
 
@@ -205,17 +177,17 @@ def openMPV(url_server: str, nome_video: str):
 
 
     if (nome_os == "Android"):
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
         return
     
-    comando = f"""'{player_path}' "{url_server}" --force-media-title="{nome_video}" --fullscreen --keep-open"""
+    comando = f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open"""
     if nome_os == "Windows":
         winOpen("mpv.exe", f"""& {comando}""")
     else:
         os.system(f'''{comando} &>/dev/null''')
 
 
-def openVLC(url_server: str, nome_video: str):
+def openVLC(url_ep: str, nome_video: str):
     """
     Apre VLC per riprodurre il video.
 
@@ -225,10 +197,10 @@ def openVLC(url_server: str, nome_video: str):
     """
 
     if nome_os == "Android":
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_server}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
         return
     
-    comando = f''''{player_path}' "{url_server}" --meta-title "{nome_video}" --fullscreen'''
+    comando = f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen'''
     if nome_os == "Windows":        
         winOpen("vlc.exe", f"""& {comando} """)
     else:
@@ -275,7 +247,7 @@ def addToCronologia(ep: int):
             log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep]) 
 
 
-def updateAnilist(ratingAnilist: bool, preferitoAnilist: bool,  ep: int, voto_anilist: str):
+def updateAnilist(ep: int):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -283,31 +255,38 @@ def updateAnilist(ratingAnilist: bool, preferitoAnilist: bool,  ep: int, voto_an
     verrà chiesto il voto da dare.
 
     Args:
-        ratingAnilist (bool): valore impostato a True se l'utente ha scelto di votare l'anime una volta finito, altrimenti False.
-        preferitoAnilist(bool): True se l'utente ha scelto di far chiedere se mettere l'anime tra i preferiti, altrimenti False.
         ep (int): il numero dell'episodio visualizzato.
-        voto_anilist (str): il voto dato dall'utente all'anime su Anilist.
     """
-
+    
+    if anime.id_anilist == 0:
+        my_print("Impossibile aggiornare AniList: id anime non trovato!", color="rosso")
+        return
+    
     voto = 0
     preferiti = False
     status_list = 'CURRENT'
     #se ho finito di vedere l'anime
     if ep == anime.ep and anime.status == 1:
         status_list = 'COMPLETED'
+        
         #chiedo di votare
-        if ratingAnilist:
-            def is_number(n):
-                try:
-                    float(n)
-                    return float(n)
-                except ValueError:
-                    pass
-
-            voto = my_input(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})", is_number)
+        if anilist.ratingAnilist:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                def is_number(n):
+                    try:
+                        return float(n)
+                    except ValueError:
+                        pass
+                future_voto = executor.submit(my_input,f"Inserisci un voto per l'anime", is_number)
+                #ottengo il voto dell'anime se già inserito in precedenza
+                future_rating = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
+                voto_anilist = future_rating.result()
+                if voto_anilist != 0:
+                    my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})\n> ", end=" ", color="magenta", cls=True)
+                voto = future_voto.result()
     
         #chiedo di mettere tra i preferiti
-        if preferitoAnilist:
+        if anilist.preferitoAnilist:
             def check_string(s: str):
                 s = s.lower()
                 if s == "s":
@@ -317,11 +296,11 @@ def updateAnilist(ratingAnilist: bool, preferitoAnilist: bool,  ep: int, voto_an
 
             preferiti = my_input("Mettere l'anime tra i preferiti? (s/N)", check_string)
     
-    thread = Thread(target=anilistApi, args=(anime.id_anilist, ep, voto, status_list, preferiti))
+    thread = Thread(target=anilist.anilistApi, args=(anime.id_anilist, ep, voto, status_list, preferiti))
     thread.start()
 
 
-def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, ratingAnilist: bool, preferitoAnilist: bool, user_id: int):
+def openVideos(ep_iniziale: int, ep_finale: int):
     """
     Riproduce gli episodi dell'anime, a partire da ep_iniziale fino a ep_finale.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
@@ -330,9 +309,6 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, ratingAnilist: bool,
     Args:
         ep_iniziale (int): il numero di episodio iniziale da riprodurre.
         ep_finale (int): il numero di episodio finale da riprodurre.
-        mpv (bool): True se il player di default è MPV, False se è VLC.
-        ratingAnilist (bool): valore impostato a True se l'utente ha scelto di votare l'anime una volta finito, altrimenti False.
-        preferitoAnilist(bool): True se l'utente ha scelto di far chiedere se mettere l'anime tra i preferiti, altrimenti False.
     """
 
     for ep in range(ep_iniziale, ep_finale+1):
@@ -342,35 +318,23 @@ def openVideos(ep_iniziale: int, ep_finale: int, mpv: bool, ratingAnilist: bool,
         path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}.mp4"
         
         if os.path.exists(path):
-            url_server = "file://" + path if nome_os == "Android" else path
+            url_ep = "file://" + path if nome_os == "Android" else path
         elif offline:
             my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
             sleep(1)
             continue
         else:
-            url_server = anime.get_episodio(ep)
+            url_ep = anime.get_episodio(ep)
 
         my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
+        openPlayer(url_ep, nome_video)
+        if offline or privato: return
 
-        #se è l'episodio finale e l'utente deve votare l'anime, controllo se l'id è presente
-        # e ottengo il voto dell'anime se già inserito in precedenza
-        #prendo l'id dell'utente tramite query
-        voto_anilist = "n.d."
-        if ep == anime.ep and anime.status == 1 and ratingAnilist == True and not offline and not privato:         
-            #prendo il voto se presente
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future_rating = executor.submit(getAnimePrivateRating, user_id, anime.id_anilist)
-                voto_anilist = future_rating.result()
-
-        openPlayer(url_server, nome_video)
-
-        #se non sono in modalità offline o privata aggiungo l'anime alla cronologia
-        if not offline and not privato:
-            addToCronologia(ep)
+        addToCronologia(ep)
 
         #update watchlist anilist se ho fatto l'accesso
-        if tokenAnilist != 'tokenAnilist: False' and not offline and not privato:
-            updateAnilist(ratingAnilist, preferitoAnilist, ep, voto_anilist)
+        if anilist.tokenAnilist != 'tokenAnilist: False':
+            updateAnilist(ep)
 
 
 def getCronologia() -> list[Anime]:
@@ -436,37 +400,32 @@ def setupConfig() -> None:
                 return True
             elif s == "n" or s == "":
                 return False
-
-        anilist = my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string)
-
-        if anilist:
+            
+        ratingAnilist = "ratingAnilist: False"
+        preferitoAnilist = "preferitoAnilist: False"
+        
+        if my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string):
             if nome_os == "Linux" or nome_os == "Android":
                 os.system("xdg-open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
             elif nome_os == "Windows":
-                subprocess.Popen(['powershell.exe', "explorer https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"])
+                Popen(['powershell.exe', "explorer https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"])
             else: 
                 os.system("open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
 
             #inserimento token
-            global tokenAnilist
-            tokenAnilist = my_input("Inserire il token di AniList", cls=True)
-            #chiede se votare l'anime
-            if my_input("Votare l'anime una volta completato? (s/N)", check_string):
-                ratingAnilist = "ratingAnilist: True "
-                #prendo l'id dell'utente tramite query
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(getAnilistUserId, tokenAnilist)
-                    user_id = future.result()
-            else:
-                ratingAnilist = "ratingAnilist: False"
-                user_id = 0
-            preferitoAnilist = "preferitoAnilist: True" if my_input("Chiedere se mettere l'anime tra i preferiti una volta completato? (s/N)", check_string) else "preferitoAnilist: False"
-
-        else:
-            tokenAnilist = "tokenAnilist: False"
-            ratingAnilist = "ratingAnilist: False"
-            preferitoAnilist = "preferitoAnilist: False"
-            user_id = 0
+            anilist.tokenAnilist = my_input("Inserire il token di AniList", cls=True)
+            
+            #prendo l'id dell'utente tramite query
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(anilist.getAnilistUserId)
+                
+                if my_input("Votare l'anime una volta completato? (s/N)", check_string):
+                    ratingAnilist = "ratingAnilist: True "
+                    
+                if my_input("Chiedere se mettere l'anime tra i preferiti una volta completato? (s/N)", check_string):
+                    preferitoAnilist = "preferitoAnilist: True"
+                
+                anilist.user_id = future.result()
 
         if nome_os == "Linux":
             syncplay= "syncplay"
@@ -480,10 +439,10 @@ def setupConfig() -> None:
     config = f"{os.path.dirname(__file__)}/aw.config"
     with open(config, 'w') as config_file:
         config_file.write(f"{player}\n")
-        config_file.write(f"{tokenAnilist}\n")
+        config_file.write(f"{anilist.tokenAnilist}\n")
         config_file.write(f"{ratingAnilist}\n")
         config_file.write(f"{preferitoAnilist}\n")
-        config_file.write(f"{user_id}\n")
+        config_file.write(f"{anilist.user_id}\n")
         config_file.write(f"{syncplay}")
 
 
@@ -566,13 +525,13 @@ def main():
     if not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
         setupConfig()
 
-    mpv, player_path, ratingAnilist, preferitoAnilist, user_id, syncplay_path = getConfig()
+    mpv, player_path, syncplay_path = getConfig()
     #se la prima riga del config corrisponde a una versione vecchia, faccio rifare il config
     if player_path == "Player: MPV" or player_path == "Player: VLC" or syncplay_path == None:
         my_print("Ci sono stati dei cambiamenti nella configurazione...", color="giallo")
         sleep(1)
         setupConfig()
-        mpv, player_path, ratingAnilist, preferitoAnilist, user_id, syncplay_path = getConfig()
+        mpv, player_path, syncplay_path = getConfig()
 
    
     openPlayer = openMPV if mpv else openVLC
@@ -643,11 +602,11 @@ def main():
                     ep_finale = ep_iniziale
                 scelta_info = ""
                 if info:
-                    scelta_info = anime.getAnimeInfo()
+                    scelta_info = getAnimeInfo(anime)
                     if scelta_info == 'i':
                         break
 
-                anime.load_episodes() if not offline else anime.downloaded_episodes(f"{downloadPath()}/{anime.name}")
+                anime.load_episodes() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
                 if anime.ep != 0:
                     break
@@ -685,13 +644,13 @@ def main():
                     
                     #chiedi all'utente se aprire ora i video scaricati
                     if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
-                        openVideos(ep_iniziale, ep_finale, mpv, ratingAnilist, preferitoAnilist, user_id)
+                        openVideos(ep_iniziale, ep_finale)
                 safeExit()
 
             ris_valida = True
             while True:
                 if ris_valida:
-                    openVideos(ep_iniziale,ep_finale, mpv, ratingAnilist, preferitoAnilist, user_id)
+                    openVideos(ep_iniziale,ep_finale)
                 else:
                     my_print("Seleziona una risposta valida", color="rosso")
                     ris_valida = True
