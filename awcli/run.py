@@ -492,6 +492,8 @@ def printAnimeNames(animelist: list[Anime]):
         None. 
     """
 
+    my_print("", end="", cls=True)
+
     colore = "verde"
 
     for i, a in reversed(list(enumerate(animelist))):
@@ -507,6 +509,52 @@ def printAnimeNames(animelist: list[Anime]):
             my_print(f"{a.name} [Ep {a.ep}]") 
         else:
             my_print(a.name)
+
+
+def removeFromCrono(number: int):
+    """
+    Rimuove l'anime selezionato dalla cronologia
+    e stampa un menu di scelta per l'utente.
+
+    Args:
+        number (int): il numero dell'anime in lista da rimuovere.
+
+    Return:
+        None.
+    """
+
+    def check_delete(s: str):
+        s.lower()
+        if s == "s":
+            return True
+        elif s == "n" or s == "":
+            return False
+
+    global log
+
+    my_print(f"Si è sicuri di voler rimuovere \"{log[number][0]}\" dalla cronologia? (s/N)", color="giallo", end="")
+    delete = my_input("", check_delete)
+
+    if delete:
+        log.pop(number)
+
+        printAnimeNames(getCronologia())
+
+        def check_str(s: str):
+            s.lower()
+            if s == "c":
+                return "c"
+            elif s == "e" or s == '':
+                return "e"
+
+        my_print("(c) continua", color="verde")
+        my_print("(e) esci", color="rosso", end="")
+        scelta = my_input("", check_str)
+
+        if scelta == "e":
+            safeExit()
+        else:
+            return
 
 
 def main():
@@ -532,7 +580,7 @@ def main():
     # args
     parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
     parser.add_argument('-a', '--configurazione', action='store_true', dest='avvia_config', help='avvia il menu di configurazione')
-    parser.add_argument('-c', '--cronologia', nargs='?', choices=['r'], dest='cronologia', help='continua a guardare un anime dalla cronologia. -r per rimuovere un anime (opzionale)')
+    parser.add_argument('-c', '--cronologia', nargs='?', choices=['r'], dest='cronologia', help='continua a guardare un anime dalla cronologia. \'r\' per rimuovere un anime (opzionale)')
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
     parser.add_argument('-i', '--info', action='store_true', dest='info', help='visualizza le informazioni e la trama di un anime')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd', 't'], dest='lista', help="lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub, t = tendenze. Default 'a'")
@@ -595,12 +643,10 @@ def main():
             else:
                 animelist = RicercaAnime()
                 
-            while True:
-                my_print("", end="", cls=True)
-                
+            while True:                
                 printAnimeNames(animelist)
 
-                if cronologia:
+                if cronologia and args.cronologia != 'r':
                     thread = Thread(target=reloadCrono, args=[animelist])    
                     thread.start()
 
@@ -610,7 +656,14 @@ def main():
                         if index in range(len(animelist)):
                             return index
                 
-                scelta = my_input("Scegli un anime", check_index)
+                if args.cronologia != 'r':
+                    scelta = my_input("Scegli un anime", check_index)
+                else:
+                    scelta = my_input("Rimuovi un anime", check_index)
+                    removeFromCrono(scelta)
+                    animelist = getCronologia()
+                    continue
+
                 anime = animelist[scelta]
                 #se la lista è stata selezionata, inserisco come ep_iniziale e ep_finale quello scelto dall'utente
                 #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
