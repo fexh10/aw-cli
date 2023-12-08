@@ -532,7 +532,7 @@ def main():
     # args
     parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
     parser.add_argument('-a', '--configurazione', action='store_true', dest='avvia_config', help='avvia il menu di configurazione')
-    parser.add_argument('-c', '--cronologia', action='store_true', dest='cronologia', help='continua a guardare un anime dalla cronologia')
+    parser.add_argument('-c', '--cronologia', nargs='?', choices=['r'], dest='cronologia', help='continua a guardare un anime dalla cronologia. -r per rimuovere un anime (opzionale)')
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
     parser.add_argument('-i', '--info', action='store_true', dest='info', help='visualizza le informazioni e la trama di un anime')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd', 't'], dest='lista', help="lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub, t = tendenze. Default 'a'")
@@ -548,7 +548,8 @@ def main():
         setupConfig()
     if  '-l' in sys.argv and args.lista == None:
         args.lista = 'a'
-    
+    elif '-c' in sys.argv and args.cronologia == None:
+        args.cronologia = True
     #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
     if not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
         setupConfig()
@@ -723,7 +724,7 @@ offline = False
 cronologia = False
 info = False
 privato = False
-versione = "1.7fC"
+versione = "1.7rFC"
 log = []
 player_path = ""
 syncplay_path = ""
