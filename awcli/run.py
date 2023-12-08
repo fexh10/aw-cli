@@ -481,6 +481,34 @@ def reloadCrono(cronologia: list[Anime]):
     my_print("Scegli un anime\n> ", end=" ", color="magenta")
 
 
+def printAnimeNames(animelist: list[Anime]): 
+    """
+    Stampa i nomi degli anime presenti nella lista desiderata.
+
+    Args:
+        animelist (list[Anime]): Una lista Anime.    
+
+    Return: 
+        None. 
+    """
+
+    colore = "verde"
+
+    for i, a in reversed(list(enumerate(animelist))):
+        if cronologia:
+            colore = "rosso"
+            if a.status == 1 or a.ep_corrente < a.ep:
+                colore = "verde"
+        
+        my_print(f"{i + 1} ", color=colore, end=" ")
+        if cronologia:
+            my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
+        elif lista:
+            my_print(f"{a.name} [Ep {a.ep}]") 
+        else:
+            my_print(a.name)
+
+
 def main():
     global log
     global syncpl
@@ -568,21 +596,9 @@ def main():
                 
             while True:
                 my_print("", end="", cls=True)
-                # stampo i nomi degli anime
-                colore = "verde"
-                for i, a in reversed(list(enumerate(animelist))):
-                    if cronologia:
-                        colore = "rosso"
-                        if a.status == 1 or a.ep_corrente < a.ep:
-                            colore = "verde"
-                    
-                    my_print(f"{i + 1} ", color=colore, end=" ")
-                    if cronologia:
-                        my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
-                    elif lista:
-                       my_print(f"{a.name} [Ep {a.ep}]") 
-                    else:
-                        my_print(a.name)
+                
+                printAnimeNames(animelist)
+
                 if cronologia:
                     thread = Thread(target=reloadCrono, args=[animelist])    
                     thread.start()
