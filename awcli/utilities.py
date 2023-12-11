@@ -221,7 +221,31 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     Returns:
         tuple[int, list[str], list[str]]: l'id di AniList, la lista degli url degli episodi e la lista delle info dell'anime.
     """
-    pass
+    # prendo l'html dalla pagina web di AW
+    bs = getBs(url)
+
+    # prendo l'id di anilist
+    try:
+        id_anilist = int(bs.find(class_='anilist control tip tippy-desktop-only').get('href')[25:])   
+    except AttributeError:
+        id_anilist = 0 
+    # prendo gli url degli episodi
+    url_episodi = list[str]()
+    for div in bs.find_all(class_='server active'):
+        for li in div.find_all(class_="episode"):
+            if ".5" in li.a.get('data-num'):
+                continue
+            temp = _url + (li.a.get('href'))
+            url_episodi.append(temp)
+            
+    # prendo le info dell'anime
+    info = list[str]()
+    for div in bs.find(class_='info col-md-9').find(class_='row').find_all("dd"):
+        info.append(div.text.strip())
+        
+    info[5] = re.sub("\s+" , " ", info[5])
+    
+    return id_anilist, url_episodi, info
         
 
 def downloaded_episodes(anime: Anime, path: str) -> None:
@@ -268,14 +292,14 @@ def getAnimeInfo(anime: Anime):
 
     #stampo dl e dt
     for i in range(len(dt)):
-            if i != 6:
-                my_print(dt[i].text.strip(), end=" ", color="azzurro")
-            else:
+            if i == 6:
                 my_print(dt[i].text.strip().replace(":", " medio: "), end=" ", color="azzurro")
-            if i != 5:
-                my_print(dd[i].text.strip(), format=0)
             else:
+                my_print(dt[i].text.strip(), end=" ", color="azzurro")
+            if i == 5:
                 my_print(re.sub("\s\s+" , " ", dd[i].text.strip()), format=0)
+            else:
+                my_print(dd[i].text.strip(), format=0)
     #stampo la trama
     my_print("Trama:", color="azzurro", end=" ")
     my_print(trama.text, format=0)    
