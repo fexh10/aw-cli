@@ -668,7 +668,15 @@ def main():
                     ep_finale = ep_iniziale
                 scelta_info = ""
                 if info:
-                    scelta_info = getAnimeInfo(anime)
+                    #stampo piccolo menu
+                    def check_string(s: str):
+                        s.lower()
+                        if s == "g" or s == 'i' or s == "":
+                            return s
+
+                    my_print("\n(g) guardare", color='verde')
+                    my_print("(i) indietro", color='magenta', end="")
+                    scelta_info = my_input("", check_string)
                     if scelta_info == 'i':
                         break
 

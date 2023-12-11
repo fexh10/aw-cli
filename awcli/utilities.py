@@ -217,12 +217,9 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
             anime.ep_ini = 0
 
 
-def getAnimeInfo(anime: Anime) -> str:
+def getAnimeInfo(anime: Anime):
     """
     Prende le informazioni e la trama relative all'anime selezionato.
-
-    Returns:
-        str: la scelta dell'utente nel menu.
     """
 
     bs = BeautifulSoup(requests.get(anime.url, headers=headers).text, "lxml")
@@ -245,17 +242,7 @@ def getAnimeInfo(anime: Anime) -> str:
                 my_print(re.sub("\s\s+" , " ", dd[i].text.strip()), format=0)
     #stampo la trama
     my_print("Trama:", color="azzurro", end=" ")
-    my_print(trama.text, format=0)
-    #stampo piccolo menu
-    def check_string(s: str):
-        s.lower()
-        if s == "g" or s == 'i' or s == "":
-            return s
-
-
-    my_print("\n(g) guardare", color='verde')
-    my_print("(i) indietro", color='magenta', end="")
-    return my_input("", check_string)
+    my_print(trama.text, format=0)    
 
 
 def getConfig() -> tuple[bool, str, str]:

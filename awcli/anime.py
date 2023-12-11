@@ -6,9 +6,9 @@ class Anime:
 
     Attributes:
         name (str): il nome dell'anime.
-        url (str): l'URL della pagina dell'anime su AnimeWorld.
-        ep (int):
-        ep_totali (str): il numero reale di episodi totali dell'anime.
+        url (str): l'URL della pagina dell'anime su AnimeWorld.  
+        ep (int, optional):
+        ep_totali (str, optional): il numero reale di episodi totali dell'anime.
     """ 
 
     def __init__(self, name, url, ep=0, ep_totali="") -> None:
@@ -17,6 +17,7 @@ class Anime:
         self.ep_corrente = ep
         self.ep = ep
         self.ep_totali = ep_totali
+        self.ep_ini = 1
 
     def load_episodes(self) -> None:
         """
@@ -32,7 +33,6 @@ class Anime:
             
         self.url_episodi, self.status, self.id_anilist, self.ep_totali = res
         self.ep = len(self.url_episodi)
-        self.ep_ini = 1
 
     def get_episodio(self, ep: int) -> str:
         """
