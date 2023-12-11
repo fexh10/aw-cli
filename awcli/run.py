@@ -481,6 +481,80 @@ def reloadCrono(cronologia: list[Anime]):
     my_print("Scegli un anime\n> ", end=" ", color="magenta")
 
 
+def printAnimeNames(animelist: list[Anime]): 
+    """
+    Stampa i nomi degli anime presenti nella lista desiderata.
+
+    Args:
+        animelist (list[Anime]): Una lista Anime.    
+
+    Return: 
+        None. 
+    """
+
+    my_print("", end="", cls=True)
+
+    colore = "verde"
+
+    for i, a in reversed(list(enumerate(animelist))):
+        if cronologia:
+            colore = "rosso"
+            if a.status == 1 or a.ep_corrente < a.ep:
+                colore = "verde"
+        
+        my_print(f"{i + 1} ", color=colore, end=" ")
+        if cronologia:
+            my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
+        elif lista:
+            my_print(f"{a.name} [Ep {a.ep}]") 
+        else:
+            my_print(a.name)
+
+
+def removeFromCrono(number: int):
+    """
+    Rimuove l'anime selezionato dalla cronologia
+    e stampa un menu di scelta per l'utente.
+
+    Args:
+        number (int): il numero dell'anime in lista da rimuovere.
+
+    Return:
+        None.
+    """
+
+    def check_delete(s: str):
+        s.lower()
+        if s == "s":
+            return True
+        elif s == "n" or s == "":
+            return False
+
+    global log
+
+    my_print(f"Si è sicuri di voler rimuovere \"{log[number][0]}\" dalla cronologia? (s/N)", color="giallo", end="")
+    delete = my_input("", check_delete)
+
+    if delete:
+        log.pop(number)
+
+        printAnimeNames(getCronologia())
+
+        def check_str(s: str):
+            s.lower()
+            if s == "c":
+                return "c"
+            elif s == "e" or s == '':
+                return "e"
+
+        my_print("(c) continua", color="verde")
+        my_print("(e) esci", color="rosso", end="")
+        scelta = my_input("", check_str)
+
+        if scelta == "e":
+            safeExit()
+
+
 def main():
     global log
     global syncpl
@@ -504,7 +578,7 @@ def main():
     # args
     parser = argparse.ArgumentParser("aw-cli", description="Guarda anime dal terminale e molto altro!")
     parser.add_argument('-a', '--configurazione', action='store_true', dest='avvia_config', help='avvia il menu di configurazione')
-    parser.add_argument('-c', '--cronologia', action='store_true', dest='cronologia', help='continua a guardare un anime dalla cronologia')
+    parser.add_argument('-c', '--cronologia', nargs='?', choices=['r'], dest='cronologia', help='continua a guardare un anime dalla cronologia. \'r\' per rimuovere un anime (opzionale)')
     parser.add_argument('-d', '--download', action='store_true', dest='download', help='scarica gli episodi che preferisci')
     parser.add_argument('-i', '--info', action='store_true', dest='info', help='visualizza le informazioni e la trama di un anime')
     parser.add_argument('-l', '--lista', nargs='?', choices=['a', 's', 'd', 't'], dest='lista', help="lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub, t = tendenze. Default 'a'")
@@ -516,18 +590,17 @@ def main():
     
     args = parser.parse_args()
     
-    if args.avvia_config:
-        setupConfig()
     if  '-l' in sys.argv and args.lista == None:
         args.lista = 'a'
-    
+    elif '-c' in sys.argv and args.cronologia == None:
+        args.cronologia = True
     #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
-    if not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
+    if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
         setupConfig()
 
     mpv, player_path, syncplay_path = getConfig()
     #se la prima riga del config corrisponde a una versione vecchia, faccio rifare il config
-    if player_path == "Player: MPV" or player_path == "Player: VLC" or syncplay_path == None:
+    if player_path.startswith("Player") or syncplay_path == None:
         my_print("Ci sono stati dei cambiamenti nella configurazione...", color="giallo")
         sleep(1)
         setupConfig()
@@ -566,24 +639,10 @@ def main():
             else:
                 animelist = RicercaAnime()
                 
-            while True:
-                my_print("", end="", cls=True)
-                # stampo i nomi degli anime
-                colore = "verde"
-                for i, a in reversed(list(enumerate(animelist))):
-                    if cronologia:
-                        colore = "rosso"
-                        if a.status == 1 or a.ep_corrente < a.ep:
-                            colore = "verde"
-                    
-                    my_print(f"{i + 1} ", color=colore, end=" ")
-                    if cronologia:
-                        my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
-                    elif lista:
-                       my_print(f"{a.name} [Ep {a.ep}]") 
-                    else:
-                        my_print(a.name)
-                if cronologia:
+            while True:                
+                printAnimeNames(animelist)
+
+                if cronologia and args.cronologia != 'r':
                     thread = Thread(target=reloadCrono, args=[animelist])    
                     thread.start()
 
@@ -593,7 +652,14 @@ def main():
                         if index in range(len(animelist)):
                             return index
                 
+                if args.cronologia == 'r':
+                    scelta = my_input("Rimuovi un anime", check_index)
+                    removeFromCrono(scelta)
+                    animelist = getCronologia()
+                    continue
+                
                 scelta = my_input("Scegli un anime", check_index)
+
                 anime = animelist[scelta]
                 #se la lista è stata selezionata, inserisco come ep_iniziale e ep_finale quello scelto dall'utente
                 #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
@@ -617,19 +683,18 @@ def main():
             #se ho l'args -i e ho scelto di tornare indietro, faccio una continue sul ciclo while True
             if scelta_info == 'i':
                 continue
-            if not cronologia:
-                if not lista:
-                    ep_iniziale, ep_finale = scegliEpisodi()
-            else:
+
+            if cronologia:            
                 ep_iniziale = anime.ep_corrente + 1
                 ep_finale = ep_iniziale
                 if ep_finale > anime.ep:
                     my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                     if len(log) == 1:
                         safeExit()
-                    else:
-                        sleep(1)
-                        continue
+                    sleep(1)
+                    continue
+            elif not lista:
+                ep_iniziale, ep_finale = scegliEpisodi()
             
             if downl:
                 path = f"{downloadPath()}/{anime.name}"
@@ -707,7 +772,7 @@ offline = False
 cronologia = False
 info = False
 privato = False
-versione = "1.7fC"
+versione = "1.7rFC"
 log = []
 player_path = ""
 syncplay_path = ""
