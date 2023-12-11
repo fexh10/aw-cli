@@ -10,11 +10,13 @@ https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-
 
 ## Indice
 
-- [Installazione](#Installazione)
-- [Disinstallazione](#Disinstallazione)
-- [Utilizzo](#Utilizzo)
-- [Crediti](#Crediti)
-- [Disclaimer](./disclaimer.md)
+- [aw-cli](#aw-cli)
+  - [Anteprima](#anteprima)
+  - [Indice](#indice)
+  - [Installazione](#installazione)
+  - [Disinstallazione](#disinstallazione)
+  - [Utilizzo](#utilizzo)
+  - [Crediti](#crediti)
 
 
 ## Installazione
@@ -37,24 +39,27 @@ python3 -m pip uninstall aw-cli
 
 ## Utilizzo
 ```
-usage: aw-cli [-h] [-a] [-c] [-d] [-i] [-l [{a,s,d,t}]] [-o] [-p] [-s] [-v]
+usage: aw-cli [-h] [-v] [-c [{r}]] [-l [{a,s,d,t}]] [-i] [-s] [-d] [-o] [-p] [-a]
 
 Guarda anime dal terminale e molto altro!
 
-options:
-  -h, --help            show this help message and exit
-  -a, --configurazione  avvia il menu di configurazione
-  -c, --cronologia      continua a guardare un anime dalla cronologia
-  -d, --download        scarica gli episodi che preferisci
-  -i, --info            visualizza le informazioni e la trama di un anime
+Informazioni:
+  -h, --help            mostra questo messaggio
+  -v, --versione        stampa la versione del programma
+
+Opzioni:
+  -c [{r}], --cronologia [{r}]
+                        continua a guardare un anime dalla cronologia. 'r' per rimuovere un anime (opzionale)
   -l [{a,s,d,t}], --lista [{a,s,d,t}]
-                        lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d =
-                        dub, t = tendenze. Default 'a'
+                        lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub, t = tendenze. Default 'a'
+  -i, --info            visualizza le informazioni e la trama di un anime
+  -s, --syncplay        usa syncplay per guardare un anime insieme ai tuoi amici
+  -d, --download        scarica gli episodi che preferisci
   -o, --offline         apri gli episodi scaricati precedentemente direttamente dal terminale
   -p, --privato         guarda un episodio senza che si aggiorni la cronologia o AniList
-  -s, --syncplay        usa syncplay per guardare un anime insieme ai tuoi amici (solo MPV)
-  -v, --versione        stampa la versione del programma
-                                                             
+
+Configurazione:
+  -a, --configurazione  avvia il menu di configurazione                                                       
 ```
 
 ## Crediti
