@@ -668,6 +668,7 @@ def main():
                     ep_finale = ep_iniziale
                 scelta_info = ""
                 if info:
+                    getAnimeInfo(anime)
                     #stampo piccolo menu
                     def check_string(s: str):
                         s.lower()

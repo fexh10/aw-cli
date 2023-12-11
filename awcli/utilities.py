@@ -176,7 +176,7 @@ def episodes(url_ep: str) -> tuple[str, int, int, str]:
         url_ep (str): indica la pagina dell'episodio.
 
     Returns:
-        tuple[str, int, int, str]: la lista con gli URL dei vari episodi trovati, 
+        tuple[list[str], int, int, str]: la lista con gli URL dei vari episodi trovati, 
         lo stato dell'anime, l'id di AniList se si ha effettuato l'accesso
         e il numero reale degli episodi totali dell'anime.
     """
@@ -211,6 +211,18 @@ def episodes(url_ep: str) -> tuple[str, int, int, str]:
 
     return url_episodi, status, id_anilist, ep_totali
 
+def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
+    """
+    Prende le informazioni dell'anime selezionato.
+
+    Args:
+        url (str): indica la pagina dell'anime.
+
+    Returns:
+        tuple[int, list[str], list[str]]: l'id di AniList, la lista degli url degli episodi e la lista delle info dell'anime.
+    """
+    pass
+        
 
 def downloaded_episodes(anime: Anime, path: str) -> None:
         """

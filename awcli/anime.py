@@ -33,7 +33,28 @@ class Anime:
             
         self.url_episodi, self.status, self.id_anilist, self.ep_totali = res
         self.ep = len(self.url_episodi)
+        
+    def load_info(self) -> None:
+        """
+        Cerca le informazioni dell'anime e le salva.
+        """
 
+        res = utilities.get_info_anime(self.url)
+        self.id_anilist, self.url_episodi, infos = res
+        self.ep = len(self.url_episodi)
+        self.category = infos[0]
+        self.audio = infos[1]
+        self.release_date = infos[2]
+        self.season = infos[3]
+        self.studios = infos[4]
+        self.genres = infos[5]
+        self.vote = infos[6]
+        self.ep_len = infos[7]
+        self.ep_totali = int(infos[8])
+        self.status = infos[9]
+        self.views = infos[10]
+        self.plot = infos[11]
+        
     def get_episodio(self, ep: int) -> str:
         """
         Restituisce il link dell'episodio specificato.
