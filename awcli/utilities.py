@@ -56,6 +56,30 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             my_print("",end="", cls=True)
     return i
 
+
+def getBs(url: str) -> BeautifulSoup:
+    """
+    Prende l'html della pagina web selezionata.
+
+    Args:
+        url (str): indica la pagina web da cui prendere l'html.
+
+    Returns:
+        BeautifulSoup: l'html della pagina web selezionata.
+    """
+    try:
+        result = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError:
+        my_print("Errore di connessione", color="rosso")
+        exit()
+    
+    if result.status_code != 200:
+        my_print("Errore: pagina non trovata", color="rosso")
+        exit()
+    
+    return BeautifulSoup(result.text, "html.parser")
+
+
 def search(input: str) -> list[Anime]:
     """
     Ricerca l'anime selezionato su AnimeWorld.
@@ -70,7 +94,7 @@ def search(input: str) -> list[Anime]:
     # cerco l'anime su animeworld
     my_print("Ricerco...", color="giallo")
     url_ricerca = _url + "/search?keyword=" + input.replace(" ", "+")
-    bs = BeautifulSoup(requests.get(url_ricerca, headers=headers).text, "lxml")
+    bs = getBs(url_ricerca)
 
     animes = list[Anime]()
     # prendo i link degli anime relativi alla ricerca
@@ -106,7 +130,7 @@ def latest(filter = "all") -> list[Anime]:
         case 't': data_name = "trending"
         case  _ : data_name = "all"
 
-    bs = BeautifulSoup(requests.get(_url, headers=headers).text, "lxml")
+    bs = getBs(_url)
     animes = list[Anime]()
 
     div = bs.find("div", {"data-name": data_name})
@@ -138,7 +162,7 @@ def download(url_ep: str) -> str:
     Returns:
         str: il link di download
     """
-    bs = BeautifulSoup(requests.get(url_ep, headers=headers).text, "lxml")
+    bs = getBs(url_ep)
 
     links = bs.find(id="download").find_all("a")
     return links[1].get('href')
@@ -158,7 +182,7 @@ def episodes(url_ep: str) -> tuple[str, int, int, str]:
     """
 
     # prendo l'html dalla pagina web di AW
-    bs = BeautifulSoup(requests.get(url_ep, headers=headers).text, "lxml")
+    bs = getBs(url_ep)
 
     url_episodi = list[str]()
     # cerco gli url di tutti gli episodi

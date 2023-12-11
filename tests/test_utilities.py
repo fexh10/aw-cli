@@ -10,6 +10,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 @pytest.fixture
 def mock_get():
     with patch('requests.get') as mock:
+        mock.return_value.status_code = 200
         yield mock
 
 @pytest.mark.parametrize("input,expected", [
