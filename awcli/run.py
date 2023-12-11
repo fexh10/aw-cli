@@ -8,6 +8,7 @@ from pySmartDL import SmartDL
 from pathlib import Path
 from threading import Thread
 from awcli.utilities import * 
+from awcli.version import versione
 import awcli.anilist as anilist
 
 if nome_os == "Windows":
@@ -586,7 +587,7 @@ def main():
     parser.add_argument('-p', '--privato', action='store_true', dest='privato', help="guarda un episodio senza che si aggiorni la cronologia o AniList")
     if nome_os != "Android":
         parser.add_argument('-s', '--syncplay', action='store_true', dest='syncpl', help='usa syncplay per guardare un anime insieme ai tuoi amici')
-    parser.add_argument('-v', '--versione', action='store_true', dest='versione', help="stampa la versione del programma")
+    parser.add_argument('-v', '--versione', action='version', version=versione, help="stampa la versione del programma")
     
     args = parser.parse_args()
     
@@ -618,9 +619,6 @@ def main():
         downl = True
     if args.lista:
         lista = True
-    if args.versione:
-        my_print(f"aw-cli versione: {versione}", cls=True)
-        safeExit()
     if args.privato:
         privato = True
     elif args.offline:
@@ -782,7 +780,6 @@ offline = False
 cronologia = False
 info = False
 privato = False
-versione = "1.7rTA"
 log = []
 player_path = ""
 syncplay_path = ""
