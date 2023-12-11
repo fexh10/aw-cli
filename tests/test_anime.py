@@ -27,8 +27,8 @@ def mock_get_info_anime():
                 "genere",
                 "voto",
                 "durata",
-                26,
-                "stato",
+                "26",
+                1,
                 232023,
                 "trama"
             ]
@@ -46,8 +46,8 @@ def test_load_info(anime, mock_get_info_anime):
     assert anime.studios == "studio"
     assert anime.genres == "genere"
     assert anime.ep_len == "durata"
-    assert anime.ep_totali == 26
-    assert anime.status == "stato"
+    assert anime.ep_totali == "26"
+    assert anime.status == 1
     assert anime.views == 232023
     assert anime.plot == "trama"
     

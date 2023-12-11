@@ -197,10 +197,14 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
             
     # prendo le info dell'anime
     info = list[str]()
-    for div in bs.find(class_='info col-md-9').find(class_='row').find_all("dd"):
-        info.append(div.text.strip())
-        
-    info[5] = re.sub("\s+" , " ", info[5])
+    infoDiv = bs.find(class_='info col-md-9')
+    for i, div in enumerate(infoDiv.find(class_='row').find_all("dd")):
+        match i:
+            case 5: info.append(re.sub(r'\s+', ' ', div.text).strip())
+            case 9: info.append(div.a.get('href')[-1])
+            case _: info.append(div.text.strip())
+    
+    info.append(re.sub(r'\s+', ' ', infoDiv.find(class_='desc').text).strip())
     
     return id_anilist, url_episodi, info
         

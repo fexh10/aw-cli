@@ -51,14 +51,13 @@ def test_get_info_anime(mock_get):
         "8.47 / 10",
         "23 min/ep",
         "20",
-        "Finito",
+        "1",
         "1.387.659",
         "Gli uomini che vivono nell'ombra sono quelle persone che passano inosservate, come persone ordinarie, ma in realtà detengono il potere da dietro le quinte. Questo è ciò a cui aspira Shido e per raggiungere il suo obiettivo vive una vita insignificante di giorno, mentre di notte si allena duramente preparandosi alla sua ascesa al potere. Finalmente riesce a raggiungere il suo obiettivo quando, dopo un fatale incidente, si risveglia in un mondo misterioso e si ritrova a capo di un'organizzazione segreta che combatte i demoni rimanendo nell'oscurità!"
     ]
     assert results[0] == 130298
     assert len(results[1]) == 20
-    for i, info in enumerate(results[2]):
-        assert info == expected[i]
+    assert results[2] == expected
 
 @pytest.mark.parametrize("input_str, format_func, input_values, expected_output", [
     ("Inserisci un numero", lambda i: int(i) if i.isdigit() else None, ["abc", "5"], 5),

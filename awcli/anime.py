@@ -40,8 +40,8 @@ class Anime:
         self.genres = infos[5]
         self.vote = infos[6]
         self.ep_len = infos[7]
-        self.ep_totali = int(infos[8])
-        self.status = infos[9]
+        self.ep_totali = infos[8]
+        self.status = int(infos[9])
         self.views = infos[10]
         self.plot = infos[11]
         
@@ -72,7 +72,40 @@ class Anime:
         """
         return f"{self.name} Ep. {ep}"
     
-    def print_info():
-        pass
+    def print_info(self):
+        """
+        Stampa le informazioni dell'anime.
+        """
+        utilities.my_print(self.name, cls=True)
+        utilities.my_print("Categoria: ", end="", color="azzurro")
+        utilities.my_print(self.category, format=0)
+        utilities.my_print("Audio: ", end="", color="azzurro")
+        utilities.my_print(self.audio, format=0)
+        utilities.my_print("Data di uscita: ", end="", color="azzurro")
+        utilities.my_print(self.release_date, format=0)
+        utilities.my_print("Stagione: ", end="", color="azzurro")
+        utilities.my_print(self.season, format=0)
+        utilities.my_print("Studios: ", end="", color="azzurro")
+        utilities.my_print(self.studios, format=0)
+        utilities.my_print("Generi: ", end="", color="azzurro")
+        utilities.my_print(self.genres, format=0)
+        utilities.my_print("Voto medio: ", end="", color="azzurro")
+        utilities.my_print(self.vote, format=0)
+        utilities.my_print("Durata: ", end="", color="azzurro")
+        utilities.my_print(self.ep_len, format=0)
+        utilities.my_print("Episodi: ", end="", color="azzurro")
+        utilities.my_print(self.ep_totali, format=0)
+        utilities.my_print("Stato: ", end="", color="azzurro")
+        match self.status:
+            case 0:
+                utilities.my_print("Finito", format=0)
+            case 1:
+                utilities.my_print("In corso", format=0)
+            case 2:
+                utilities.my_print("Non rilasciato", format=0)
+        utilities.my_print("Visualizzazioni: ", end="", color="azzurro")
+        utilities.my_print(self.views, format=0)
+        utilities.my_print("Trama: ", end="", color="azzurro")
+        utilities.my_print(self.plot, format=0)
         
  
