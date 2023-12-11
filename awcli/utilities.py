@@ -167,49 +167,6 @@ def download(url_ep: str) -> str:
     links = bs.find(id="download").find_all("a")
     return links[1].get('href')
 
-def episodes(url_ep: str) -> tuple[str, int, int, str]:
-    """
-    Cerca i link degli episodi dell'anime nella pagina selezionata e 
-    controlla se è ancora in corso.
-
-    Args:
-        url_ep (str): indica la pagina dell'episodio.
-
-    Returns:
-        tuple[list[str], int, int, str]: la lista con gli URL dei vari episodi trovati, 
-        lo stato dell'anime, l'id di AniList se si ha effettuato l'accesso
-        e il numero reale degli episodi totali dell'anime.
-    """
-
-    # prendo l'html dalla pagina web di AW
-    bs = getBs(url_ep)
-
-    url_episodi = list[str]()
-    # cerco gli url di tutti gli episodi
-    for div in bs.find_all(class_='server active'):
-        for li in div.find_all(class_="episode"):
-            if ".5" in li.a.get('data-num'):
-                continue
-            temp = _url + (li.a.get('href'))
-            url_episodi.append(temp)
-    #cerco lo stato dell'anime. 1 se è finito, altrimenti 0
-    status = 1
-    dl = bs.find_all(class_='meta col-sm-6')
-    for a in dl[1].find_all("a"):
-        if "filter?status=0"in a.get('href'):
-            status = 0
-            break
-    #cerco il numero reale di episodi totali dell'anime
-    ep_totali = bs.find_all("dd")[12].string if status == 0 else len(url_episodi) 
-    #cerco l'id di anilist
-    id_anilist = 0
-    try:
-        if anilist.tokenAnilist != 'tokenAnilist: False':
-            id_anilist = int(bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", ""))
-    except AttributeError:
-        pass
-
-    return url_episodi, status, id_anilist, ep_totali
 
 def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     """
@@ -275,34 +232,6 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
         else:
             anime.ep = 0
             anime.ep_ini = 0
-
-
-def getAnimeInfo(anime: Anime):
-    """
-    Prende le informazioni e la trama relative all'anime selezionato.
-    """
-
-    bs = BeautifulSoup(requests.get(anime.url, headers=headers).text, "lxml")
-    row = bs.find(class_='info col-md-9').find(class_='row')
-    my_print(anime.name, cls=True)
-    
-    dt = row.find_all("dt")
-    dd = row.find_all("dd")
-    trama = bs.find(class_='desc')
-
-    #stampo dl e dt
-    for i in range(len(dt)):
-            if i == 6:
-                my_print(dt[i].text.strip().replace(":", " medio: "), end=" ", color="azzurro")
-            else:
-                my_print(dt[i].text.strip(), end=" ", color="azzurro")
-            if i == 5:
-                my_print(re.sub("\s\s+" , " ", dd[i].text.strip()), format=0)
-            else:
-                my_print(dd[i].text.strip(), format=0)
-    #stampo la trama
-    my_print("Trama:", color="azzurro", end=" ")
-    my_print(trama.text, format=0)    
 
 
 def getConfig() -> tuple[bool, str, str]:

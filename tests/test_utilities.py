@@ -34,14 +34,6 @@ def test_download(mock_get):
     results = utilities.download(input)
     expected = "https://server18.streamingaw.online/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
     ##assert results == expected
-
-def test_episodes_len(mock_get):
-    input = TEST_DIR + "/" + "theeminenceinshadowep13"
-    with open(input) as html:
-        mock_get.return_value.text = html.read()
-    
-    results = utilities.episodes(input)
-    assert len(results[0]) == 20
     
 def test_get_info_anime(mock_get):
     input = TEST_DIR + "/" + "theeminenceinshadowep13"

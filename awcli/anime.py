@@ -18,28 +18,18 @@ class Anime:
         self.ep = ep
         self.ep_totali = ep_totali
         self.ep_ini = 1
-
-    def load_episodes(self) -> None:
-        """
-        Cerca gli URL degli episodi dell'anime e salva il numero di episodi trovati
-        """
-
-        try:
-            res = utilities.episodes(self.url)
-        except IndexError:
-            utilities.my_print("Il link è stato cambiato", color="rosso", end="\n")
-            self.url = utilities.search(self.name)[0].url
-            res = utilities.episodes(self.url)
-            
-        self.url_episodi, self.status, self.id_anilist, self.ep_totali = res
-        self.ep = len(self.url_episodi)
         
     def load_info(self) -> None:
         """
         Cerca le informazioni dell'anime e le salva.
         """
-
-        res = utilities.get_info_anime(self.url)
+        try:
+            res = utilities.get_info_anime(self.url)
+        except IndexError:
+            utilities.my_print("Il link è stato cambiato", color="rosso", end="\n")
+            self.url = utilities.search(self.name)[0].url
+            res = utilities.get_info_anime(self.url)
+            
         self.id_anilist, self.url_episodi, infos = res
         self.ep = len(self.url_episodi)
         self.category = infos[0]
@@ -81,4 +71,8 @@ class Anime:
             str: il nome dell'episodio.
         """
         return f"{self.name} Ep. {ep}"
+    
+    def print_info():
+        pass
+        
  
