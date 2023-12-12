@@ -667,12 +667,22 @@ def main():
                     ep_iniziale = anime.ep
                     ep_finale = ep_iniziale
                 scelta_info = ""
+
+                anime.load_info() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
+
                 if info:
-                    scelta_info = getAnimeInfo(anime)
+                    anime.print_info()
+                    #stampo piccolo menu
+                    def check_string(s: str):
+                        s.lower()
+                        if s == "g" or s == 'i' or s == "":
+                            return s
+
+                    my_print("(g) guardare", color='verde')
+                    my_print("(i) indietro", color='magenta', end="")
+                    scelta_info = my_input("", check_string)
                     if scelta_info == 'i':
                         break
-
-                anime.load_episodes() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
                 if anime.ep != 0:
                     break
@@ -772,7 +782,7 @@ offline = False
 cronologia = False
 info = False
 privato = False
-versione = "1.7rFC"
+versione = "1.7rTA"
 log = []
 player_path = ""
 syncplay_path = ""

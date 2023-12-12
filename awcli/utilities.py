@@ -56,6 +56,30 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             my_print("",end="", cls=True)
     return i
 
+
+def getBs(url: str) -> BeautifulSoup:
+    """
+    Prende l'html della pagina web selezionata.
+
+    Args:
+        url (str): indica la pagina web da cui prendere l'html.
+
+    Returns:
+        BeautifulSoup: l'html della pagina web selezionata.
+    """
+    try:
+        result = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError:
+        my_print("Errore di connessione", color="rosso")
+        exit()
+    
+    if result.status_code != 200:
+        my_print("Errore: pagina non trovata", color="rosso")
+        exit()
+    
+    return BeautifulSoup(result.text, "html.parser")
+
+
 def search(input: str) -> list[Anime]:
     """
     Ricerca l'anime selezionato su AnimeWorld.
@@ -70,7 +94,7 @@ def search(input: str) -> list[Anime]:
     # cerco l'anime su animeworld
     my_print("Ricerco...", color="giallo")
     url_ricerca = _url + "/search?keyword=" + input.replace(" ", "+")
-    bs = BeautifulSoup(requests.get(url_ricerca, headers=headers).text, "lxml")
+    bs = getBs(url_ricerca)
 
     animes = list[Anime]()
     # prendo i link degli anime relativi alla ricerca
@@ -106,7 +130,7 @@ def latest(filter = "all") -> list[Anime]:
         case 't': data_name = "trending"
         case  _ : data_name = "all"
 
-    bs = BeautifulSoup(requests.get(_url, headers=headers).text, "lxml")
+    bs = getBs(_url)
     animes = list[Anime]()
 
     div = bs.find("div", {"data-name": data_name})
@@ -138,55 +162,52 @@ def download(url_ep: str) -> str:
     Returns:
         str: il link di download
     """
-    bs = BeautifulSoup(requests.get(url_ep, headers=headers).text, "lxml")
+    bs = getBs(url_ep)
 
     links = bs.find(id="download").find_all("a")
     return links[1].get('href')
 
-def episodes(url_ep: str) -> tuple[str, int, int, str]:
+
+def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     """
-    Cerca i link degli episodi dell'anime nella pagina selezionata e 
-    controlla se è ancora in corso.
+    Prende le informazioni dell'anime selezionato.
 
     Args:
-        url_ep (str): indica la pagina dell'episodio.
+        url (str): indica la pagina dell'anime.
 
     Returns:
-        tuple[str, int, int, str]: la lista con gli URL dei vari episodi trovati, 
-        lo stato dell'anime, l'id di AniList se si ha effettuato l'accesso
-        e il numero reale degli episodi totali dell'anime.
+        tuple[int, list[str], list[str]]: l'id di AniList, la lista degli url degli episodi e la lista delle info dell'anime.
     """
-
     # prendo l'html dalla pagina web di AW
-    bs = BeautifulSoup(requests.get(url_ep, headers=headers).text, "lxml")
+    bs = getBs(url)
 
+    # prendo l'id di anilist
+    try:
+        id_anilist = int(bs.find(class_='anilist control tip tippy-desktop-only').get('href')[25:])   
+    except AttributeError:
+        id_anilist = 0 
+    # prendo gli url degli episodi
     url_episodi = list[str]()
-    # cerco gli url di tutti gli episodi
     for div in bs.find_all(class_='server active'):
         for li in div.find_all(class_="episode"):
             if ".5" in li.a.get('data-num'):
                 continue
             temp = _url + (li.a.get('href'))
             url_episodi.append(temp)
-    #cerco lo stato dell'anime. 1 se è finito, altrimenti 0
-    status = 1
-    dl = bs.find_all(class_='meta col-sm-6')
-    for a in dl[1].find_all("a"):
-        if "filter?status=0"in a.get('href'):
-            status = 0
-            break
-    #cerco il numero reale di episodi totali dell'anime
-    ep_totali = bs.find_all("dd")[12].string if status == 0 else len(url_episodi) 
-    #cerco l'id di anilist
-    id_anilist = 0
-    try:
-        if anilist.tokenAnilist != 'tokenAnilist: False':
-            id_anilist = int(bs.find(class_='anilist control tip tippy-desktop-only').get('href').replace("https://anilist.co/anime/", ""))
-    except AttributeError:
-        pass
-
-    return url_episodi, status, id_anilist, ep_totali
-
+            
+    # prendo le info dell'anime
+    info = list[str]()
+    infoDiv = bs.find(class_='info col-md-9')
+    for i, div in enumerate(infoDiv.find(class_='row').find_all("dd")):
+        match i:
+            case 5: info.append(re.sub(r'\s+', ' ', div.text).strip())
+            case 9: info.append(div.a.get('href')[-1])
+            case _: info.append(div.text.strip())
+    
+    info.append(re.sub(r'\s+', ' ', infoDiv.find(class_='desc').text).strip())
+    
+    return id_anilist, url_episodi, info
+        
 
 def downloaded_episodes(anime: Anime, path: str) -> None:
         """
@@ -215,47 +236,6 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
         else:
             anime.ep = 0
             anime.ep_ini = 0
-
-
-def getAnimeInfo(anime: Anime) -> str:
-    """
-    Prende le informazioni e la trama relative all'anime selezionato.
-
-    Returns:
-        str: la scelta dell'utente nel menu.
-    """
-
-    bs = BeautifulSoup(requests.get(anime.url, headers=headers).text, "lxml")
-    row = bs.find(class_='info col-md-9').find(class_='row')
-    my_print(anime.name, cls=True)
-    
-    dt = row.find_all("dt")
-    dd = row.find_all("dd")
-    trama = bs.find(class_='desc')
-
-    #stampo dl e dt
-    for i in range(len(dt)):
-            if i != 6:
-                my_print(dt[i].text.strip(), end=" ", color="azzurro")
-            else:
-                my_print(dt[i].text.strip().replace(":", " medio: "), end=" ", color="azzurro")
-            if i != 5:
-                my_print(dd[i].text.strip(), format=0)
-            else:
-                my_print(re.sub("\s\s+" , " ", dd[i].text.strip()), format=0)
-    #stampo la trama
-    my_print("Trama:", color="azzurro", end=" ")
-    my_print(trama.text, format=0)
-    #stampo piccolo menu
-    def check_string(s: str):
-        s.lower()
-        if s == "g" or s == 'i' or s == "":
-            return s
-
-
-    my_print("\n(g) guardare", color='verde')
-    my_print("(i) indietro", color='magenta', end="")
-    return my_input("", check_string)
 
 
 def getConfig() -> tuple[bool, str, str]:

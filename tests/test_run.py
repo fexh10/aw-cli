@@ -1,9 +1,10 @@
 import pytest
-from awcli.run import anime, scegliEpisodi
-from unittest.mock import patch, Mock
+import awcli.run as run
+from awcli.anime import Anime
+from unittest.mock import patch, MagicMock
 
-anime.name = "Mushishi"
-anime.ep = 26
+
+run.anime = Anime("Test", "no_url", 26, 26)
 
 @pytest.mark.parametrize("input_values,expected", [
     (["0", "27", "1"], (1, 1)),
@@ -13,6 +14,6 @@ anime.ep = 26
 @patch("builtins.input")
 def test_scegliEpisodi(input_mock, input_values, expected):
     input_mock.side_effect = input_values
-    result = scegliEpisodi()
+    result = run.scegliEpisodi()
     assert result == expected
 
