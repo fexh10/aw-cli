@@ -1,0 +1,1 @@
+versione = "1.7aD"
