@@ -385,9 +385,9 @@ def setupConfig() -> None:
 
         def check_index(s: str):
             if s == "1":
-                return "mpv" if nome_os == "Linux" else my_input("Inserisci il path del player")
+                return "mpv" if nome_os == "Linux" or nome_os == "Android" else my_input("Inserisci il path del player")
             elif s == "2":
-                return "vlc" if nome_os == "Linux" else my_input("Inserisci il path del player")
+                return "vlc" if nome_os == "Linux" or nome_os == "Android" else my_input("Inserisci il path del player")
 
 
         player = my_input("Scegli un player predefinito", check_index)
@@ -428,6 +428,8 @@ def setupConfig() -> None:
 
         if nome_os == "Linux":
             syncplay= "syncplay"
+        elif nome_os == "Android": 
+                syncplay = "Syncplay: None"
         else:
             syncplay = my_input("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)")
             if syncplay == "":
