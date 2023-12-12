@@ -1,6 +1,7 @@
 import sys
 import argparse
 from awcli.version import versione
+from awcli.utilities import nome_os 
 
 # args
 downl = False
@@ -60,13 +61,14 @@ options_group.add_argument(
     help='visualizza le informazioni e la trama di un anime'
 )
 
-options_group.add_argument(
-    '-s',
-    '--syncplay',
-    action='store_true',
-    dest='syncpl',
-    help='usa syncplay per guardare un anime insieme ai tuoi amici'
-)
+if nome_os != "Android":
+    options_group.add_argument(
+        '-s',
+        '--syncplay',
+        action='store_true',
+        dest='syncpl',
+        help='usa syncplay per guardare un anime insieme ai tuoi amici'
+    )
 
 options_group.add_argument(
     '-d',
