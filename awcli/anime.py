@@ -96,13 +96,12 @@ class Anime:
         utilities.my_print("Episodi: ", end="", color="azzurro")
         utilities.my_print(self.ep_totali, format=0)
         utilities.my_print("Stato: ", end="", color="azzurro")
-        match self.status:
-            case 0:
-                utilities.my_print("Finito", format=0)
-            case 1:
-                utilities.my_print("In corso", format=0)
-            case 2:
-                utilities.my_print("Non rilasciato", format=0)
+        if self.status == 0:
+            utilities.my_print("Finito", format=0)
+        elif self.status == 1:
+            utilities.my_print("In corso", format=0)
+        elif self.status == 2:
+            utilities.my_print("Non rilasciato", format=0)
         utilities.my_print("Visualizzazioni: ", end="", color="azzurro")
         utilities.my_print(self.views, format=0)
         utilities.my_print("Trama: ", end="", color="azzurro")

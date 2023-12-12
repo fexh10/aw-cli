@@ -123,12 +123,16 @@ def latest(filter = "all") -> list[Anime]:
     Returns:
         list[Anime]: la lista degli anime trovati
     """
-
-    match filter[0]:
-        case 's': data_name = "sub"
-        case 'd': data_name = "dub"
-        case 't': data_name = "trending"
-        case  _ : data_name = "all"
+    
+    
+    if filter[0] == 's':
+        data_name = "sub"
+    elif filter[0] == 'd':
+        data_name = "dub"
+    elif filter[0] == 't':
+        data_name = "trending"
+    else:
+        data_name = "all"
 
     bs = getBs(_url)
     animes = list[Anime]()
@@ -199,10 +203,12 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     info = list[str]()
     infoDiv = bs.find(class_='info col-md-9')
     for i, div in enumerate(infoDiv.find(class_='row').find_all("dd")):
-        match i:
-            case 5: info.append(re.sub(r'\s+', ' ', div.text).strip())
-            case 9: info.append(div.a.get('href')[-1])
-            case _: info.append(div.text.strip())
+        if i == 5:
+            info.append(re.sub(r'\s+', ' ', div.text).strip())
+        elif i == 9:
+            info.append(div.a.get('href')[-1])
+        else:
+            info.append(div.text.strip())
     
     info.append(re.sub(r'\s+', ' ', infoDiv.find(class_='desc').text).strip())
     
