@@ -211,7 +211,8 @@ def addToCronologia(ep: int):
     Viene aggiunta alla cronologia locale il nome del video,
     il numero dell'ultimo episodio visualizzato,
     il link di AnimeWorld relativo all'anime, 
-    il numero reale di episodi totali della serie e lo stato dell'anime.
+    il numero reale di episodi totali della serie, lostato dell'anime
+    e l'id anilist.
     La cronologia viene salvata su un file csv nella stessa 
     directory dello script. Se il file non esiste viene creato.
 
@@ -231,6 +232,7 @@ def addToCronologia(ep: int):
                 log[i][3] = anime.ep_totali
                 log[i][4] = anime.status
                 log[i][5] = anime.ep
+                log[i][6] = anime.id_anilist
                 temp = log.pop(i)
                 #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
                 if anime.status == 0 and ep == anime.ep:
@@ -241,9 +243,9 @@ def addToCronologia(ep: int):
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
         if anime.status == 0 and ep == anime.ep:
-            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep])
+            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist])
         else:
-            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep]) 
+            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist]) 
 
 
 def updateAnilist(ep: int):
@@ -352,7 +354,8 @@ def getCronologia() -> list[Anime]:
             riga.append(0)
         if len(riga) < 6:
             riga.append(riga[1])    
-        
+        if len(riga) < 7:
+            riga.append(0)
         a = Anime(name=riga[0], url=riga[2], ep=int(riga[5]), ep_totali=riga[3])
         a.ep_corrente = int(riga[1])
         a.status = int(riga[4])
