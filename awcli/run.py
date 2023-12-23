@@ -248,7 +248,53 @@ def addToCronologia(ep: int):
             log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist]) 
 
 
-def updateAnilist(ep: int):
+def removeFromCrono(number: int):
+    """
+    Rimuove l'anime selezionato dalla cronologia
+    e stampa un menu di scelta per l'utente.
+
+    Args:
+        number (int): il numero dell'anime in lista da rimuovere.
+
+    Return:
+        None.
+    """
+
+    def check_delete(s: str):
+        s.lower()
+        if s == "s":
+            return True
+        elif s == "n" or s == "":
+            return False
+
+    global log
+
+    my_print(f"Si è sicuri di voler rimuovere \"{anime.name}\" dalla cronologia? (s/N)", color="giallo", end="")
+    delete = my_input("", check_delete)
+
+    if delete:
+        updateAnilist(anime.ep, "drop")
+
+        log.pop(number)
+
+        printAnimeNames(getCronologia())
+
+        def check_str(s: str):
+            s.lower()
+            if s == "c":
+                return "c"
+            elif s == "e" or s == '':
+                return "e"
+
+        my_print("(c) continua", color="verde")
+        my_print("(e) esci", color="rosso", end="")
+        scelta = my_input("", check_str)
+
+        if scelta == "e":
+            safeExit()
+
+
+def updateAnilist(ep: int, dropRem: str = ""):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -266,10 +312,15 @@ def updateAnilist(ep: int):
     voto = 0
     preferiti = False
     status_list = 'CURRENT'
-    #se ho finito di vedere l'anime
-    if ep == anime.ep and anime.status == 1:
-        status_list = 'COMPLETED'
-        
+    
+    if dropRem == "drop":
+        status_list = 'DROPPED'
+
+    #se ho finito di vedere l'anime o lo stato è dropped
+    if (ep == anime.ep and anime.status == 1) or status_list == 'DROPPED':
+        if status_list == 'CURRENT':
+            status_list = 'COMPLETED'
+    
         #chiedo di votare
         if anilist.ratingAnilist:
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -287,7 +338,7 @@ def updateAnilist(ep: int):
                 voto = future_voto.result()
     
         #chiedo di mettere tra i preferiti
-        if anilist.preferitoAnilist:
+        if anilist.preferitoAnilist and status_list == 'COMPLETED':
             def check_string(s: str):
                 s = s.lower()
                 if s == "s":
@@ -520,50 +571,6 @@ def printAnimeNames(animelist: list[Anime]):
             my_print(a.name)
 
 
-def removeFromCrono(number: int):
-    """
-    Rimuove l'anime selezionato dalla cronologia
-    e stampa un menu di scelta per l'utente.
-
-    Args:
-        number (int): il numero dell'anime in lista da rimuovere.
-
-    Return:
-        None.
-    """
-
-    def check_delete(s: str):
-        s.lower()
-        if s == "s":
-            return True
-        elif s == "n" or s == "":
-            return False
-
-    global log
-
-    my_print(f"Si è sicuri di voler rimuovere \"{log[number][0]}\" dalla cronologia? (s/N)", color="giallo", end="")
-    delete = my_input("", check_delete)
-
-    if delete:
-        log.pop(number)
-
-        printAnimeNames(getCronologia())
-
-        def check_str(s: str):
-            s.lower()
-            if s == "c":
-                return "c"
-            elif s == "e" or s == '':
-                return "e"
-
-        my_print("(c) continua", color="verde")
-        my_print("(e) esci", color="rosso", end="")
-        scelta = my_input("", check_str)
-
-        if scelta == "e":
-            safeExit()
-
-
 def main():
     global log
     global syncpl
@@ -628,6 +635,7 @@ def main():
                 
                 if args.cronologia == 'r':
                     scelta = my_input("Rimuovi un anime", check_index)
+                    anime = animelist[scelta]
                     removeFromCrono(scelta)
                     animelist = getCronologia()
                     continue
