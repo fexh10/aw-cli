@@ -248,53 +248,7 @@ def addToCronologia(ep: int):
             log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist]) 
 
 
-def removeFromCrono(number: int):
-    """
-    Rimuove l'anime selezionato dalla cronologia
-    e stampa un menu di scelta per l'utente.
-
-    Args:
-        number (int): il numero dell'anime in lista da rimuovere.
-
-    Return:
-        None.
-    """
-
-    def check_delete(s: str):
-        s.lower()
-        if s == "s":
-            return True
-        elif s == "n" or s == "":
-            return False
-
-    global log
-
-    my_print(f"Si è sicuri di voler rimuovere \"{anime.name}\" dalla cronologia? (s/N)", color="giallo", end="")
-    delete = my_input("", check_delete)
-
-    if delete:
-        updateAnilist(anime.ep, "drop")
-
-        log.pop(number)
-
-        printAnimeNames(getCronologia())
-
-        def check_str(s: str):
-            s.lower()
-            if s == "c":
-                return "c"
-            elif s == "e" or s == '':
-                return "e"
-
-        my_print("(c) continua", color="verde")
-        my_print("(e) esci", color="rosso", end="")
-        scelta = my_input("", check_str)
-
-        if scelta == "e":
-            safeExit()
-
-
-def updateAnilist(ep: int, dropRem: str = ""):
+def updateAnilist(ep: int, drop: bool = False):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -303,6 +257,7 @@ def updateAnilist(ep: int, dropRem: str = ""):
 
     Args:
         ep (int): il numero dell'episodio visualizzato.
+        drop: True se l'utente decide di droppare l'anime, altrimenti False.
     """
     
     if anime.id_anilist == 0:
@@ -313,10 +268,10 @@ def updateAnilist(ep: int, dropRem: str = ""):
     preferiti = False
     status_list = 'CURRENT'
     
-    if dropRem == "drop":
+    if drop:
         status_list = 'DROPPED'
 
-    #se ho finito di vedere l'anime o lo stato è dropped
+    #se ho finito di vedere l'anime o lo stato è dropped    
     if (ep == anime.ep and anime.status == 1) or status_list == 'DROPPED':
         if status_list == 'CURRENT':
             status_list = 'COMPLETED'
@@ -569,6 +524,67 @@ def printAnimeNames(animelist: list[Anime]):
             my_print(f"{a.name} [Ep {a.ep}]") 
         else:
             my_print(a.name)
+
+
+def removeFromCrono(number: int):
+    """
+    Rimuove l'anime selezionato dalla cronologia
+    e stampa un menu di scelta per l'utente.
+
+    Args:
+        number (int): il numero dell'anime in lista da rimuovere.
+
+    Return:
+        None.
+    """
+
+    def check_delete(s: str):
+        s.lower()
+        if s == "s":
+            return True
+        elif s == "n" or s == "":
+            return False
+
+    global log
+
+    my_print(f"Si è sicuri di voler rimuovere \"{anime.name}\" dalla cronologia? (s/N)", color="giallo", end="")
+    delete = my_input("", check_delete)
+
+    if delete:
+        if anilist.tokenAnilist != "TokenAnilist: False":
+            def check_drop(s: str):
+                s.lower()
+                if s == "d" or s == "r" or s == "n":
+                    return s
+
+            my_print("Anilist", color="blu")
+            my_print("(d) drop", color="rosso")
+            my_print("(n) niente", color="bianco", end="")
+
+            drop = my_input("", check_drop)
+
+            if drop == "d":
+                updateAnilist(anime.ep, True)
+            elif drop == "r":
+                exit()
+
+        log.pop(number)
+
+        printAnimeNames(getCronologia())
+
+        def check_str(s: str):
+            s.lower()
+            if s == "c":
+                return "c"
+            elif s == "e" or s == '':
+                return "e"
+
+        my_print("(c) continua", color="verde")
+        my_print("(e) esci", color="rosso", end="")
+        scelta = my_input("", check_str)
+
+        if scelta == "e":
+            safeExit()
 
 
 def main():
