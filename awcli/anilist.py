@@ -9,7 +9,45 @@ class TokenError(Exception):
     pass
 
 
-def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferiti: bool) -> None:
+def addToAnilistFavourite(id_anilist: int, ep: int, voto: float): 
+    """
+    Collegamento alle API di AniList per aggiornare
+    automaticamente gli anime.
+
+    Args:
+        id_anilist (int): l'id dell'anime su AniList.
+        ep (int): il numero dell'episodio visualizzato.
+        voto (float): il voto dell'anime.
+    """
+
+    query = """
+        mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
+            SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
+                status
+                progress
+                score
+            },
+            ToggleFavourite(animeId:$idAnime){
+                anime {
+                    nodes {
+                        id
+                    }
+                }
+            }
+        }
+        """
+    
+    var = {
+        "idAnime": id_anilist,
+        "status": "COMPLETED",
+        "episodio": ep,
+        "score": voto
+    }
+
+    requestModifyAnilist(query, var)
+
+
+def addToAnilist(id_anilist: int, ep: int, status_list: str, voto: float) -> None:
     """
     Collegamento alle API di AniList per aggiornare
     automaticamente gli anime.
@@ -19,37 +57,17 @@ def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferit
         ep (int): il numero dell'episodio visualizzato.
         voto (float): il voto dell'anime.
         status_list (str): lo stato dell'anime per l'utente. Se è in corso verrà impostato su "CURRENT", se completato su "COMPLETED".
-        preferiti (bool) : True se l'utente ha scelto di mettere l'anime tra i preferiti, altrimenti False.
     """
 
-    # query in base alla scelta del preferito
-    if not preferiti:
-        query = """
-        mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-            SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
-                status
-                progress
-                score
-            }
+    query = """
+    mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
+        SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
+            status
+            progress
+            score
         }
-        """
-    else:
-        query = """
-            mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-                SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
-                    status
-                    progress
-                    score
-                },
-                ToggleFavourite(animeId:$idAnime){
-                    anime {
-                        nodes {
-                            id
-                        }
-                    }
-                }
-            }
-            """
+    }
+    """
 
     var = {
         "idAnime": id_anilist,
@@ -59,10 +77,8 @@ def anilistApi(id_anilist: int, ep: int, voto: float, status_list: str, preferit
     
     if voto != 0:
         var["score"] = voto
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var})
-    if risposta.status_code != 200:
-        print("Impossibile aggiornare AniList!")
+
+    requestModifyAnilist(query, var)
  
 
 def getAnilistUserId() -> int:
@@ -126,3 +142,20 @@ def getAnimePrivateRating(id_anime: int) -> int:
         return 0
     
     return str(risposta.json()["data"]["MediaList"]["score"])
+
+
+def requestModifyAnilist(query: str, var: dict):
+    """
+    Request alle API di Anilist. 
+    Se la richiesta non va a buon fine, viene stampato un errore.
+
+    Args: 
+        query (str): la stringa che contiene la query.
+        var (dict): dizionario che contiene le variabili da passare alla query.
+    """
+
+    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var})
+    
+    if risposta.status_code != 200:
+        print("Impossibile aggiornare AniList!")

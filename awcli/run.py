@@ -297,7 +297,11 @@ def updateAnilist(ep: int):
 
             preferiti = my_input("Mettere l'anime tra i preferiti? (s/N)", check_string)
     
-    thread = Thread(target=anilist.anilistApi, args=(anime.id_anilist, ep, voto, status_list, preferiti))
+    if preferiti: 
+        thread = Thread(target=anilist.addToAnilistFavourite, args=(anime.id_anilist, ep, voto))
+    else:
+        thread = Thread(target=anilist.addToAnilist, args=(anime.id_anilist, ep, status_list, voto))
+
     thread.start()
 
 
@@ -359,6 +363,7 @@ def getCronologia() -> list[Anime]:
         a = Anime(name=riga[0], url=riga[2], ep=int(riga[5]), ep_totali=riga[3])
         a.ep_corrente = int(riga[1])
         a.status = int(riga[4])
+        a.id_anilist = int(riga[6])
         animes.append(a)
 
     #se il file esiste ma non contiene dati stampo un messaggio di errore
