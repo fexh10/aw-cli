@@ -4,6 +4,7 @@ tokenAnilist = "tokenAnilist: False"
 user_id = 0
 ratingAnilist = False
 preferitoAnilist = False
+dropAnilist = False
 
 class TokenError(Exception):
     pass

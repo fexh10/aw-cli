@@ -416,6 +416,7 @@ def setupConfig() -> None:
             
         ratingAnilist = "ratingAnilist: False"
         preferitoAnilist = "preferitoAnilist: False"
+        dropAnilist = "dropAnilist: False"
         
         if my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string):
             if nome_os == "Linux" or nome_os == "Android":
@@ -438,6 +439,9 @@ def setupConfig() -> None:
                 if my_input("Chiedere se mettere l'anime tra i preferiti una volta completato? (s/N)", check_string):
                     preferitoAnilist = "preferitoAnilist: True"
                 
+                if my_input("Chiedere se droppare l'anime una volta rimosso dalla cronologia? (s/N)", check_string):
+                    dropAnilist = "dropAnilist: True"
+                
                 anilist.user_id = future.result()
 
         if nome_os == "Linux":
@@ -453,12 +457,7 @@ def setupConfig() -> None:
     #creo il file
     config = f"{os.path.dirname(__file__)}/aw.config"
     with open(config, 'w') as config_file:
-        config_file.write(f"{player}\n")
-        config_file.write(f"{anilist.tokenAnilist}\n")
-        config_file.write(f"{ratingAnilist}\n")
-        config_file.write(f"{preferitoAnilist}\n")
-        config_file.write(f"{anilist.user_id}\n")
-        config_file.write(f"{syncplay}")
+        config_file.write(f"{player}\n{anilist.tokenAnilist}\n{ratingAnilist}\n{preferitoAnilist}\n{dropAnilist}\n{anilist.user_id}\n{syncplay}")
 
 
 def reloadCrono(cronologia: list[Anime]):
@@ -613,7 +612,7 @@ def main():
 
     mpv, player_path, syncplay_path = getConfig()
     #se la prima riga del config corrisponde a una versione vecchia, faccio rifare il config
-    if player_path.startswith("Player") or syncplay_path == None:
+    if player_path.startswith("Player") or mpv == None:
         my_print("Ci sono stati dei cambiamenti nella configurazione...", color="giallo")
         sleep(1)
         setupConfig()

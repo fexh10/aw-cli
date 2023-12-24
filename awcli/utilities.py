@@ -255,22 +255,19 @@ def getConfig() -> tuple[bool, str, str]:
     with open(config, 'r+') as config_file:
         lines = config_file.readlines()
 
+        if len(lines) < 7:
+            return None, "", ""
+
         mpv = True if "mpv" in lines[0].strip() else False
         player_path = lines[0].strip()
 
         anilist.tokenAnilist = lines[1].strip()
         anilist.ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
         anilist.preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
+        anilist.dropAnilist = True if lines[4].strip() == "dropAnilist: True" else False
+        anilist.user_id = int(lines[5])
 
-        if len(lines) == 4 and anilist.ratingAnilist == True:
-            anilist.user_id = anilist.getAnilistUserId()
-            config_file.write(f"{anilist.user_id}")
-        else:
-            anilist.user_id = int(lines[4])
-        if len(lines) == 5:
-            syncplay_path = None
-        else:
-            syncplay_path = lines[5]
+        syncplay_path = lines[6]
 
     return mpv, player_path, syncplay_path
 
