@@ -257,7 +257,7 @@ def updateAnilist(ep: int, drop: bool = False):
 
     Args:
         ep (int): il numero dell'episodio visualizzato.
-        drop: True se l'utente decide di droppare l'anime, altrimenti False.
+        drop (bool, optional): True se l'utente decide di droppare l'anime, altrimenti False.
     """
     
     if anime.id_anilist == 0:
@@ -288,7 +288,8 @@ def updateAnilist(ep: int, drop: bool = False):
                 #ottengo il voto dell'anime se già inserito in precedenza
                 future_rating = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
                 voto_anilist = future_rating.result()
-                if voto_anilist != 0:
+
+                if int(voto_anilist) != 0:
                     my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})\n> ", end=" ", color="magenta", cls=True)
                 voto = future_voto.result()
     
@@ -537,7 +538,7 @@ def removeFromCrono(number: int):
         None.
     """
 
-    def check_delete(s: str):
+    def check_yes(s: str):
         s.lower()
         if s == "s":
             return True
@@ -547,25 +548,14 @@ def removeFromCrono(number: int):
     global log
 
     my_print(f"Si è sicuri di voler rimuovere \"{anime.name}\" dalla cronologia? (s/N)", color="giallo", end="")
-    delete = my_input("", check_delete)
+    delete = my_input("", check_yes)
 
     if delete:
-        if anilist.tokenAnilist != "TokenAnilist: False":
-            def check_drop(s: str):
-                s.lower()
-                if s == "d" or s == "r" or s == "n":
-                    return s
+        if anilist.dropAnilist:
+            drop = my_input(f"Droppare \"{anime.name}\" su AniList? (s/N)", check_yes)
 
-            my_print("Anilist", color="blu")
-            my_print("(d) drop", color="rosso")
-            my_print("(n) niente", color="bianco", end="")
-
-            drop = my_input("", check_drop)
-
-            if drop == "d":
+            if drop:
                 updateAnilist(anime.ep, True)
-            elif drop == "r":
-                exit()
 
         log.pop(number)
 
@@ -573,16 +563,14 @@ def removeFromCrono(number: int):
 
         def check_str(s: str):
             s.lower()
-            if s == "c":
-                return "c"
-            elif s == "e" or s == '':
-                return "e"
+            if s == "c" or s== "e" or s == '':
+                return s
 
         my_print("(c) continua", color="verde")
         my_print("(e) esci", color="rosso", end="")
         scelta = my_input("", check_str)
 
-        if scelta == "e":
+        if scelta == "e" or scelta == '':
             safeExit()
 
 
