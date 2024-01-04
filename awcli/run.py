@@ -211,7 +211,8 @@ def addToCronologia(ep: int):
     Viene aggiunta alla cronologia locale il nome del video,
     il numero dell'ultimo episodio visualizzato,
     il link di AnimeWorld relativo all'anime, 
-    il numero reale di episodi totali della serie e lo stato dell'anime.
+    il numero reale di episodi totali della serie, lostato dell'anime
+    e l'id anilist.
     La cronologia viene salvata su un file csv nella stessa 
     directory dello script. Se il file non esiste viene creato.
 
@@ -231,6 +232,7 @@ def addToCronologia(ep: int):
                 log[i][3] = anime.ep_totali
                 log[i][4] = anime.status
                 log[i][5] = anime.ep
+                log[i][6] = anime.id_anilist
                 temp = log.pop(i)
                 #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
                 if anime.status == 0 and ep == anime.ep:
@@ -241,12 +243,12 @@ def addToCronologia(ep: int):
             return
     if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
         if anime.status == 0 and ep == anime.ep:
-            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep])
+            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist])
         else:
-            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep]) 
+            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist]) 
 
 
-def updateAnilist(ep: int):
+def updateAnilist(ep: int, drop: bool = False):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -255,6 +257,7 @@ def updateAnilist(ep: int):
 
     Args:
         ep (int): il numero dell'episodio visualizzato.
+        drop (bool, optional): True se l'utente decide di droppare l'anime, altrimenti False.
     """
     
     if anime.id_anilist == 0:
@@ -264,10 +267,15 @@ def updateAnilist(ep: int):
     voto = 0
     preferiti = False
     status_list = 'CURRENT'
-    #se ho finito di vedere l'anime
-    if ep == anime.ep and anime.status == 1:
-        status_list = 'COMPLETED'
-        
+    
+    if drop:
+        status_list = 'DROPPED'
+
+    #se ho finito di vedere l'anime o lo stato è dropped    
+    if (ep == anime.ep and anime.status == 1) or status_list == 'DROPPED':
+        if status_list == 'CURRENT':
+            status_list = 'COMPLETED'
+    
         #chiedo di votare
         if anilist.ratingAnilist:
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -280,12 +288,13 @@ def updateAnilist(ep: int):
                 #ottengo il voto dell'anime se già inserito in precedenza
                 future_rating = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
                 voto_anilist = future_rating.result()
-                if voto_anilist != 0:
+
+                if int(voto_anilist) != 0:
                     my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})\n> ", end=" ", color="magenta", cls=True)
                 voto = future_voto.result()
     
         #chiedo di mettere tra i preferiti
-        if anilist.preferitoAnilist:
+        if anilist.preferitoAnilist and status_list == 'COMPLETED':
             def check_string(s: str):
                 s = s.lower()
                 if s == "s":
@@ -295,7 +304,11 @@ def updateAnilist(ep: int):
 
             preferiti = my_input("Mettere l'anime tra i preferiti? (s/N)", check_string)
     
-    thread = Thread(target=anilist.anilistApi, args=(anime.id_anilist, ep, voto, status_list, preferiti))
+    if preferiti: 
+        thread = Thread(target=anilist.addToAnilistFavourite, args=(anime.id_anilist, ep, voto))
+    else:
+        thread = Thread(target=anilist.addToAnilist, args=(anime.id_anilist, ep, status_list, voto))
+
     thread.start()
 
 
@@ -352,10 +365,12 @@ def getCronologia() -> list[Anime]:
             riga.append(0)
         if len(riga) < 6:
             riga.append(riga[1])    
-        
+        if len(riga) < 7:
+            riga.append(0)
         a = Anime(name=riga[0], url=riga[2], ep=int(riga[5]), ep_totali=riga[3])
         a.ep_corrente = int(riga[1])
         a.status = int(riga[4])
+        a.id_anilist = int(riga[6])
         animes.append(a)
 
     #se il file esiste ma non contiene dati stampo un messaggio di errore
@@ -402,6 +417,7 @@ def setupConfig() -> None:
             
         ratingAnilist = "ratingAnilist: False"
         preferitoAnilist = "preferitoAnilist: False"
+        dropAnilist = "dropAnilist: False"
         
         if my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string):
             if nome_os == "Linux" or nome_os == "Android":
@@ -424,6 +440,9 @@ def setupConfig() -> None:
                 if my_input("Chiedere se mettere l'anime tra i preferiti una volta completato? (s/N)", check_string):
                     preferitoAnilist = "preferitoAnilist: True"
                 
+                if my_input("Chiedere se droppare l'anime una volta rimosso dalla cronologia? (s/N)", check_string):
+                    dropAnilist = "dropAnilist: True"
+                
                 anilist.user_id = future.result()
 
         if nome_os == "Linux":
@@ -439,12 +458,7 @@ def setupConfig() -> None:
     #creo il file
     config = f"{os.path.dirname(__file__)}/aw.config"
     with open(config, 'w') as config_file:
-        config_file.write(f"{player}\n")
-        config_file.write(f"{anilist.tokenAnilist}\n")
-        config_file.write(f"{ratingAnilist}\n")
-        config_file.write(f"{preferitoAnilist}\n")
-        config_file.write(f"{anilist.user_id}\n")
-        config_file.write(f"{syncplay}")
+        config_file.write(f"{player}\n{anilist.tokenAnilist}\n{ratingAnilist}\n{preferitoAnilist}\n{dropAnilist}\n{anilist.user_id}\n{syncplay}")
 
 
 def reloadCrono(cronologia: list[Anime]):
@@ -524,7 +538,7 @@ def removeFromCrono(number: int):
         None.
     """
 
-    def check_delete(s: str):
+    def check_yes(s: str):
         s.lower()
         if s == "s":
             return True
@@ -533,26 +547,30 @@ def removeFromCrono(number: int):
 
     global log
 
-    my_print(f"Si è sicuri di voler rimuovere \"{log[number][0]}\" dalla cronologia? (s/N)", color="giallo", end="")
-    delete = my_input("", check_delete)
+    my_print(f"Si è sicuri di voler rimuovere \"{anime.name}\" dalla cronologia? (s/N)", color="giallo", end="")
+    delete = my_input("", check_yes)
 
     if delete:
+        if anilist.dropAnilist:
+            drop = my_input(f"Droppare \"{anime.name}\" su AniList? (s/N)", check_yes)
+
+            if drop:
+                updateAnilist(anime.ep, True)
+
         log.pop(number)
 
         printAnimeNames(getCronologia())
 
         def check_str(s: str):
             s.lower()
-            if s == "c":
-                return "c"
-            elif s == "e" or s == '':
-                return "e"
+            if s == "c" or s== "e" or s == '':
+                return s
 
         my_print("(c) continua", color="verde")
         my_print("(e) esci", color="rosso", end="")
         scelta = my_input("", check_str)
 
-        if scelta == "e":
+        if scelta == "e" or scelta == '':
             safeExit()
 
 
@@ -582,7 +600,7 @@ def main():
 
     mpv, player_path, syncplay_path = getConfig()
     #se la prima riga del config corrisponde a una versione vecchia, faccio rifare il config
-    if player_path.startswith("Player") or syncplay_path == None:
+    if player_path.startswith("Player") or mpv == None:
         my_print("Ci sono stati dei cambiamenti nella configurazione...", color="giallo")
         sleep(1)
         setupConfig()
@@ -620,6 +638,7 @@ def main():
                 
                 if args.cronologia == 'r':
                     scelta = my_input("Rimuovi un anime", check_index)
+                    anime = animelist[scelta]
                     removeFromCrono(scelta)
                     animelist = getCronologia()
                     continue
