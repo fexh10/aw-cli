@@ -587,10 +587,7 @@ def updateScript():
     else: 
         comando = f"echo y | python3 -m pip uninstall aw-cli &>/dev/null && python3 -m pip install git+https://github.com/fexh10/aw-cli.git@{args.update} &>/dev/null"
 
-    if nome_os == "Windows":
-        Popen(['powershell.exe', comando])
-    else:
-        os.system(comando)
+    os.system(comando)
     
     my_print("aw-cli aggiornato con successo!", color="bianco")
     exit()
