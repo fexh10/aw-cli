@@ -10,6 +10,7 @@ offline = False
 cronologia = False
 info = False
 privato = False
+update = False
 
 # args
 parser = argparse.ArgumentParser(
@@ -93,6 +94,14 @@ options_group.add_argument(
     help="guarda un episodio senza che si aggiorni la cronologia o AniList"
 )
 
+options_group.add_argument(
+    '-u',
+    '--update',
+    nargs='?',
+    dest='update',
+    help='aggiorna il programma'
+)
+
 config_group.add_argument(
     '-a',
     '--configurazione',
@@ -108,6 +117,10 @@ if args.offline:
 else:
     if args.cronologia == 'r':
         cronologia = True
+    elif args.update:
+        update = True
+        if len(sys.argv) > 1:
+            args.update = sys.argv[2]
     else: 
         if args.info:
             info = True
