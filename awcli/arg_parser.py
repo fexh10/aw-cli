@@ -114,24 +114,23 @@ args = parser.parse_args()
 
 if args.offline:
     offline = True
-else:
-    if args.cronologia == 'r':
+elif args.cronologia == 'r':
         cronologia = True
-    elif args.update:
-        update = True
-        if len(sys.argv) > 1:
-            args.update = sys.argv[2]
-    else: 
-        if args.info:
-            info = True
-        if args.download:
-            downl = True
-        if args.lista or '-l' in sys.argv:
-            if args.lista == None:
-                args.lista = 'a'
-            lista = True
-        if args.privato:
-            privato = True
-        elif '-c' in sys.argv:
-            cronologia = True
+elif args.update or '-u' in sys.argv:
+    update = True
+    if len(sys.argv) == 3:
+        args.update = sys.argv[2]
+else: 
+    if args.info:
+        info = True
+    if args.download:
+        downl = True
+    if args.lista or '-l' in sys.argv:
+        if args.lista == None:
+            args.lista = 'a'
+        lista = True
+    if args.privato:
+        privato = True
+    if '-c' in sys.argv:
+        cronologia = True
     

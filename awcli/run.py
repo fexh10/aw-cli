@@ -574,6 +574,28 @@ def removeFromCrono(number: int):
             safeExit()
 
 
+def updateScript():
+    """
+    Aggiorna di default il programma in base 
+    all'ultima versione stabile.
+    Se viene specificato il branch,
+    verrà installato quest'ultimo.
+    """
+
+    if args.update == None:
+        comando = "echo y | pip uninstall aw-cli &>/dev/null && pip install aw-cli &>/dev/null"
+    else: 
+        comando = f"echo y | pip uninstall aw-cli &>/dev/null && pip install git+https://github.com/fexh10/aw-cli.git@{args.update} &>/dev/null"
+
+    if nome_os == "Windows":
+        Popen(['powershell.exe', comando])
+    else:
+        os.system(comando)
+    
+    my_print("aw-cli aggiornato con successo!", color="bianco")
+    exit()
+
+
 def main():
     global log
     global syncpl
@@ -587,6 +609,9 @@ def main():
     global player_path
     global syncplay_path
     global openPlayer
+
+    if update:
+        updateScript()
 
     try:
         with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", encoding='utf-8') as file:
