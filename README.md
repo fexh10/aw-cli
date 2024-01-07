@@ -39,7 +39,7 @@ python3 -m pip uninstall aw-cli
 
 ## Utilizzo
 ```
-usage: aw-cli [-h] [-v] [-c [{r}]] [-l [{a,s,d,t}]] [-i] [-s] [-d] [-o] [-p] [-a]
+usage: aw-cli [-h] [-v] [-c [{r}]] [-l [{a,s,d,t}]] [-i] [-s] [-d] [-o] [-p] [-u [UPDATE]] [-a]
 
 Guarda anime dal terminale e molto altro!
 
@@ -57,9 +57,11 @@ Opzioni:
   -d, --download        scarica gli episodi che preferisci
   -o, --offline         apri gli episodi scaricati precedentemente direttamente dal terminale
   -p, --privato         guarda un episodio senza che si aggiorni la cronologia o AniList
+  -u [UPDATE], --update [UPDATE]
+                        aggiorna il programma
 
 Configurazione:
-  -a, --configurazione  avvia il menu di configurazione                                                       
+  -a, --configurazione  avvia il menu di configurazione                                                    
 ```
 
 ## Crediti
