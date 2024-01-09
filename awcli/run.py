@@ -1,5 +1,4 @@
 import os
-import warnings
 import csv
 import concurrent.futures
 from pySmartDL import SmartDL
@@ -8,9 +7,6 @@ from threading import Thread
 from awcli.utilities import * 
 from awcli.arg_parser import *
 import awcli.anilist as anilist
-
-if nome_os == "Windows":
-    from awcli.windows import *
 
 def safeExit():
     with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='', encoding='utf-8') as file:
@@ -157,12 +153,7 @@ def openSyncplay(url_ep: str, nome_video: str):
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
 
-    comando = f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}"'''
-    if nome_os == "Windows":
-        warnings.filterwarnings("ignore", category=UserWarning)
-        winOpen("Syncplay.exe", f"& {comando}")
-    else:
-        os.system(f"{comando} --language it &>/dev/null")
+    os.system(f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}" --language it &>/dev/null''')
 
 
 def openMPV(url_ep: str, nome_video: str):
@@ -179,11 +170,7 @@ def openMPV(url_ep: str, nome_video: str):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
         return
     
-    comando = f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open"""
-    if nome_os == "Windows":
-        winOpen("mpv.exe", f"""& {comando}""")
-    else:
-        os.system(f'''{comando} &>/dev/null''')
+    os.system(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open  &>/dev/null""")
 
 
 def openVLC(url_ep: str, nome_video: str):
@@ -199,11 +186,7 @@ def openVLC(url_ep: str, nome_video: str):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
         return
     
-    comando = f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen'''
-    if nome_os == "Windows":        
-        winOpen("vlc.exe", f"""& {comando} """)
-    else:
-        os.system(f'''{comando} &>/dev/null''')
+    os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen &>/dev/null''')
 
 
 def addToCronologia(ep: int):
@@ -422,8 +405,6 @@ def setupConfig() -> None:
         if my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string):
             if nome_os == "Linux" or nome_os == "Android":
                 os.system("xdg-open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
-            elif nome_os == "Windows":
-                Popen(['powershell.exe', "explorer https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"])
             else: 
                 os.system("open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
 
