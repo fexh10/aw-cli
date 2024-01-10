@@ -103,7 +103,7 @@ def search(input: str) -> list[Anime]:
         
         for a in div.find_all(class_='name'):
             name =a.text
-            if nome_os == "Windows" or nome_os == "Android":
+            if nome_os == "Android":
                 caratteri_proibiti = '"*/:<>?\|'
                 caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
                 for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
@@ -139,7 +139,7 @@ def latest(filter = "all") -> list[Anime]:
         
         for a in div.find_all(class_='name'):
             name = a.text
-            if nome_os == "Windows" or nome_os == "Android":
+            if nome_os == "Android":
                 caratteri_proibiti = '"*/:<>?\|'
                 caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
                 for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
