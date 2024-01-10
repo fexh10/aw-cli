@@ -153,7 +153,7 @@ def openSyncplay(url_ep: str, nome_video: str):
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
 
-    os.system(f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}" --language it &>/dev/null''')
+    os.system(f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}" --language it > /dev/null 2>&1''')
 
 
 def openMPV(url_ep: str, nome_video: str):
@@ -167,10 +167,10 @@ def openMPV(url_ep: str, nome_video: str):
 
 
     if (nome_os == "Android"):
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return
     
-    os.system(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open  &>/dev/null""")
+    os.system(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open > /dev/null 2>&1""")
 
 
 def openVLC(url_ep: str, nome_video: str):
@@ -183,10 +183,10 @@ def openVLC(url_ep: str, nome_video: str):
     """
 
     if nome_os == "Android":
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')    
         return
     
-    os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen &>/dev/null''')
+    os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen > /dev/null 2>&1''')
 
 
 def addToCronologia(ep: int):
