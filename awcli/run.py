@@ -403,13 +403,14 @@ def setupConfig() -> None:
         dropAnilist = "dropAnilist: False"
         
         if my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string):
+            link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
             if nome_os == "Linux" or nome_os == "Android":
-                os.system("xdg-open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
+                os.system(f"xdg-open '{link}' > /dev/null 2>&1")
             else: 
-                os.system("open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
+                os.system(f"open '{link}' > /dev/null 2>&1")
 
             #inserimento token
-            anilist.tokenAnilist = my_input("Inserire il token di AniList", cls=True)
+            anilist.tokenAnilist = my_input(f"Inserire il token di AniList ({link})", cls=True)
             
             #prendo l'id dell'utente tramite query
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -564,9 +565,9 @@ def updateScript():
     """
 
     if args.update == None:
-        comando = "echo y | python3 -m pip uninstall aw-cli &>/dev/null && python3 -m pip install aw-cli &>/dev/null"
+        comando = "echo y | python3 -m pip uninstall aw-cli > /dev/null 2>&1 && python3 -m pip install aw-cli > /dev/null 2>&1"
     else: 
-        comando = f"echo y | python3 -m pip uninstall aw-cli &>/dev/null && python3 -m pip install git+https://github.com/fexh10/aw-cli.git@{args.update} &>/dev/null"
+        comando = f"echo y | python3 -m pip uninstall aw-cli > /dev/null 2>&1 && python3 -m pip install git+https://github.com/fexh10/aw-cli.git@{args.update} > /dev/null 2>&1"
 
     os.system(comando)
     
