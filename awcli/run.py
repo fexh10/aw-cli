@@ -1,5 +1,4 @@
 import os
-import warnings
 import csv
 import concurrent.futures
 from pySmartDL import SmartDL
@@ -8,9 +7,6 @@ from threading import Thread
 from awcli.utilities import * 
 from awcli.arg_parser import *
 import awcli.anilist as anilist
-
-if nome_os == "Windows":
-    from awcli.windows import *
 
 def safeExit():
     with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='', encoding='utf-8') as file:
@@ -157,12 +153,7 @@ def openSyncplay(url_ep: str, nome_video: str):
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
 
-    comando = f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}"'''
-    if nome_os == "Windows":
-        warnings.filterwarnings("ignore", category=UserWarning)
-        winOpen("Syncplay.exe", f"& {comando}")
-    else:
-        os.system(f"{comando} --language it &>/dev/null")
+    os.system(f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}" --language it > /dev/null 2>&1''')
 
 
 def openMPV(url_ep: str, nome_video: str):
@@ -176,14 +167,10 @@ def openMPV(url_ep: str, nome_video: str):
 
 
     if (nome_os == "Android"):
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1 &''')
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return
     
-    comando = f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open"""
-    if nome_os == "Windows":
-        winOpen("mpv.exe", f"""& {comando}""")
-    else:
-        os.system(f'''{comando} &>/dev/null''')
+    os.system(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open > /dev/null 2>&1""")
 
 
 def openVLC(url_ep: str, nome_video: str):
@@ -196,14 +183,10 @@ def openVLC(url_ep: str, nome_video: str):
     """
 
     if nome_os == "Android":
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1 &''')    
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')    
         return
     
-    comando = f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen'''
-    if nome_os == "Windows":        
-        winOpen("vlc.exe", f"""& {comando} """)
-    else:
-        os.system(f'''{comando} &>/dev/null''')
+    os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen > /dev/null 2>&1''')
 
 
 def addToCronologia(ep: int):
@@ -420,15 +403,14 @@ def setupConfig() -> None:
         dropAnilist = "dropAnilist: False"
         
         if my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string):
+            link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
             if nome_os == "Linux" or nome_os == "Android":
-                os.system("xdg-open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
-            elif nome_os == "Windows":
-                Popen(['powershell.exe', "explorer https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"])
+                os.system(f"xdg-open '{link}' > /dev/null 2>&1")
             else: 
-                os.system("open 'https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token' &>/dev/null")
+                os.system(f"open '{link}' > /dev/null 2>&1")
 
             #inserimento token
-            anilist.tokenAnilist = my_input("Inserire il token di AniList", cls=True)
+            anilist.tokenAnilist = my_input(f"Inserire il token di AniList ({link})", cls=True)
             
             #prendo l'id dell'utente tramite query
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -583,9 +565,9 @@ def updateScript():
     """
 
     if args.update == None:
-        comando = "echo y | python3 -m pip uninstall aw-cli &>/dev/null && python3 -m pip install aw-cli &>/dev/null"
+        comando = "echo y | python3 -m pip uninstall aw-cli > /dev/null 2>&1 && python3 -m pip install aw-cli > /dev/null 2>&1"
     else: 
-        comando = f"echo y | python3 -m pip uninstall aw-cli &>/dev/null && python3 -m pip install git+https://github.com/fexh10/aw-cli.git@{args.update} &>/dev/null"
+        comando = f"echo y | python3 -m pip uninstall aw-cli > /dev/null 2>&1 && python3 -m pip install git+https://github.com/fexh10/aw-cli.git@{args.update} > /dev/null 2>&1"
 
     os.system(comando)
     
