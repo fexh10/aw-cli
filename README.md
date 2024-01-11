@@ -23,14 +23,64 @@ https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-
 
 Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html). <br /> 
 
+<details><summary><b>Linux, MacOS, Android</b></summary>
 È possibile installare aw-cli da pip:
+
 ```
-python3 -m pip install aw-cli --upgrade
+python3 -m pip install aw-cli
 ```
-O se si preferisce da sorgente (potrebbe essere più aggiornato):
+</details>
+
+<details><summary><b>Windows</b></summary>
+Attualmente, Windows presenta due versioni: la più recente, progettata per funzionare su WSL (Windows Subsystem for Linux), e una versione Legacy compatibile con PowerShell. La versione Legacy non riceverà ulteriori aggiornamenti, mentre l'altra sarà mantenuta costantemente. 
+
+<br>
+
+<details><summary><b>Ultima Versione</b></summary>
+L'ultima versione per Windows richiede installare <a href="https://learn.microsoft.com/it-it/windows/wsl/install">WSL</a>:
+
 ```
-python3 -m pip install git+https://github.com/fexh10/aw-cli.git
+wsl --install
 ```
+Per installare MPV su WSL, basta eseguire:
+```
+sudo apt install mpv
+``` 
+
+Per VLC:
+```
+sudo apt install vlc
+```
+
+Il programma dovrà essere installato e avviato da WSL:
+
+```
+python3 -m pip install aw-cli
+```
+</details>
+<details><summary><b>Versione Legacy</b></summary>
+Per installare la versione Legacy, è necessario avere <a href="https://www.git-scm.com/download/win">git</a>.
+
+
+```
+python3 -m pip install git+https://github.com/fexh10/aw-cli.git@winLegacy
+```
+
+</details>
+</details>
+
+<details><summary><b>iOS</b></summary>
+La versione per iOS richiede <a href="https://apps.apple.com/it/app/ish-shell/id1436902243">iSH</a> e <a href="https://apps.apple.com/it/app/vlc-media-player/id650377962">VLC</a>. 
+
+```
+apk update
+apk upgrade
+apk add python3 python3-dev py3-pip gcc musl-dev git
+python3 -m pip install git+https://github.com/fexh10/aw-cli.git@iosCompatibility
+```
+
+</details>
+
 ## Disinstallazione 
 
 ```
