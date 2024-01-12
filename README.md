@@ -23,7 +23,7 @@ https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-
 
 Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html). <br /> 
 
-<details><summary><b>Linux, MacOS, Android</b></summary>
+<details><summary><b>Linux, MacOS</b></summary>
 È possibile installare aw-cli da pip:
 
 ```
@@ -67,6 +67,15 @@ python3 -m pip install git+https://github.com/fexh10/aw-cli.git@winLegacy
 ```
 
 </details>
+</details>
+
+<details><summary><b>Android</b></summary>
+Android richiede l'installazione di <a href="https://github.com/termux/termux-app/releases/tag/v0.118.0">termux</a>. <br>
+È possibile installare aw-cli da pip:
+
+```
+python3 -m pip install aw-cli
+```
 </details>
 
 <details><summary><b>iOS</b></summary>
