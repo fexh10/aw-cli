@@ -14,6 +14,7 @@ https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-
   - [Anteprima](#anteprima)
   - [Indice](#indice)
   - [Installazione](#installazione)
+  - [Problemi noti](#problemi-noti)
   - [Disinstallazione](#disinstallazione)
   - [Utilizzo](#utilizzo)
   - [Crediti](#crediti)
@@ -88,6 +89,39 @@ apk add python3 python3-dev py3-pip gcc musl-dev git
 python3 -m pip install git+https://github.com/fexh10/aw-cli.git@iosCompatibility
 ```
 
+</details>
+
+## Problemi noti
+Se è impossibile avviare `aw-cli`, è possibile che non si abbia la cartella degli script Python aggiunta al path. <br /> 
+
+<details> <summary><b>Linux/Windows WSL</b></summary>
+Aggiungere la seguente linea al file di profilo (.bashrc, .zshrc, o altro):
+
+```
+export PATH=$PATH:$HOME/.local/bin
+```
+Riavviare il terminale o eseguire `source ~/.bashrc`.
+
+</details>
+
+<details> <summary><b>MacOS</b></summary>
+Aggiungere la seguente linea al file di profilo (.bashrc, .zshrc, o altro):
+
+```
+export PATH=$PATH:$HOME/Library/Python/3.x/bin
+```
+Sostituire `3.x` con la propria versione di Python. <br>
+Riavviare il terminale o eseguire `source ~/.bashrc`. 
+</details>
+
+<details> <summary><b>Windows Legacy</b></summary>
+Inserire da linea di comando:
+
+```
+setx PATH "%PATH%;%APPDATA%\Local\Programs\Python\Python3x\Scripts
+```
+Sostituire `3.x` con la propria versione di Python. <br/>
+Se necessario, riavviare il sistema. 
 </details>
 
 ## Disinstallazione 
