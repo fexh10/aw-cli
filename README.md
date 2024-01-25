@@ -88,7 +88,7 @@ apk upgrade
 apk add python3 python3-dev py3-pip gcc musl-dev git
 python3 -m pip install git+https://github.com/fexh10/aw-cli.git@iosCompatibility
 ```
-
+Nota che la velocità di download e caricamento molto bassa è un problema di iSH e non di aw-cli. 
 </details>
 
 ## Problemi noti
