@@ -376,19 +376,8 @@ def setupConfig() -> None:
         #player predefinito
         my_print("", end="", cls=True)
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
-        my_print("1", color="verde", end="  ")
-        my_print("MPV")
-        my_print("2", color="verde", end="  ")
-        my_print("VLC")
-
-        def check_index(s: str):
-            if s == "1":
-                return "mpv" if nome_os == "Linux" or nome_os == "Android" else my_input("Inserisci il path del player")
-            elif s == "2":
-                return "vlc" if nome_os == "Linux" or nome_os == "Android" else my_input("Inserisci il path del player")
-
-
-        player = my_input("Scegli un player predefinito", check_index)
+        
+        player = "vlc" 
 
         #animelist
         def check_string(s: str):
@@ -427,14 +416,8 @@ def setupConfig() -> None:
                 
                 anilist.user_id = future.result()
 
-        if nome_os == "Linux":
-            syncplay= "syncplay"
-        elif nome_os == "Android": 
-                syncplay = "Syncplay: None"
-        else:
-            syncplay = my_input("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)")
-            if syncplay == "":
-                syncplay = "Syncplay: None"
+        syncplay = "Syncplay: None"
+        
     except KeyboardInterrupt:
         safeExit()
     #creo il file
