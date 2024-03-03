@@ -1,1 +1,1 @@
-versione = "1.7rWD"
+versione = "1.8"

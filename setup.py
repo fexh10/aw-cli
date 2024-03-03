@@ -14,7 +14,7 @@ installRequires = [
 setup(
     name="aw-cli",
     packages=find_packages(include=["awcli"]),
-    version="1.7",
+    version="1.8",
     python_requires=">3.10",
     description="guarda anime dal terminale e molto altro!",
     long_description=long_description,
