@@ -28,7 +28,7 @@ def my_print(text: str = "", format: int = 1, color: str = "bianco", bg_color: s
     """
     COLORS = {'nero': 0,'rosso': 1,'verde': 2,'giallo': 3,'blu': 4,'magenta': 5,'azzurro': 6,'bianco': 7}
     if cls:
-        os.system('cls' if os.name == 'nt' else 'clear')
+        os.system('clear')
 
     print(f"\033[{format};3{COLORS[color]};4{COLORS[bg_color]}m{text}\033[1;37;40m", end=end)
 
@@ -56,6 +56,26 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             my_print("",end="", cls=True)
     return i
 
+def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False) -> str:
+    """
+    Avvia fzf con impostazioni predefinite.
+
+    Args:
+        elementi (str): la stringa da passare ad fzf con gli elementi da selezionare.
+        altezza (int): il numero di elementi da passare ad fzf. Definisce l'altezza occupata da fzf nel terminale.
+        prompt (str, optional): il prompt che fzf deve stampare. Valore predefinito: "> ".
+        cls (bool, optional): se impostato a True, pulisce lo schermo prima di stampare il testo. Valore predefinito: False.
+
+    Returns:
+        str: la scelta selezionata tramite fzf.
+    """
+
+    if cls:
+        my_print("",end="", cls=True)
+    comando = f"fzf --tac --height={altezza + 2} --cycle --ansi --prompt='{prompt}'"
+    output = os.popen(f"printf '{elementi}' | {comando}").read().strip()
+    
+    return output
 
 def getBs(url: str) -> BeautifulSoup:
     """
