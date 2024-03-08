@@ -24,13 +24,15 @@ def my_print(text: str = "", format: int = 1, color: str = "bianco", bg_color: s
         color (str, optional): il colore del testo. Valore predefinito: "bianco".
         bg_color (str, optional): il colore dello sfondo. Valore predefinito: "nero".
         cls (bool, optional): se impostato a True, pulisce lo schermo prima di stampare il testo. Valore predefinito: False.
-        end (str, optional): il carattere di fine linea da utilizzare. Valore predefinito: "\n".
+        end (str, optional): il carattere di fine linea da utilizzare. Valore predefinito: "\\n".
     """
-    COLORS = {'nero': 0,'rosso': 1,'verde': 2,'giallo': 3,'blu': 4,'magenta': 5,'azzurro': 6,'bianco': 7}
+    COLORS = {'nero': 0,'rosso': 1,'verde': 2,'giallo': 3,'blu': 4,'magenta': 5,'azzurro': 6,'bianco': 7, "ciano": 8, "ciano_bg": 110}
     if cls:
         os.system('clear')
-
-    print(f"\033[{format};3{COLORS[color]};4{COLORS[bg_color]}m{text}\033[1;37;40m", end=end)
+    if bg_color == "ciano_bg":
+        print(f"\033[{format};3{COLORS[color]};5;{COLORS[bg_color]}m{text}\033[1;37;40m", end=end)
+    else:
+        print(f"\033[{format};3{COLORS[color]};4{COLORS[bg_color]}m{text}\033[1;37;40m", end=end)
 
 def my_input(text: str, format = lambda i: i, error: str = "Seleziona una risposta valida!", cls = False):
     """
@@ -46,7 +48,7 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
         Input formattato dalla funzione format, se fornita. Altrimenti, restituisce l'input immutato.
     """
     while True:
-        my_print(f"{text}\n>", end=" ", color="magenta")
+        my_print(f"{text}:", end=" ", color="ciano", bg_color="ciano_bg")
         if (i := format(input())) is not None:
             break
 
