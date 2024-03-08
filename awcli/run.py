@@ -478,34 +478,36 @@ def reloadCrono(cronologia: list[Anime]):
     my_print("Scegli un anime\n> ", end=" ", color="magenta")
 
 
-def printAnimeNames(animelist: list[Anime]): 
+def stringAnimeNames(animelist: list[Anime]) -> str: 
     """
-    Stampa i nomi degli anime presenti nella lista desiderata.
+    Genera una stringa formattata con i 
+    nomi degli anime presenti nella lista desiderata.
 
     Args:
         animelist (list[Anime]): Una lista Anime.    
 
     Return: 
-        None. 
+        str: la stringa formattata.
     """
 
-    my_print("", end="", cls=True)
-
-    colore = "verde"
+    colore = 2 #2 verde, 1 rosso
+    nomi = ""
 
     for i, a in reversed(list(enumerate(animelist))):
         if cronologia:
-            colore = "rosso"
+            colore = 1
             if a.status == 1 or a.ep_corrente < a.ep:
-                colore = "verde"
+                colore = 2
         
-        my_print(f"{i + 1} ", color=colore, end=" ")
+        nomi += f"\033[0;3{colore}m{i + 1}  \033[0;37m"
+
         if cronologia:
-            my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
+            nomi += f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]\n"
         elif lista:
-            my_print(f"{a.name} [Ep {a.ep}]") 
+            nomi += f"{a.name} [Ep {a.ep}]\n" 
         else:
-            my_print(a.name)
+            nomi += f"{a.name}\n"
+    return nomi
 
 
 def removeFromCrono(number: int):
@@ -541,7 +543,7 @@ def removeFromCrono(number: int):
 
         log.pop(number)
 
-        printAnimeNames(getCronologia())
+        #printAnimeNames(getCronologia())
 
         def check_str(s: str):
             s.lower()
@@ -627,29 +629,24 @@ def main():
             else:
                 animelist = RicercaAnime()
                 
-            while True:                
-                printAnimeNames(animelist)
-
+            while True:
+                prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
+                scelta = fzf(stringAnimeNames(animelist), len(animelist), prompt, True)
+                
+                if scelta == "":
+                    return
+                
                 if cronologia and args.cronologia != 'r':
                     thread = Thread(target=reloadCrono, args=[animelist])    
                     thread.start()
-
-                def check_index(s: str):
-                    if s.isdigit():
-                        index = int(s) - 1
-                        if index in range(len(animelist)):
-                            return index
                 
                 if args.cronologia == 'r':
-                    scelta = my_input("Rimuovi un anime", check_index)
                     anime = animelist[scelta]
                     removeFromCrono(scelta)
                     animelist = getCronologia()
                     continue
                 
-                scelta = my_input("Scegli un anime", check_index)
-
-                anime = animelist[scelta]
+                anime = animelist[int(scelta.split("  ")[0]) - 1]
                 #se la lista è stata selezionata, inserisco come ep_iniziale e ep_finale quello scelto dall'utente
                 #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
                 if lista:
