@@ -660,15 +660,8 @@ def main():
                 if info:
                     anime.print_info()
                     #stampo piccolo menu
-                    def check_string(s: str):
-                        s.lower()
-                        if s == "g" or s == 'i' or s == "":
-                            return s
-
-                    my_print("(g) guardare", color='verde')
-                    my_print("(i) indietro", color='magenta', end="")
-                    scelta_info = my_input("", check_string)
-                    if scelta_info == 'i':
+                    scelta_info = fzf("indietro\nguardare", 2)
+                    if  scelta_info== "indietro":
                         break
 
                 if anime.ep != 0:
@@ -678,7 +671,7 @@ def main():
                 my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
                 sleep(1)
             #se ho l'args -i e ho scelto di tornare indietro, faccio una continue sul ciclo while True
-            if scelta_info == 'i':
+            if scelta_info == "indietro":
                 continue
 
             if cronologia:            
