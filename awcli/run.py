@@ -14,6 +14,31 @@ def safeExit():
     exit()
 
 
+def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False) -> str:
+    """
+    Avvia fzf con impostazioni predefinite.
+
+    Args:
+        elementi (str): la stringa da passare ad fzf con gli elementi da selezionare.
+        altezza (int): il numero di elementi da passare ad fzf. Definisce l'altezza occupata da fzf nel terminale.
+        prompt (str, optional): il prompt che fzf deve stampare. Valore predefinito: "> ".
+        cls (bool, optional): se impostato a True, pulisce lo schermo prima di stampare il testo. Valore predefinito: False.
+
+    Returns:
+        str: la scelta selezionata tramite fzf.
+    """
+
+    if cls:
+        my_print("",end="", cls=True)
+    comando = f"fzf --tac --height={altezza + 2} --cycle --ansi --prompt='{prompt}'"
+    output = os.popen(f"""printf "{elementi}" | {comando}""").read().strip()
+    
+    if output == "":
+        safeExit()
+
+    return output
+
+
 def RicercaAnime() -> list[Anime]:
     """
     Dato in input un nome di un anime inserito dall'utente, restituisce una lista con gli URL degli anime
