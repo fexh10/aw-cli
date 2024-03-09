@@ -56,45 +56,29 @@ def animeScaricati(path: str) -> list[Anime]:
     return animes
 
 
-def scegliEpisodi() -> tuple[int, int]:
+def scegliEpisodi() -> int:
     """
     Fa scegliere all'utente gli episodi dell'anime da guardare.
 
     Se l'anime ha solo un episodio, questo verrà riprodotto automaticamente.
-    In caso contrario, l'utente può scegliere un singolo episodio o un intervallo di episodi da riprodurre.
-    Inserire il valore predefinito (Enter) farà riprodurre tutti gli episodi disponibili.
+    In caso contrario, l'utente può scegliere un episodio.
 
     Returns:
-        tuple[int, int]: una tupla con il numero di episodio iniziale e finale da riprodurre.
+        int: il numero dell'episodio da riprodurre.
     """
 
     
     my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
     if anime.ep == 1:
-        return 1, 1
+        return 1
 
-    # faccio decire all'utente il range di ep
-    if (nome_os == "Android"):
-        my_print("Attenzione! Su Android non è ancora possibile specificare un range per lo streaming", color="giallo")
-    # controllo se l'utente ha inserito un range o un episodio unico
-    def check_string(s: str):
-        if s.isdigit():
-            n = int(s)
-            if n in range(anime.ep_ini, anime.ep+1):
-                return n,n
-        elif "-" in s:
-            n, m = s.split("-")
-            if not n.isdigit() or not m.isdigit():
-                return None
-            n = int(n)
-            m = int(m)
-            if n in range(anime.ep_ini, anime.ep+1) and m in range(n, anime.ep+1):
-                return n, m
-        elif s == "":
-            return anime.ep_ini, anime.ep
+    ep = ""
 
-    return my_input(f"Specifica un episodio, o per un range usa: ep_iniziale-ep_finale (Episodi: {anime.ep_ini}-{anime.ep})",check_string,"Ep. o range selezionato non valido")
+    for i in range(anime.ep, anime.ep_ini - 1, -1):
+        ep += str(i) + "\n"
+
+    return int(fzf(ep, anime.ep, "Scegli un episodio: "))
 
 
 def downloadPath(create: bool = True) -> str:
@@ -633,9 +617,6 @@ def main():
                 prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
                 scelta = fzf(stringAnimeNames(animelist), len(animelist), prompt, True)
                 
-                if scelta == "":
-                    return
-                
                 if cronologia and args.cronologia != 'r':
                     thread = Thread(target=reloadCrono, args=[animelist])    
                     thread.start()
@@ -690,7 +671,8 @@ def main():
                     sleep(1)
                     continue
             elif not lista:
-                ep_iniziale, ep_finale = scegliEpisodi()
+                ep_iniziale = scegliEpisodi()
+                ep_finale = ep_iniziale
             
             if downl:
                 path = f"{downloadPath()}/{anime.name}"
@@ -749,7 +731,8 @@ def main():
                     ep_finale = ep_iniziale
                     continue
                 elif scelta_menu == 's' and seleziona:
-                    ep_iniziale, ep_finale = scegliEpisodi()
+                    ep_iniziale = scegliEpisodi()
+                    ep_finale = ep_iniziale
                 elif scelta_menu == 'i':
                     break
                 elif scelta_menu == 'e':
