@@ -72,9 +72,10 @@ python3 -m pip install git+https://github.com/fexh10/aw-cli.git@winLegacy
 
 <details><summary><b>Android</b></summary>
 Android richiede l'installazione di <a href="https://github.com/termux/termux-app/releases/tag/v0.118.0">termux</a>. <br>
-È possibile installare aw-cli da pip:
 
 ```
+pkg update && pkg upgrade
+pkg install python python-pip libxml2 libxslt pkg-config
 python3 -m pip install aw-cli
 ```
 </details>
