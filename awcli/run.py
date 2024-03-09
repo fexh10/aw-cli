@@ -707,53 +707,51 @@ def main():
                         openVideos(ep_iniziale)
                 safeExit()
 
-            ris_valida = True
             while True:
-                if ris_valida:
-                    openVideos(ep_iniziale)
-                else:
-                    my_print("Seleziona una risposta valida", color="rosso")
-                    ris_valida = True
+                openVideos(ep_iniziale)
 
                 prossimo = True
                 antecedente = True
                 seleziona = True
-
+                stringa_menu = ""
+                n_elementi = 3
                 # menù che si visualizza dopo aver finito la riproduzione
-                if ep_iniziale != anime.ep:
-                    my_print("(p) prossimo", color="azzurro")
-                else:
-                    prossimo = False
-                my_print("(r) riguarda", color="blu")
-                if ep_iniziale != anime.ep_ini:
-                    my_print("(a) antecedente", color="azzurro")
-                else:
-                    antecedente = False
+                stringa_menu += "esci\n"
+                stringa_menu += "indietro\n"
+
                 if anime.ep != 1:
-                    my_print("(s) seleziona", color="verde")
+                    stringa_menu += "seleziona\n"
+                    n_elementi += 1
                 else:
                     seleziona = False
-                my_print("(i) indietro", color='magenta')
-                my_print("(e) esci", color="rosso")
-                my_print(">", color="magenta", end=" ")
-                scelta_menu = input().lower()
-                if (scelta_menu == 'p' or scelta_menu == '') and prossimo:
+                if ep_iniziale != anime.ep_ini:
+                    stringa_menu += "antecedente\n"
+                    n_elementi += 1
+                else:
+                    antecedente = False
+                stringa_menu += "riguarda\n"
+                if ep_iniziale != anime.ep:
+                    stringa_menu += "prossimo\n"
+                    n_elementi += 1
+                else:
+                    prossimo = False
+        
+                scelta_menu = fzf(stringa_menu, n_elementi)
+
+                if scelta_menu == "prossimo" and prossimo:
                     ep_iniziale += 1
                     continue
-                elif scelta_menu == 'r':
+                elif scelta_menu == "riguarda":
                     continue            
-                elif scelta_menu == 'a' and antecedente:
+                elif scelta_menu == "antecedente" and antecedente:
                     ep_iniziale -= 1
                     continue
-                elif scelta_menu == 's' and seleziona:
+                elif scelta_menu == "seleziona" and seleziona:
                     ep_iniziale = scegliEpisodi()
-                elif scelta_menu == 'i':
+                elif scelta_menu == "indietro":
                     break
-                elif scelta_menu == 'e':
+                elif scelta_menu == "esci":
                     safeExit()
-                else:
-                    my_print("", end="", cls=True)
-                    ris_valida = False
 
         except KeyboardInterrupt:
             safeExit()
