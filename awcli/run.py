@@ -279,41 +279,37 @@ def updateAnilist(ep: int, drop: bool = False):
     thread.start()
 
 
-def openVideos(ep_iniziale: int, ep_finale: int):
+def openVideos(ep: int):
     """
-    Riproduce gli episodi dell'anime, a partire da ep_iniziale fino a ep_finale.
+    Riproduce l'episodio dell'anime.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
     Altrimenti, viene riprodotto in streaming.
 
     Args:
-        ep_iniziale (int): il numero di episodio iniziale da riprodurre.
-        ep_finale (int): il numero di episodio finale da riprodurre.
+        ep (int): il numero di episodio da riprodurre.
     """
 
-    for ep in range(ep_iniziale, ep_finale+1):
+    nome_video = anime.ep_name(ep)
+    #se il video è già stato scaricato lo riproduco invece di farlo in streaming
+    path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}.mp4"
+    
+    if os.path.exists(path):
+        url_ep = "file://" + path if nome_os == "Android" else path
+    elif offline:
+        my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
+        return
+    else:
+        url_ep = anime.get_episodio(ep)
 
-        nome_video = anime.ep_name(ep)
-        #se il video è già stato scaricato lo riproduco invece di farlo in streaming
-        path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}.mp4"
-        
-        if os.path.exists(path):
-            url_ep = "file://" + path if nome_os == "Android" else path
-        elif offline:
-            my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
-            sleep(1)
-            continue
-        else:
-            url_ep = anime.get_episodio(ep)
+    my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
+    openPlayer(url_ep, nome_video)
+    if offline or privato: return
 
-        my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-        openPlayer(url_ep, nome_video)
-        if offline or privato: return
+    addToCronologia(ep)
 
-        addToCronologia(ep)
-
-        #update watchlist anilist se ho fatto l'accesso
-        if anilist.tokenAnilist != 'tokenAnilist: False':
-            updateAnilist(ep)
+    #update watchlist anilist se ho fatto l'accesso
+    if anilist.tokenAnilist != 'tokenAnilist: False':
+        updateAnilist(ep)
 
 
 def getCronologia() -> list[Anime]:
@@ -628,11 +624,10 @@ def main():
                     continue
                 
                 anime = animelist[int(scelta.split("  ")[0]) - 1]
-                #se la lista è stata selezionata, inserisco come ep_iniziale e ep_finale quello scelto dall'utente
+                #se la lista è stata selezionata, inserisco come ep_iniziale quello scelto dall'utente
                 #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
                 if lista:
                     ep_iniziale = anime.ep
-                    ep_finale = ep_iniziale
                 scelta_info = ""
 
                 anime.load_info() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
@@ -663,8 +658,7 @@ def main():
 
             if cronologia:            
                 ep_iniziale = anime.ep_corrente + 1
-                ep_finale = ep_iniziale
-                if ep_finale > anime.ep:
+                if ep_iniziale > anime.ep:
                     my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                     if len(log) == 1:
                         safeExit()
@@ -672,12 +666,10 @@ def main():
                     continue
             elif not lista:
                 ep_iniziale = scegliEpisodi()
-                ep_finale = ep_iniziale
             
             if downl:
                 path = f"{downloadPath()}/{anime.name}"
-                for ep in range(ep_iniziale, ep_finale+1):
-                    scaricaEpisodio(ep, path)
+                scaricaEpisodio(ep_iniziale, path)
 
                 my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
                 if nome_os == "Android":
@@ -687,13 +679,13 @@ def main():
                     
                     #chiedi all'utente se aprire ora i video scaricati
                     if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
-                        openVideos(ep_iniziale, ep_finale)
+                        openVideos(ep_iniziale)
                 safeExit()
 
             ris_valida = True
             while True:
                 if ris_valida:
-                    openVideos(ep_iniziale,ep_finale)
+                    openVideos(ep_iniziale)
                 else:
                     my_print("Seleziona una risposta valida", color="rosso")
                     ris_valida = True
@@ -703,12 +695,12 @@ def main():
                 seleziona = True
 
                 # menù che si visualizza dopo aver finito la riproduzione
-                if ep_finale != anime.ep:
+                if ep_iniziale != anime.ep:
                     my_print("(p) prossimo", color="azzurro")
                 else:
                     prossimo = False
                 my_print("(r) riguarda", color="blu")
-                if ep_finale != anime.ep_ini:
+                if ep_iniziale != anime.ep_ini:
                     my_print("(a) antecedente", color="azzurro")
                 else:
                     antecedente = False
@@ -721,18 +713,15 @@ def main():
                 my_print(">", color="magenta", end=" ")
                 scelta_menu = input().lower()
                 if (scelta_menu == 'p' or scelta_menu == '') and prossimo:
-                    ep_iniziale = ep_finale + 1
-                    ep_finale = ep_iniziale
+                    ep_iniziale += 1
                     continue
                 elif scelta_menu == 'r':
                     continue            
                 elif scelta_menu == 'a' and antecedente:
-                    ep_iniziale = ep_finale - 1
-                    ep_finale = ep_iniziale
+                    ep_iniziale -= 1
                     continue
                 elif scelta_menu == 's' and seleziona:
                     ep_iniziale = scegliEpisodi()
-                    ep_finale = ep_iniziale
                 elif scelta_menu == 'i':
                     break
                 elif scelta_menu == 'e':
