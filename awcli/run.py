@@ -689,15 +689,17 @@ def main():
                 path = f"{downloadPath()}/{anime.name}"
                 scaricaEpisodio(ep_iniziale, path)
 
-                my_print("Tutti i video scaricati correttamente!\nLi puoi trovare nella cartella", color="verde", end=" ")
+                my_print("Video scaricato correttamente!\nLo puoi trovare nella cartella", color="verde", end=" ")
                 if nome_os == "Android":
-                    my_print("Movies/Anime", color="verde")
+                    my_print("Movies/Anime\n", color="verde")
                 else:
-                    my_print("Video/Anime", color="verde")
+                    my_print("Video/Anime\n", color="verde")
                     
-                    #chiedi all'utente se aprire ora i video scaricati
-                    if my_input("Aprire ora il player con gli episodi scaricati? (S/n)", lambda i: i.lower()) in ['s', '']:
+                    risp = fzf("esci\nguarda\ncontinua", 3)
+                    if risp == "guarda":
                         openVideos(ep_iniziale)
+                    elif risp == "continua":
+                        continue
                 safeExit()
 
             while True:
