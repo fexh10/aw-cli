@@ -30,7 +30,7 @@ def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False) -> s
 
     if cls:
         my_print("",end="", cls=True)
-    comando = f"fzf --tac --height={altezza + 2} --cycle --ansi --prompt='{prompt}'"
+    comando = f"""fzf --tac --height={altezza + 2} --cycle --ansi --prompt="{prompt}" """
     output = os.popen(f"""printf "{elementi}" | {comando}""").read().strip()
     
     if output == "":
@@ -380,34 +380,19 @@ def setupConfig() -> None:
     try:
         #player predefinito
         my_print("", end="", cls=True)
-        my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
-        my_print("1", color="verde", end="  ")
-        my_print("MPV")
-        my_print("2", color="verde", end="  ")
-        my_print("VLC")
+        my_print("AW-CLI - CONFIGURAZIONE\n", color="giallo")
 
-        def check_index(s: str):
-            if s == "1":
-                return "mpv" if nome_os == "Linux" or nome_os == "Android" else my_input("Inserisci il path del player")
-            elif s == "2":
-                return "vlc" if nome_os == "Linux" or nome_os == "Android" else my_input("Inserisci il path del player")
-
-
-        player = my_input("Scegli un player predefinito", check_index)
+        player = fzf("vlc\nmpv", 2, "Scegli il player predefinito: ")
+        if nome_os != "Linux" and nome_os != "Android":
+            player = my_input("Inserisci il path del player")
+            my_print("AW-CLI - CONFIGURAZIONE\n", color="giallo", cls=True)
 
         #animelist
-        def check_string(s: str):
-            s = s.lower()
-            if s == "s":
-                return True
-            elif s == "n" or s == "":
-                return False
-            
         ratingAnilist = "ratingAnilist: False"
         preferitoAnilist = "preferitoAnilist: False"
         dropAnilist = "dropAnilist: False"
         
-        if my_input("Aggiornare automaticamente la watchlist con AniList? (s/N)", check_string):
+        if fzf("sì\nno", 2, "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
             link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
             if nome_os == "Linux" or nome_os == "Android":
                 os.system(f"xdg-open '{link}' > /dev/null 2>&1")
@@ -420,14 +405,14 @@ def setupConfig() -> None:
             #prendo l'id dell'utente tramite query
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(anilist.getAnilistUserId)
-                
-                if my_input("Votare l'anime una volta completato? (s/N)", check_string):
+                my_print("AW-CLI - CONFIGURAZIONE\n", color="giallo", cls=True)
+                if fzf("sì\nno", 2, "Votare l'anime una volta completato? ") == "sì":
                     ratingAnilist = "ratingAnilist: True "
                     
-                if my_input("Chiedere se mettere l'anime tra i preferiti una volta completato? (s/N)", check_string):
+                if fzf("sì\nno", 2, "Chiedere se mettere l'anime tra i preferiti una volta completato? ") == "sì":
                     preferitoAnilist = "preferitoAnilist: True"
                 
-                if my_input("Chiedere se droppare l'anime una volta rimosso dalla cronologia? (s/N)", check_string):
+                if fzf("sì\nno", 2, "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
                     dropAnilist = "dropAnilist: True"
                 
                 anilist.user_id = future.result()
