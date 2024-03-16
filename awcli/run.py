@@ -673,7 +673,7 @@ def main():
             #se ho l'args -i e ho scelto di tornare indietro, faccio una continue sul ciclo while True
             if scelta_info == "indietro":
                 continue
-
+            
             if cronologia:            
                 ep_iniziale = anime.ep_corrente + 1
                 if ep_iniziale > anime.ep:
@@ -682,25 +682,29 @@ def main():
                         safeExit()
                     sleep(1)
                     continue
-            elif not lista:
-                ep_iniziale = scegliEpisodi()
-            
-            if downl:
-                path = f"{downloadPath()}/{anime.name}"
-                scaricaEpisodio(ep_iniziale, path)
+            while True:
+                if not lista:
+                    ep_iniziale = scegliEpisodi()
+                    if not downl:
+                        break
+                
+                if downl:
+                    path = f"{downloadPath()}/{anime.name}"
+                    scaricaEpisodio(ep_iniziale, path)
 
-                my_print("Video scaricato correttamente!\nLo puoi trovare nella cartella", color="verde", end=" ")
-                if nome_os == "Android":
-                    my_print("Movies/Anime\n", color="verde")
-                else:
-                    my_print("Video/Anime\n", color="verde")
-                    
-                    risp = fzf("esci\nguarda\ncontinua", 3)
-                    if risp == "guarda":
-                        openVideos(ep_iniziale)
-                    elif risp == "continua":
-                        continue
-                safeExit()
+                    my_print("\nVideo scaricato correttamente!\nLo puoi trovare nella cartella", color="verde", end=" ")
+                    if nome_os == "Android":
+                        my_print("Movies/Anime\n", color="verde")
+                    else:
+                        my_print("Video/Anime\n", color="verde")
+                        
+                        risp = fzf("esci\nguarda\ncontinua", 3)
+                        if risp == "esci":
+                            safeExit()
+                        elif risp == "guarda":
+                            break   
+                        elif risp == "continua":
+                            continue
 
             while True:
                 openVideos(ep_iniziale)
