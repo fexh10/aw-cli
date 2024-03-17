@@ -639,6 +639,7 @@ def main():
                 if lista:
                     ep_iniziale = anime.ep
                 scelta_info = ""
+                scelta_download = ""
 
                 anime.load_info() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
@@ -683,13 +684,20 @@ def main():
                     else:
                         my_print("Video/Anime\n", color="verde")
                         
-                        risp = fzf("esci\nguarda\ncontinua", 3)
+                        risp = fzf("esci\nindietro\nguarda\ncontinua", 4)
                         if risp == "esci":
                             safeExit()
                         elif risp == "guarda":
                             break   
                         elif risp == "continua":
                             continue
+                        elif risp == "indietro":
+                            scelta_download = True
+                            break
+            
+            if scelta_download:
+                scelta_download = False
+                continue
 
             while True:
                 openVideos(ep_iniziale)
