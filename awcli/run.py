@@ -444,28 +444,29 @@ def reloadCrono(cronologia: list[Anime]):
         cronologia (list[Anime]): Una lista Anime in cronologia.
 
     """
+    global scelta_anime
     if 0 not in [anime.status for anime in cronologia]:
         return
     
     my_print("Ricerco le nuove uscite...", color="giallo")
     ultime_uscite = latest()
     my_print(end="", cls=True)
-                
+    testo = ""
+
     for i, a in reversed(list(enumerate(cronologia))):
-        colore = "rosso"
+        colore = 1 #2 verde, 1 rosso
         if a.status == 1 or a.ep_corrente < a.ep:
-            colore = "verde"
+            colore = 2
         else:    
             for anime_latest in ultime_uscite:
                 if a.name == anime_latest.name and a.ep_corrente < anime_latest.ep:
                     log[i][5] = anime_latest.ep
-                    colore = "verde"
+                    colore = 2
                     break
-                
-        my_print(f"{i + 1} ", color=colore, end=" ")
-        my_print(f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
-        
-    my_print("Scegli un anime\n> ", end=" ", color="magenta")
+        testo += f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]\n"
+    
+    os.system("killall fzf")
+    scelta_anime = fzf(testo, len(cronologia), "Scegli un anime: ")
 
 
 def stringAnimeNames(animelist: list[Anime]) -> str: 
@@ -580,6 +581,7 @@ def main():
     global player_path
     global syncplay_path
     global openPlayer
+    global scelta_anime
 
     if update:
         updateScript()
@@ -620,20 +622,23 @@ def main():
                 animelist = RicercaAnime()
                 
             while True:
-                prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
-                scelta = fzf(stringAnimeNames(animelist), len(animelist), prompt, True)
-                
+                my_print("", end="", cls=True)
                 if cronologia and args.cronologia != 'r':
                     thread = Thread(target=reloadCrono, args=[animelist])    
                     thread.start()
                 
+                prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
+                scelta_anime = fzf(stringAnimeNames(animelist), len(animelist), prompt)
+                if cronologia and args.cronologia != 'r' and thread.is_alive:
+                    thread.join()
+
                 if args.cronologia == 'r':
-                    anime = animelist[scelta]
-                    removeFromCrono(scelta)
+                    anime = animelist[scelta_anime]
+                    removeFromCrono(scelta_anime)
                     animelist = getCronologia()
                     continue
                 
-                anime = animelist[int(scelta.split("  ")[0]) - 1]
+                anime = animelist[int(scelta_anime.split("  ")[0]) - 1]
                 #se la lista è stata selezionata, inserisco come ep_iniziale quello scelto dall'utente
                 #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
                 if lista:
@@ -751,6 +756,7 @@ def main():
 log = []
 player_path = ""
 syncplay_path = ""
+scelta_anime = ""
 openPlayer = None
 
 anime = Anime("", "")
