@@ -14,7 +14,7 @@ def safeExit():
     exit()
 
 
-def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False) -> str:
+def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False, esci: bool = True) -> str:
     """
     Avvia fzf con impostazioni predefinite.
 
@@ -23,6 +23,7 @@ def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False) -> s
         altezza (int): il numero di elementi da passare ad fzf. Definisce l'altezza occupata da fzf nel terminale.
         prompt (str, optional): il prompt che fzf deve stampare. Valore predefinito: "> ".
         cls (bool, optional): se impostato a True, pulisce lo schermo prima di stampare il testo. Valore predefinito: False.
+        esci (bool, optional): se True, esce dal programma se l'input dell'utente è vuoto. Valore predefinito: True.
 
     Returns:
         str: la scelta selezionata tramite fzf.
@@ -33,7 +34,7 @@ def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False) -> s
     comando = f"""fzf --tac --height={altezza + 2} --cycle --ansi --prompt="{prompt}" """
     output = os.popen(f"""printf "{elementi}" | {comando}""").read().strip()
     
-    if output == "":
+    if esci and output == "":
         safeExit()
 
     return output
@@ -623,14 +624,18 @@ def main():
                 
             while True:
                 my_print("", end="", cls=True)
+                esci = True
                 if cronologia and args.cronologia != 'r':
                     thread = Thread(target=reloadCrono, args=[animelist])    
                     thread.start()
+                    esci = False
                 
                 prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
-                scelta_anime = fzf(stringAnimeNames(animelist), len(animelist), prompt)
+                scelta_anime = fzf(stringAnimeNames(animelist), len(animelist), prompt, esci=esci)
                 if cronologia and args.cronologia != 'r' and thread.is_alive:
-                    thread.join()
+                        thread.join()
+                        if scelta_anime == "":
+                            safeExit()
 
                 if args.cronologia == 'r':
                     anime = animelist[scelta_anime]
