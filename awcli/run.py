@@ -283,19 +283,14 @@ def updateAnilist(ep: int, drop: bool = False):
                 voto_anilist = future_rating.result()
 
                 if int(voto_anilist) != 0:
-                    my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})\n> ", end=" ", color="magenta", cls=True)
+                    my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
+                    my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})\n> ", end=" ", color="ciano", bg_color="ciano_bg")
                 voto = future_voto.result()
     
         #chiedo di mettere tra i preferiti
         if anilist.preferitoAnilist and status_list == 'COMPLETED':
-            def check_string(s: str):
-                s = s.lower()
-                if s == "s":
-                    return True
-                elif s == "n" or s == "":
-                    return False
-
-            preferiti = my_input("Mettere l'anime tra i preferiti? (s/N)", check_string)
+            my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
+            preferiti = fzf("sì\nno", 2, "Mettere l'anime tra i preferiti? ")
     
     if preferiti: 
         thread = Thread(target=anilist.addToAnilistFavourite, args=(anime.id_anilist, ep, voto))
