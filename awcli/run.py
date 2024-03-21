@@ -284,7 +284,7 @@ def updateAnilist(ep: int, drop: bool = False):
 
                 if int(voto_anilist) != 0:
                     my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
-                    my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist})\n> ", end=" ", color="ciano", bg_color="ciano_bg")
+                    my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist}): ", end=" ", color="ciano", bg_color="ciano_bg")
                 voto = future_voto.result()
     
         #chiedo di mettere tra i preferiti
@@ -376,7 +376,7 @@ def setupConfig() -> None:
     try:
         #player predefinito
         my_print("", end="", cls=True)
-        my_print("AW-CLI - CONFIGURAZIONE\n", color="giallo")
+        my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
         player = fzf("vlc\nmpv", 2, "Scegli il player predefinito: ")
         if nome_os != "Linux" and nome_os != "Android":
@@ -401,7 +401,7 @@ def setupConfig() -> None:
             #prendo l'id dell'utente tramite query
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(anilist.getAnilistUserId)
-                my_print("AW-CLI - CONFIGURAZIONE\n", color="giallo", cls=True)
+                my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
                 if fzf("sì\nno", 2, "Votare l'anime una volta completato? ") == "sì":
                     ratingAnilist = "ratingAnilist: True "
                     
