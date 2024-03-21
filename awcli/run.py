@@ -31,7 +31,7 @@ def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False, esci
 
     if cls:
         my_print("",end="", cls=True)
-    comando = f"""fzf --tac --height={altezza + 2} --cycle --ansi --prompt="{prompt}" """
+    comando = f"""fzf --tac --height={altezza + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
     output = os.popen(f"""printf "{elementi}" | {comando}""").read().strip()
     
     if esci and output == "":
