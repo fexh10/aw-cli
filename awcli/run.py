@@ -514,39 +514,24 @@ def removeFromCrono(number: int):
         None.
     """
 
-    def check_yes(s: str):
-        s.lower()
-        if s == "s":
-            return True
-        elif s == "n" or s == "":
-            return False
-
     global log
 
-    my_print(f"Si è sicuri di voler rimuovere \"{anime.name}\" dalla cronologia? (s/N)", color="giallo", end="")
-    delete = my_input("", check_yes)
+    delete = fzf("sì\nno", 2, f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ")
 
-    if delete:
+    if delete == "sì":
         if anilist.dropAnilist:
-            drop = my_input(f"Droppare \"{anime.name}\" su AniList? (s/N)", check_yes)
+            drop = fzf("sì\nno", 2, f"Droppare {anime.name} su AniList? ")
 
-            if drop:
+            if drop == "sì":
                 updateAnilist(anime.ep_corrente, True)
 
         log.pop(number)
 
         #printAnimeNames(getCronologia())
 
-        def check_str(s: str):
-            s.lower()
-            if s == "c" or s== "e" or s == '':
-                return s
+        scelta = fzf("esci\ncontinua", 2, cls=True)
 
-        my_print("(c) continua", color="verde")
-        my_print("(e) esci", color="rosso", end="")
-        scelta = my_input("", check_str)
-
-        if scelta == "e" or scelta == '':
+        if scelta == "esci":
             safeExit()
 
 
@@ -636,14 +621,16 @@ def main():
                         thread.join()
                         if scelta_anime == "":
                             safeExit()
+                
+                scelta = int(scelta_anime.split("  ")[0]) - 1
 
                 if args.cronologia == 'r':
-                    anime = animelist[scelta_anime]
-                    removeFromCrono(scelta_anime)
+                    anime = animelist[scelta]
+                    removeFromCrono(scelta)
                     animelist = getCronologia()
                     continue
                 
-                anime = animelist[int(scelta_anime.split("  ")[0]) - 1]
+                anime = animelist[scelta]
                 #se la lista è stata selezionata, inserisco come ep_iniziale quello scelto dall'utente
                 #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
                 if lista:
