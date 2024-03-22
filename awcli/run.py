@@ -522,8 +522,6 @@ def removeFromCrono(number: int):
 
         log.pop(number)
 
-        #printAnimeNames(getCronologia())
-
         scelta = fzf("esci\ncontinua", 2, cls=True)
 
         if scelta == "esci":
@@ -631,7 +629,7 @@ def main():
                 if lista:
                     ep_iniziale = anime.ep
                 scelta_info = ""
-                scelta_download = ""
+                scelta_download = False
 
                 anime.load_info() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
@@ -660,11 +658,10 @@ def main():
                         safeExit()
                     sleep(1)
                     continue
-            while True:
-                if not lista:
-                    ep_iniziale = scegliEpisodi()
-                    if not downl:
-                        break
+            while not lista and not cronologia:
+                ep_iniziale = scegliEpisodi()
+                if not downl:
+                    break
                 
                 if downl:
                     path = f"{downloadPath()}/{anime.name}"
