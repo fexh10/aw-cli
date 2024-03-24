@@ -381,7 +381,7 @@ def setupConfig() -> None:
         player = fzf("vlc\nmpv", 2, "Scegli il player predefinito: ")
         if nome_os != "Linux" and nome_os != "Android":
             player = my_input("Inserisci il path del player")
-            my_print("AW-CLI - CONFIGURAZIONE\n", color="giallo", cls=True)
+            my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
         #animelist
         ratingAnilist = "ratingAnilist: False"
@@ -461,7 +461,8 @@ def reloadCrono(cronologia: list[Anime]):
                     break
         testo += f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]\n"
     
-    os.system("killall fzf")
+    pid = os.popen("pgrep fzf").read().strip().split("\n")
+    os.system(f"kill {pid[len(pid) - 1]}")
     scelta_anime = fzf(testo, len(cronologia), "Scegli un anime: ")
 
 
