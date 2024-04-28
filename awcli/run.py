@@ -441,6 +441,8 @@ def reloadCrono(cronologia: list[Anime]):
 
     """
     global scelta_anime
+    global notSelected
+    
     if 0 not in [anime.status for anime in cronologia]:
         return
     
@@ -461,9 +463,10 @@ def reloadCrono(cronologia: list[Anime]):
                     break
         testo += f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]\n"
     
-    pid = os.popen("pgrep fzf").read().strip().split("\n")
-    os.system(f"kill {pid[len(pid) - 1]}")
-    scelta_anime = fzf(testo, len(cronologia), "Scegli un anime: ")
+    if notSelected:
+        pid = os.popen("pgrep fzf").read().strip().split("\n")
+        os.system(f"kill {pid[len(pid) - 1]}")
+        scelta_anime = fzf(testo, len(cronologia), "Scegli un anime: ")
 
 
 def stringAnimeNames(animelist: list[Anime]) -> str: 
@@ -562,6 +565,7 @@ def main():
     global syncplay_path
     global openPlayer
     global scelta_anime
+    global notSelected
 
     if update:
         updateScript()
@@ -605,17 +609,21 @@ def main():
                 my_print("", end="", cls=True)
                 esci = True
                 if cronologia and args.cronologia != 'r':
+                    notSelected = True 
                     thread = Thread(target=reloadCrono, args=[animelist])    
                     thread.start()
                     esci = False
                 
                 prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
                 scelta_anime = fzf(stringAnimeNames(animelist), len(animelist), prompt, esci=esci)
+                notSelected = False
                 if cronologia and args.cronologia != 'r' and thread.is_alive:
-                        thread.join()
+                        #controllo se l'utente ha selezionato un anime oppure se c'è stata la relaodCrono
                         if scelta_anime == "":
-                            safeExit()
-                
+                            thread.join()
+                            if scelta_anime == "":
+                                safeExit()                        
+
                 scelta = int(scelta_anime.split("  ")[0]) - 1
 
                 if args.cronologia == 'r':
@@ -743,6 +751,7 @@ player_path = ""
 syncplay_path = ""
 scelta_anime = ""
 openPlayer = None
+notSelected = True
 
 anime = Anime("", "")
 
