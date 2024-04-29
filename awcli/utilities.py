@@ -80,6 +80,27 @@ def getBs(url: str) -> BeautifulSoup:
     
     return BeautifulSoup(result.text, "html.parser")
 
+def getHtml(url: str) -> str:
+    """
+    Prende l'html della pagina web selezionata.
+
+    Args:
+        url (str): indica la pagina web da cui prendere l'html.
+
+    Returns:
+        str: l'html della pagina web selezionata.
+    """
+    try:
+        result = requests.get(url, headers=headers)
+    except requests.exceptions.ConnectionError:
+        my_print("Errore di connessione", color="rosso")
+        exit()
+    
+    if result.status_code != 200:
+        my_print("Errore: pagina non trovata", color="rosso")
+        exit()
+    
+    return result.text
 
 def search(input: str) -> list[Anime]:
     """
@@ -163,10 +184,14 @@ def download(url_ep: str) -> str:
     Returns:
         str: il link di download
     """
-    bs = getBs(url_ep)
+    pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
+    match = re.search(pattern, getHtml(url_ep))
 
-    links = bs.find(id="download").find_all("a")
-    return links[1].get('href')
+    # Estrai l'URL se c'è una corrispondenza
+    if match is None:
+        exit()
+    
+    return match.group(1)
 
 
 def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
