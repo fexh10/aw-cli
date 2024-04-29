@@ -190,7 +190,6 @@ def download(url_ep: str) -> str:
     
     return match.group(1)
 
-
 def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     """
     Prende le informazioni dell'anime selezionato.
@@ -202,34 +201,32 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
         tuple[int, list[str], list[str]]: l'id di AniList, la lista degli url degli episodi e la lista delle info dell'anime.
     """
     # prendo l'html dalla pagina web di AW
-    bs = getBs(url)
+    html = getHtml(url)
 
     # prendo l'id di anilist
     try:
-        id_anilist = int(bs.find(class_='anilist control tip tippy-desktop-only').get('href')[25:])   
+        id_anilist = int(re.findall(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)[0])   
     except AttributeError:
         id_anilist = 0 
     # prendo gli url degli episodi
     url_episodi = list[str]()
-    for div in bs.find_all(class_='server active'):
-        for li in div.find_all(class_="episode"):
-            if ".5" in li.a.get('data-num'):
-                continue
-            temp = _url + (li.a.get('href'))
-            url_episodi.append(temp)
+    for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
+        if num.endswith(".5") or num == "0":
+            continue
+        if int(num) < len(url_episodi):
+            break
+        url_episodi.append(_url+url)
+        
             
     # prendo le info dell'anime
     info = list[str]()
-    infoDiv = bs.find(class_='info col-md-9')
-    for i, div in enumerate(infoDiv.find(class_='row').find_all("dd")):
-        match i:
-            case 5: info.append(re.sub(r'\s+', ' ', div.text).strip())
-            case 9: info.append(div.a.get('href')[-1])
-            case _: info.append(div.text.strip())
-    
-    info.append(re.sub(r'\s+', ' ', infoDiv.find(class_='desc').text).strip())
-    
-    return id_anilist, url_episodi, info
+    for i, text in enumerate(re.findall(r'<dd(?: class="rating")?>((?:.|\n)+?)</dd>', html)):
+        if "status" in text:
+            info.append(re.findall(r'<a.*href="\D*(\d*)"', text)[0])
+        else:
+            info.append(re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', text)).strip())
+    info.append(re.sub(r'[\s\n]+', ' ', re.findall(r'<div.*class="desc">((?:.|\n)+?)</div>', html)[0]).strip())
+    return id_anilist, url_episodi, info[-12:]
         
 
 def downloaded_episodes(anime: Anime, path: str) -> None:
