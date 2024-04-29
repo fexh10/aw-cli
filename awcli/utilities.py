@@ -116,23 +116,20 @@ def search(input: str) -> list[Anime]:
     # cerco l'anime su animeworld
     my_print("Ricerco...", color="giallo")
     url_ricerca = _url + "/search?keyword=" + input.replace(" ", "+")
-    bs = getBs(url_ricerca)
+    html = getHtml(url_ricerca)
+    if re.search(r'<div class="alert alert-danger">', html):
+        return []
 
     animes = list[Anime]()
     # prendo i link degli anime relativi alla ricerca
-    for div in bs.find(class_='film-list').find_all(class_='inner'):
-        url = _url + div.a.get('href')
-        
-        for a in div.find_all(class_='name'):
-            name =a.text
-            if nome_os == "Android":
-                caratteri_proibiti = '"*/:<>?\|'
-                caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
-                for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
-                    name = name.replace(a, b)
-
-        animes.append(Anime(name, url))
-
+    for url, name in re.findall(r'<div class="inner">(?:.|\n)+?<a href="([^"]+)"\s+data-jtitle="[^"]+"\s+class="name">([^<]+)', html):
+        if nome_os == "Android":
+            caratteri_proibiti = '"*/:<>?\|'
+            caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
+            for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
+                name = name.replace(a, b)
+        animes.append(Anime(name, _url+url))
+    
     return animes
 
 def latest(filter = "all") -> list[Anime]:
