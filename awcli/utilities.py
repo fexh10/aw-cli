@@ -3,7 +3,7 @@ import re
 import requests
 from platform import system
 from time import sleep
-from bs4 import BeautifulSoup
+from html import unescape
 import awcli.anilist as anilist
 from awcli.anime import Anime
    
@@ -58,28 +58,6 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             my_print("",end="", cls=True)
     return i
 
-def getBs(url: str) -> BeautifulSoup:
-    """
-    Prende l'html della pagina web selezionata.
-
-    Args:
-        url (str): indica la pagina web da cui prendere l'html.
-
-    Returns:
-        BeautifulSoup: l'html della pagina web selezionata.
-    """
-    try:
-        result = requests.get(url, headers=headers)
-    except requests.exceptions.ConnectionError:
-        my_print("Errore di connessione", color="rosso")
-        exit()
-    
-    if result.status_code != 200:
-        my_print("Errore: pagina non trovata", color="rosso")
-        exit()
-    
-    return BeautifulSoup(result.text, "html.parser")
-
 def getHtml(url: str) -> str:
     """
     Prende l'html della pagina web selezionata.
@@ -128,7 +106,7 @@ def search(input: str) -> list[Anime]:
             caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
             for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
                 name = name.replace(a, b)
-        animes.append(Anime(name, _url+url))
+        animes.append(Anime(unescape(name), _url+url))
     
     return animes
 
@@ -146,9 +124,9 @@ def latest(filter = "all") -> list[Anime]:
     html = getHtml(_url)
     animes = list[Anime]()
 
-    for url, title, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
+    for url, name, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
         if ".5" not in ep:
-            animes.append(Anime(title, _url + url, int(ep)))
+            animes.append(Anime(unescape(name), _url + url, int(ep)))
             
     match filter[0]:
         case 's': return animes[45:90]
@@ -167,13 +145,13 @@ def download(url_ep: str) -> str:
         str: il link di download
     """
     pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
-    match = re.search(pattern, getHtml(url_ep))
+    res = re.search(pattern, getHtml(url_ep))
 
     # Estrai l'URL se c'è una corrispondenza
-    if match is None:
+    if res is None:
         exit()
     
-    return match.group(1)
+    return res.group(1)
 
 def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     """
@@ -193,25 +171,27 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
         id_anilist = int(re.findall(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)[0])   
     except AttributeError:
         id_anilist = 0 
+        
     # prendo gli url degli episodi
     url_episodi = list[str]()
     for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
         if num.endswith(".5") or num == "0":
             continue
-        if int(num) < len(url_episodi):
+        if int(num) <= len(url_episodi):
             break
         url_episodi.append(_url+url)
-        
             
     # prendo le info dell'anime
-    info = list[str]()
-    for i, text in enumerate(re.findall(r'<dd(?: class="rating")?>((?:.|\n)+?)</dd>', html)):
-        if "status" in text:
-            info.append(re.findall(r'<a.*href="\D*(\d*)"', text)[0])
-        else:
-            info.append(re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', text)).strip())
-    info.append(re.sub(r'[\s\n]+', ' ', re.findall(r'<div.*class="desc">((?:.|\n)+?)</div>', html)[0]).strip())
-    return id_anilist, url_episodi, info[-12:]
+    info = re.findall(r'<dd(?: class="rating")?>((?:.|\n)+?)</dd>', html)
+    info.extend(re.findall(r'<div.*class="desc">((?:.|\n)+?)</div>', html))
+    info = info [-12:]
+
+    for i, text in enumerate(info):
+        res = re.search(r'<a[\s\n]*href=".*status=(\d+)"', text)
+        text = res.group(1) if res else re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', text)).strip()
+        info[i] = unescape(text)
+    
+    return id_anilist, url_episodi, info
         
 
 def downloaded_episodes(anime: Anime, path: str) -> None:
