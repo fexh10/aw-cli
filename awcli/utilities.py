@@ -143,33 +143,18 @@ def latest(filter = "all") -> list[Anime]:
         list[Anime]: la lista degli anime trovati
     """
 
-    match filter[0]:
-        case 's': data_name = "sub"
-        case 'd': data_name = "dub"
-        case 't': data_name = "trending"
-        case  _ : data_name = "all"
-
-    bs = getBs(_url)
+    html = getHtml(_url)
     animes = list[Anime]()
 
-    div = bs.find("div", {"data-name": data_name})
-    for div in div.find_all(class_='inner'):
-        url = _url + div.a.get('href')
-        
-        for a in div.find_all(class_='name'):
-            name = a.text
-            if nome_os == "Android":
-                caratteri_proibiti = '"*/:<>?\|'
-                caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
-                for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
-                    name = name.replace(a, b)
-        for div in div.find_all(class_='ep'):
-            ep = div.text[3:]
-            if ".5" not in ep:
-                animes.append(Anime(name, url, int(ep)))
-        
-
-    return animes
+    for url, title, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
+        if ".5" not in ep:
+            animes.append(Anime(title, _url + url, int(ep)))
+            
+    match filter[0]:
+        case 's': return animes[45:90]
+        case 'd': return animes[90:135]
+        case 't': return animes[135:]
+        case  _ : return animes[:45]
 
 def download(url_ep: str) -> str:
     """
