@@ -537,7 +537,11 @@ def removeFromCrono(number: int):
             drop = my_input(f"Droppare \"{anime.name}\" su AniList? (s/N)", check_yes)
 
             if drop:
-                updateAnilist(anime.ep_corrente, True)
+                if anime.id_anilist == 0:
+                    my_print("Impossibile droppare su AniList: id anime non trovato!", color="rosso")
+                    sleep(1)
+                else:
+                    updateAnilist(anime.ep_corrente, True)
 
         log.pop(number)
 
