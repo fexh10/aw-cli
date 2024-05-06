@@ -153,7 +153,7 @@ def openSyncplay(url_ep: str, nome_video: str):
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
 
-    os.system(f''''{syncplay_path}' "{url_ep}" media-title="{nome_video}" --language it > /dev/null 2>&1''')
+    os.system(f''''{syncplay_path}' "{url_ep}" force-media-title="{nome_video}" --language it > /dev/null 2>&1''')
 
 
 def openMPV(url_ep: str, nome_video: str):
