@@ -273,7 +273,7 @@ def getConfig() -> tuple[bool, str, str]:
         anilist.dropAnilist = True if lines[4].strip() == "dropAnilist: True" else False
         anilist.user_id = int(lines[5])
 
-        syncplay_path = lines[6]
+        syncplay_path = lines[6].strip()
 
     return mpv, player_path, syncplay_path
 
