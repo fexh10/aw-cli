@@ -14,13 +14,12 @@ def safeExit():
     exit()
 
 
-def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False, esci: bool = True) -> str:
+def fzf(elementi: list[str], prompt: str = "> ", cls: bool = False, esci: bool = True) -> str:
     """
     Avvia fzf con impostazioni predefinite.
 
     Args:
-        elementi (str): la stringa da passare ad fzf con gli elementi da selezionare.
-        altezza (int): il numero di elementi da passare ad fzf. Definisce l'altezza occupata da fzf nel terminale.
+        elementi (list[str]): lista da passare ad fzf con gli elementi da selezionare.
         prompt (str, optional): il prompt che fzf deve stampare. Valore predefinito: "> ".
         cls (bool, optional): se impostato a True, pulisce lo schermo prima di stampare il testo. Valore predefinito: False.
         esci (bool, optional): se True, esce dal programma se l'input dell'utente è vuoto. Valore predefinito: True.
@@ -31,8 +30,9 @@ def fzf(elementi: str, altezza: int, prompt: str = "> ", cls: bool = False, esci
 
     if cls:
         my_print("",end="", cls=True)
-    comando = f"""fzf --tac --height={altezza + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
-    output = os.popen(f"""printf "{elementi}" | {comando}""").read().strip()
+    string = "\n".join(elementi)
+    comando = f"""fzf --tac --height={len(elementi) + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
+    output = os.popen(f"""printf "{string}" | {comando}""").read().strip()
     
     if esci and output == "":
         safeExit()
@@ -99,12 +99,9 @@ def scegliEpisodi() -> int:
     if anime.ep == 1:
         return 1
 
-    ep = ""
+    ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)]
 
-    for i in range(anime.ep, anime.ep_ini - 1, -1):
-        ep += str(i) + "\n"
-
-    return int(fzf(ep, anime.ep, "Scegli un episodio: "))
+    return int(fzf(ep, "Scegli un episodio: "))
 
 
 def downloadPath(create: bool = True) -> str:
@@ -290,7 +287,7 @@ def updateAnilist(ep: int, drop: bool = False):
         #chiedo di mettere tra i preferiti
         if anilist.preferitoAnilist and status_list == 'COMPLETED':
             my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
-            preferiti = fzf("sì\nno", 2, "Mettere l'anime tra i preferiti? ")
+            preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ")
     
     if preferiti: 
         thread = Thread(target=anilist.addToAnilistFavourite, args=(anime.id_anilist, ep, voto))
@@ -378,7 +375,7 @@ def setupConfig() -> None:
         my_print("", end="", cls=True)
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
-        player = fzf("vlc\nmpv", 2, "Scegli il player predefinito: ")
+        player = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
         if nome_os != "Linux" and nome_os != "Android":
             player = my_input("Inserisci il path del player")
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
@@ -388,7 +385,7 @@ def setupConfig() -> None:
         preferitoAnilist = "preferitoAnilist: False"
         dropAnilist = "dropAnilist: False"
         
-        if fzf("sì\nno", 2, "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
+        if fzf(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
             link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
             if nome_os == "Linux" or nome_os == "Android":
                 os.system(f"xdg-open '{link}' > /dev/null 2>&1")
@@ -402,13 +399,13 @@ def setupConfig() -> None:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(anilist.getAnilistUserId)
                 my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
-                if fzf("sì\nno", 2, "Votare l'anime una volta completato? ") == "sì":
+                if fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
                     ratingAnilist = "ratingAnilist: True "
                     
-                if fzf("sì\nno", 2, "Chiedere se mettere l'anime tra i preferiti una volta completato? ") == "sì":
+                if fzf(["sì","no"], "Chiedere se mettere l'anime tra i preferiti una volta completato? ") == "sì":
                     preferitoAnilist = "preferitoAnilist: True"
                 
-                if fzf("sì\nno", 2, "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
+                if fzf(["sì","no"], "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
                     dropAnilist = "dropAnilist: True"
                 
                 anilist.user_id = future.result()
@@ -449,7 +446,7 @@ def reloadCrono(cronologia: list[Anime]):
     my_print("Ricerco le nuove uscite...", color="giallo")
     ultime_uscite = latest()
     my_print(end="", cls=True)
-    testo = ""
+    testo = []
 
     for i, a in reversed(list(enumerate(cronologia))):
         colore = 1 #2 verde, 1 rosso
@@ -461,28 +458,28 @@ def reloadCrono(cronologia: list[Anime]):
                     log[i][5] = anime_latest.ep
                     colore = 2
                     break
-        testo += f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]\n"
+        testo.append(f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
     
     if notSelected:
         pid = os.popen("pgrep fzf").read().strip().split("\n")
         os.system(f"kill {pid[len(pid) - 1]}")
-        scelta_anime = fzf(testo, len(cronologia), "Scegli un anime: ")
+        scelta_anime = fzf(testo, "Scegli un anime: ")
 
 
-def stringAnimeNames(animelist: list[Anime]) -> str: 
+def listAnimeNames(animelist: list[Anime]) -> list[str]: 
     """
-    Genera una stringa formattata con i 
+    Genera una lista di stringhe formattate con i 
     nomi degli anime presenti nella lista desiderata.
 
     Args:
         animelist (list[Anime]): Una lista Anime.    
 
     Return: 
-        str: la stringa formattata.
+        str: lista di stringhe formattate.
     """
 
     colore = 2 #2 verde, 1 rosso
-    nomi = ""
+    nomi = []
 
     for i, a in reversed(list(enumerate(animelist))):
         if cronologia:
@@ -490,14 +487,16 @@ def stringAnimeNames(animelist: list[Anime]) -> str:
             if a.status == 1 or a.ep_corrente < a.ep:
                 colore = 2
         
-        nomi += f"\033[0;3{colore}m{i + 1}  \033[0;37m"
+        nome = f"\033[0;3{colore}m{i + 1}  \033[0;37m"
 
         if cronologia:
-            nomi += f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]\n"
+            nome += f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]"
         elif lista:
-            nomi += f"{a.name} [Ep {a.ep}]\n" 
+            nome += f"{a.name} [Ep {a.ep}]" 
         else:
-            nomi += f"{a.name}\n"
+            nome += f"{a.name}"
+        nomi.append(nome)
+        
     return nomi
 
 
@@ -515,18 +514,18 @@ def removeFromCrono(number: int):
 
     global log
 
-    delete = fzf("sì\nno", 2, f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ")
+    delete = fzf(["sì","no"], f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ")
 
     if delete == "sì":
         if anilist.dropAnilist:
-            drop = fzf("sì\nno", 2, f"Droppare {anime.name} su AniList? ")
+            drop = fzf(["sì","no"], f"Droppare {anime.name} su AniList? ")
 
             if drop == "sì":
                 updateAnilist(anime.ep_corrente, True)
 
         log.pop(number)
 
-        scelta = fzf("esci\ncontinua", 2, cls=True)
+        scelta = fzf(["esci","continua"], cls=True)
 
         if scelta == "esci":
             safeExit()
@@ -615,7 +614,7 @@ def main():
                     esci = False
                 
                 prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
-                scelta_anime = fzf(stringAnimeNames(animelist), len(animelist), prompt, esci=esci)
+                scelta_anime = fzf(listAnimeNames(animelist), prompt, esci=esci)
                 notSelected = False
                 if cronologia and args.cronologia != 'r' and thread.is_alive:
                         #controllo se l'utente ha selezionato un anime oppure se c'è stata la relaodCrono
@@ -645,7 +644,7 @@ def main():
                 if info:
                     anime.print_info()
                     #stampo piccolo menu
-                    scelta_info = fzf("indietro\nguardare", 2)
+                    scelta_info = fzf(["indietro","guardare"])
                     if  scelta_info== "indietro":
                         break
 
@@ -682,7 +681,7 @@ def main():
                     else:
                         my_print("Video/Anime\n", color="verde")
                         
-                        risp = fzf("esci\nindietro\nguarda\ncontinua", 4)
+                        risp = fzf(["esci","indietro","guarda","continua"])
                         if risp == "esci":
                             safeExit()
                         elif risp == "guarda":
@@ -703,30 +702,24 @@ def main():
                 prossimo = True
                 antecedente = True
                 seleziona = True
-                stringa_menu = ""
-                n_elementi = 3
                 # menù che si visualizza dopo aver finito la riproduzione
-                stringa_menu += "esci\n"
-                stringa_menu += "indietro\n"
+                lista_menu = ["esci", "indietro"]
 
                 if anime.ep != 1:
-                    stringa_menu += "seleziona\n"
-                    n_elementi += 1
+                    lista_menu.append("seleziona")
                 else:
                     seleziona = False
                 if ep_iniziale != anime.ep_ini:
-                    stringa_menu += "antecedente\n"
-                    n_elementi += 1
+                    lista_menu.append("antecedente")
                 else:
                     antecedente = False
-                stringa_menu += "riguarda\n"
+                lista_menu.append("riguarda")
                 if ep_iniziale != anime.ep:
-                    stringa_menu += "prossimo\n"
-                    n_elementi += 1
+                    lista_menu.append("prossimo")
                 else:
                     prossimo = False
         
-                scelta_menu = fzf(stringa_menu, n_elementi)
+                scelta_menu = fzf(lista_menu)
 
                 if scelta_menu == "prossimo" and prossimo:
                     ep_iniziale += 1
