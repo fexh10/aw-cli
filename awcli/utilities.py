@@ -167,10 +167,8 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     html = getHtml(url)
 
     # prendo l'id di anilist
-    try:
-        id_anilist = int(re.findall(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)[0])   
-    except AttributeError:
-        id_anilist = 0 
+    res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
+    id_anilist = res.group(1) if res else 0
         
     # prendo gli url degli episodi
     url_episodi = list[str]()
@@ -178,7 +176,7 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
         if num.endswith(".5") or num == "0":
             continue
         if int(num) <= len(url_episodi):
-            break
+            continue
         url_episodi.append(_url+url)
             
     # prendo le info dell'anime
