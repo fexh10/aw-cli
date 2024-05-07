@@ -106,6 +106,6 @@ class Anime:
         utilities.my_print("Visualizzazioni: ", end="", color="azzurro")
         utilities.my_print(self.views, format=0)
         utilities.my_print("Trama: ", end="", color="azzurro")
-        utilities.my_print(self.plot, format=0)
+        utilities.my_print(self.plot, end="\n\n", format=0)
         
  
