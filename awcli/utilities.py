@@ -3,7 +3,7 @@ import re
 import requests
 from platform import system
 from time import sleep
-from bs4 import BeautifulSoup
+from html import unescape
 import awcli.anilist as anilist
 from awcli.anime import Anime
    
@@ -58,7 +58,7 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             my_print("",end="", cls=True)
     return i
 
-def getBs(url: str) -> BeautifulSoup:
+def getHtml(url: str) -> str:
     """
     Prende l'html della pagina web selezionata.
 
@@ -66,7 +66,7 @@ def getBs(url: str) -> BeautifulSoup:
         url (str): indica la pagina web da cui prendere l'html.
 
     Returns:
-        BeautifulSoup: l'html della pagina web selezionata.
+        str: l'html della pagina web selezionata.
     """
     try:
         result = requests.get(url, headers=headers)
@@ -78,8 +78,7 @@ def getBs(url: str) -> BeautifulSoup:
         my_print("Errore: pagina non trovata", color="rosso")
         exit()
     
-    return BeautifulSoup(result.text, "html.parser")
-
+    return result.text
 
 def search(input: str) -> list[Anime]:
     """
@@ -95,23 +94,20 @@ def search(input: str) -> list[Anime]:
     # cerco l'anime su animeworld
     my_print("Ricerco...", color="giallo")
     url_ricerca = _url + "/search?keyword=" + input.replace(" ", "+")
-    bs = getBs(url_ricerca)
+    html = getHtml(url_ricerca)
+    if re.search(r'<div class="alert alert-danger">', html):
+        return []
 
     animes = list[Anime]()
     # prendo i link degli anime relativi alla ricerca
-    for div in bs.find(class_='film-list').find_all(class_='inner'):
-        url = _url + div.a.get('href')
-        
-        for a in div.find_all(class_='name'):
-            name =a.text
-            if nome_os == "Android":
-                caratteri_proibiti = '"*/:<>?\|'
-                caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
-                for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
-                    name = name.replace(a, b)
-
-        animes.append(Anime(name, url))
-
+    for url, name in re.findall(r'<div class="inner">(?:.|\n)+?<a href="([^"]+)"\s+data-jtitle="[^"]+"\s+class="name">([^<]+)', html):
+        if nome_os == "Android":
+            caratteri_proibiti = '"*/:<>?\|'
+            caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
+            for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
+                name = name.replace(a, b)
+        animes.append(Anime(unescape(name), _url+url))
+    
     return animes
 
 def latest(filter = "all") -> list[Anime]:
@@ -125,33 +121,18 @@ def latest(filter = "all") -> list[Anime]:
         list[Anime]: la lista degli anime trovati
     """
 
-    match filter[0]:
-        case 's': data_name = "sub"
-        case 'd': data_name = "dub"
-        case 't': data_name = "trending"
-        case  _ : data_name = "all"
-
-    bs = getBs(_url)
+    html = getHtml(_url)
     animes = list[Anime]()
 
-    div = bs.find("div", {"data-name": data_name})
-    for div in div.find_all(class_='inner'):
-        url = _url + div.a.get('href')
-        
-        for a in div.find_all(class_='name'):
-            name = a.text
-            if nome_os == "Android":
-                caratteri_proibiti = '"*/:<>?\|'
-                caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
-                for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
-                    name = name.replace(a, b)
-        for div in div.find_all(class_='ep'):
-            ep = div.text[3:]
-            if ".5" not in ep:
-                animes.append(Anime(name, url, int(ep)))
-        
-
-    return animes
+    for url, name, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
+        if ".5" not in ep:
+            animes.append(Anime(unescape(name), _url + url, int(ep)))
+            
+    match filter[0]:
+        case 's': return animes[45:90]
+        case 'd': return animes[90:135]
+        case 't': return animes[135:]
+        case  _ : return animes[:45]
 
 def download(url_ep: str) -> str:
     """
@@ -163,11 +144,14 @@ def download(url_ep: str) -> str:
     Returns:
         str: il link di download
     """
-    bs = getBs(url_ep)
+    pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
+    res = re.search(pattern, getHtml(url_ep))
 
-    links = bs.find(id="download").find_all("a")
-    return links[1].get('href')
-
+    # Estrai l'URL se c'è una corrispondenza
+    if res is None:
+        exit()
+    
+    return res.group(1)
 
 def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     """
@@ -180,32 +164,30 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
         tuple[int, list[str], list[str]]: l'id di AniList, la lista degli url degli episodi e la lista delle info dell'anime.
     """
     # prendo l'html dalla pagina web di AW
-    bs = getBs(url)
+    html = getHtml(url)
 
     # prendo l'id di anilist
-    try:
-        id_anilist = int(bs.find(class_='anilist control tip tippy-desktop-only').get('href')[25:])   
-    except AttributeError:
-        id_anilist = 0 
+    res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
+    id_anilist = res.group(1) if res else 0
+        
     # prendo gli url degli episodi
     url_episodi = list[str]()
-    for div in bs.find_all(class_='server active'):
-        for li in div.find_all(class_="episode"):
-            if ".5" in li.a.get('data-num'):
-                continue
-            temp = _url + (li.a.get('href'))
-            url_episodi.append(temp)
+    for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
+        if num.endswith(".5") or num == "0":
+            continue
+        if int(num) <= len(url_episodi):
+            continue
+        url_episodi.append(_url+url)
             
-    # prendo le info dell'anime
-    info = list[str]()
-    infoDiv = bs.find(class_='info col-md-9')
-    for i, div in enumerate(infoDiv.find(class_='row').find_all("dd")):
-        match i:
-            case 5: info.append(re.sub(r'\s+', ' ', div.text).strip())
-            case 9: info.append(div.a.get('href')[-1])
-            case _: info.append(div.text.strip())
-    
-    info.append(re.sub(r'\s+', ' ', infoDiv.find(class_='desc').text).strip())
+    # prendo gile info dell'anime
+    info = re.findall(r'<dd(?: class="rating")?>((?:.|\n)+?)</dd>', html)
+    info.extend(re.findall(r'<div.*class="desc">((?:.|\n)+?)</div>', html))
+    info = info [-12:]
+
+    for i, text in enumerate(info):
+        res = re.search(r'<a[\s\n]*href=".*status=(\d+)"', text)
+        text = res.group(1) if res else re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', text)).strip()
+        info[i] = unescape(text)
     
     return id_anilist, url_episodi, info
         
