@@ -320,6 +320,8 @@ def openVideos(ep: int):
         url_ep = anime.get_episodio(ep)
 
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
+    if ep != anime.ep_corrente+1:
+        anime.progress = 0
     progress = openPlayer(url_ep, nome_video)
     if offline or privato: return
 
