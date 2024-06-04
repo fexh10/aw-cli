@@ -163,7 +163,7 @@ def openSyncplay(url_ep: str, nome_video: str):
     os.system(f''''{syncplay_path}' "{url_ep}" force-media-title="{nome_video}" --language it > /dev/null 2>&1''')
 
 
-def openMPV(url_ep: str, nome_video: str):
+def openMPV(url_ep: str, nome_video: str) -> int:
     """
     Apre MPV per riprodurre il video.
 
@@ -177,7 +177,15 @@ def openMPV(url_ep: str, nome_video: str):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return
     
-    os.system(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open --start="{anime.progress}"> /dev/null 2>&1""")
+    out = os.popen(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open --start="{anime.progress}" 2>&1""")
+
+    res = re.search(r'AV: (\d+:\d+:\d+) / [\d:]+ \((\d+)%\)', out.readlines()[-1])
+    
+    time = res.group(1).split(":")
+    anime.progress = (int(time[0]) * 3600) + (int(time[1]) * 60) + int(time[2])
+    
+    my_print(f"Progresso: {res.group(2)}%", color="giallo")
+    return int(res.group(2)) 
 
 
 def openVLC(url_ep: str, nome_video: str):
@@ -195,7 +203,7 @@ def openVLC(url_ep: str, nome_video: str):
     
     os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen --start-time="{anime.progress}"> /dev/null 2>&1''')
 
-def addToCronologia(ep: int):
+def addToCronologia(ep: int, progress: int = 0):
     """
     Aggiorna la cronologia con le informazioni esseziali relative all'episodio visualizzato.
     Le informazioni sono:
@@ -206,6 +214,7 @@ def addToCronologia(ep: int):
     - stato dell'anime
     - ultimo episodio disponibile
     - id dell'anime su AniList
+    - progresso dell'episodio visualizzato
 
     Args:
         ep (int): il numero dell'episodio visualizzato.
@@ -218,8 +227,12 @@ def addToCronologia(ep: int):
             
     #aggiungo l'anime alla cronologia con i nuovi dati    
     if ep != anime.ep or anime.status == 0:
-        temp = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist]
-        if ep == anime.ep:
+        if progress >= completeLimit:
+            anime.progress = 0
+        else:
+            ep -= 1
+        temp = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist, anime.progress]
+        if ep == anime.ep and progress >= completeLimit:
             log.append(temp)
         else:
             log.insert(0, temp) 
@@ -307,13 +320,13 @@ def openVideos(ep: int):
         url_ep = anime.get_episodio(ep)
 
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-    openPlayer(url_ep, nome_video)
+    progress = openPlayer(url_ep, nome_video)
     if offline or privato: return
 
-    addToCronologia(ep) 
+    addToCronologia(ep, progress if progress else 0) 
 
     #update watchlist anilist se ho fatto l'accesso
-    if anilist.tokenAnilist != 'tokenAnilist: False':
+    if anilist.tokenAnilist != 'tokenAnilist: False' and progress >= completeLimit:
         updateAnilist(ep)
 
 
