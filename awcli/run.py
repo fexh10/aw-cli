@@ -335,10 +335,13 @@ def getCronologia() -> list[Anime]:
             riga.append(riga[1])    
         if len(riga) < 7:
             riga.append(0)
+        if len(riga) < 8:
+            riga.append(0)
         a = Anime(name=riga[0], url=riga[2], ep=int(riga[5]), ep_totali=riga[3])
         a.ep_corrente = int(riga[1])
         a.status = int(riga[4])
         a.id_anilist = int(riga[6])
+        a.progress = int(riga[7])
         animes.append(a)
 
     #se il file esiste ma non contiene dati stampo un messaggio di errore
@@ -556,6 +559,7 @@ def main():
     global openPlayer
     global scelta_anime
     global notSelected
+    global completeLimit
 
     if update:
         updateScript()
@@ -736,6 +740,7 @@ syncplay_path = ""
 scelta_anime = ""
 openPlayer = None
 notSelected = True
+completeLimit = 90
 
 anime = Anime("", "")
 
