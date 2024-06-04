@@ -177,7 +177,7 @@ def openMPV(url_ep: str, nome_video: str):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return
     
-    os.system(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open > /dev/null 2>&1""")
+    os.system(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open --start="{anime.progress}"> /dev/null 2>&1""")
 
 
 def openVLC(url_ep: str, nome_video: str):
@@ -193,8 +193,7 @@ def openVLC(url_ep: str, nome_video: str):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')    
         return
     
-    os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen > /dev/null 2>&1''')
-
+    os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen --start-time="{anime.progress}"> /dev/null 2>&1''')
 
 def addToCronologia(ep: int):
     """
@@ -311,7 +310,7 @@ def openVideos(ep: int):
     openPlayer(url_ep, nome_video)
     if offline or privato: return
 
-    addToCronologia(ep)
+    addToCronologia(ep) 
 
     #update watchlist anilist se ho fatto l'accesso
     if anilist.tokenAnilist != 'tokenAnilist: False':
