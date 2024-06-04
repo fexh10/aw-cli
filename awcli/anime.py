@@ -15,6 +15,7 @@ class Anime:
         self.name = name
         self.url = url
         self.ep_corrente = ep
+        self.progress = 0
         self.ep = ep
         self.ep_totali = ep_totali
         self.ep_ini = 1
