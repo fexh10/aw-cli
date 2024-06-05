@@ -175,9 +175,11 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
     for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
         if num.endswith(".5") or num == "0":
             continue
-        if int(num) <= len(url_episodi):
-            continue
-        url_episodi.append(_url+url)
+        nums = num.split("-")
+        for num in nums:
+            if int(num) <= len(url_episodi):
+                continue
+            url_episodi.append(_url+url)
             
     # prendo gile info dell'anime
     info = re.findall(r'<dd(?: class="rating")?>((?:.|\n)+?)</dd>', html)
