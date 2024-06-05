@@ -179,13 +179,12 @@ def openMPV(url_ep: str, nome_video: str) -> int:
     
     out = os.popen(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open --start="{anime.progress}" 2>&1""")
 
-    res = re.search(r'AV: (\d+:\d+:\d+) / [\d:]+ \((\d+)%\)', out.readlines()[-1])
+    res = re.findall(r'AV: (\d+:\d+:\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
     
-    time = res.group(1).split(":")
+    time = res[0].split(":")
     anime.progress = (int(time[0]) * 3600) + (int(time[1]) * 60) + int(time[2])
     
-    my_print(f"Progresso: {res.group(2)}%", color="giallo")
-    return int(res.group(2)) 
+    return int(res[1]) 
 
 
 def openVLC(url_ep: str, nome_video: str):
