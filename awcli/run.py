@@ -198,44 +198,32 @@ def openVLC(url_ep: str, nome_video: str):
 
 def addToCronologia(ep: int):
     """
-    Viene aggiunta alla cronologia locale il nome del video,
-    il numero dell'ultimo episodio visualizzato,
-    il link di AnimeWorld relativo all'anime, 
-    il numero reale di episodi totali della serie, lostato dell'anime
-    e l'id anilist.
-    La cronologia viene salvata su un file csv nella stessa 
-    directory dello script. Se il file non esiste viene creato.
+    Aggiorna la cronologia con le informazioni esseziali relative all'episodio visualizzato.
+    Le informazioni sono:
+    - nome dell'anime
+    - episodio visualizzato
+    - URL dell'anime
+    - numero totale di episodi
+    - stato dell'anime
+    - ultimo episodio disponibile
+    - id dell'anime su AniList
 
     Args:
         ep (int): il numero dell'episodio visualizzato.
     """
+    
+    #rimuovo l'anime dalla cronologia se è già presente
     for i, riga in enumerate(log):
-        #se l'anime è presente
         if riga[0] == anime.name:
-            #se l'ep riprodotto è l'ultimo allora non lo inserisco più
-            if ep == anime.ep and anime.status == 1:
-                log.pop(i)
-            else: 
-                #sovrascrivo la riga   
-                log[i][1] = ep
-                log[i][2] = anime.url
-                log[i][3] = anime.ep_totali
-                log[i][4] = anime.status
-                log[i][5] = anime.ep
-                log[i][6] = anime.id_anilist
-                temp = log.pop(i)
-                #se l'anime è in corso e l'ep visualizzato è l'ultimo, metto l'anime alla fine della cronologia
-                if anime.status == 0 and ep == anime.ep:
-                    log.insert(len(log), temp)
-                #altrimenti all'inizio
-                else:
-                    log.insert(0, temp)
-            return
-    if (ep == anime.ep and anime.status == 0) or ep != anime.ep:
-        if anime.status == 0 and ep == anime.ep:
-            log.insert(len(log), [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist])
+            log.pop(i)
+            
+    #aggiungo l'anime alla cronologia con i nuovi dati    
+    if ep != anime.ep or anime.status == 0:
+        temp = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist]
+        if ep == anime.ep:
+            log.append(temp)
         else:
-            log.insert(0, [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist]) 
+            log.insert(0, temp) 
 
 
 def updateAnilist(ep: int, drop: bool = False):
