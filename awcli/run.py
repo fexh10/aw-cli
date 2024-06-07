@@ -99,7 +99,7 @@ def scegliEpisodi() -> int:
     if anime.ep == 1:
         return 1
 
-    ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)]
+    ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)] 
 
     return int(fzf(ep, "Scegli un episodio: "))
 
@@ -223,18 +223,20 @@ def addToCronologia(ep: int, progress: int = 0):
     for i, riga in enumerate(log):
         if riga[0] == anime.name:
             log.pop(i)
+            break
             
-    #aggiungo l'anime alla cronologia con i nuovi dati    
-    if ep != anime.ep or anime.status == 0:
-        if progress >= completeLimit:
-            anime.progress = 0
-        else:
-            ep -= 1
-        temp = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist, anime.progress]
-        if ep == anime.ep and progress >= completeLimit:
-            log.append(temp)
-        else:
-            log.insert(0, temp) 
+    if ep == anime.ep and anime.status == 1 and progress >= completeLimit:
+        return
+    #aggiungo l'anime alla cronologia con i nuovi dati  
+    new = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist, anime.progress]
+
+    if ep == anime.ep and progress >= completeLimit:
+        new[7] = 0
+        log.append(new)
+    else:
+        if progress < completeLimit:
+            new[1] -= 1
+        log.insert(0, new)
 
 
 def updateAnilist(ep: int, drop: bool = False):
@@ -677,6 +679,7 @@ def main():
                     continue
             while not lista and not cronologia:
                 ep_iniziale = scegliEpisodi()
+                anime.ep_corrente = ep_iniziale - 1
                 if not downl:
                     break
                 
