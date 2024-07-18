@@ -601,9 +601,6 @@ def main():
     #openPlayer = openMPV if mpv else openVLC
     openPlayer = lambda url_ep, nome_video: os.system(f"printf \"\e]8;;vlc://%s\a~~~~~~~~~~~~~~~~~~~~\n~ Premi per aprire VLC ~\n~~~~~~~~~~~~~~~~~~~~\e]8;;\a\n\" \"{url_ep}\"")
 
-    if nome_os != "Android" and args.syncpl:
-        openPlayer = openSyncplay
-
     while True:
         try:
             if cronologia:
