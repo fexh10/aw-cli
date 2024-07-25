@@ -364,8 +364,9 @@ def setupConfig() -> None:
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
         player = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
-        if nome_os != "Linux" and nome_os != "Android":
-            player = my_input("Inserisci il path del player")
+        if (nome_os != "Linux" and nome_os != "Android") or wsl:
+            stringa = "Inserisci il path del player tramite il percorso di WSL" if wsl else "Inserisci il path del player"
+            player = my_input(stringa)
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
         #animelist
