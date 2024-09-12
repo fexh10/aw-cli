@@ -10,9 +10,13 @@ from awcli.anime import Anime
 _url = "https://www.animeworld.so"
 # controllo il tipo del dispositivo
 nome_os = system()
+wsl = False
 if nome_os == "Linux":
-    if "com.termux" in os.popen("type -p python3").read().strip():
+    out = os.popen("uname -a").read().strip()
+    if "Android" in out:
         nome_os = "Android"
+    elif "WSL" in out:
+        wsl = True
 
 def my_print(text: str = "", format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
     """

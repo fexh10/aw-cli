@@ -177,7 +177,7 @@ def openMPV(url_ep: str, nome_video: str):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return
     
-    os.system(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open > /dev/null 2>&1""")
+    os.system(f"{player_path} '{url_ep}' --force-media-title='{nome_video}' --fullscreen --keep-open > /dev/null 2>&1")
 
 
 def openVLC(url_ep: str, nome_video: str):
@@ -193,7 +193,7 @@ def openVLC(url_ep: str, nome_video: str):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')    
         return
     
-    os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen > /dev/null 2>&1''')
+    os.system(f"{player_path} '{url_ep}' --meta-title '{nome_video}' --fullscreen > /dev/null 2>&1")
 
 
 def addToCronologia(ep: int):
@@ -364,8 +364,9 @@ def setupConfig() -> None:
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
         player = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
-        if nome_os != "Linux" and nome_os != "Android":
-            player = my_input("Inserisci il path del player")
+        if (nome_os != "Linux" and nome_os != "Android") or wsl:
+            stringa = "Inserisci il path del player tramite il percorso di WSL" if wsl else "Inserisci il path del player"
+            player = my_input(stringa)
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
         #animelist
