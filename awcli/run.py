@@ -363,10 +363,13 @@ def setupConfig() -> None:
         my_print("", end="", cls=True)
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
+        stringa_wsl = ""
+        if wsl:
+            stringa_wsl = " tramite il percorso di WSL"
+
         player = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
         if (nome_os != "Linux" and nome_os != "Android") or wsl:
-            stringa = "Inserisci il path del player tramite il percorso di WSL" if wsl else "Inserisci il path del player"
-            player = my_input(stringa)
+            player = my_input(f"Inserisci il path del player{stringa_wsl}")
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
         #animelist
@@ -399,12 +402,12 @@ def setupConfig() -> None:
                 
                 anilist.user_id = future.result()
 
-        if nome_os == "Linux":
+        if nome_os == "Linux" and not wsl:
             syncplay= "syncplay"
         elif nome_os == "Android": 
                 syncplay = "Syncplay: None"
         else:
-            syncplay = my_input("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)")
+            syncplay = my_input(f"Inserisci il path di Syncplay{stringa_wsl} (premere INVIO se non lo si desidera utilizzare)")
             if syncplay == "":
                 syncplay = "Syncplay: None"
     except KeyboardInterrupt:
