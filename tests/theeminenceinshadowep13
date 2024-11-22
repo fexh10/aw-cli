@@ -1,318 +1,499 @@
 <!DOCTYPE html>
 <html lang="it">
-<body class="dark">
-    <div id="body">
-        <div class="container" id="body-container">
-            <div id="main">
-                <div class="content">
-                    <div class="widget player">
-                        <div class="widget-title">
-                            <h1 class="title" id="anime-title" data-jtitle="Kage no Jitsuryokusha ni Naritakute!">The
-                                Eminence in Shadow</h1>
-                        </div>
-                        <div class="widget-body">
-                            <div class="player-show">
-                                <div id="player" class="d-flex justify-content-center align-items-center player-box"
-                                    data-id="wc88rg" data-episode-id="69228" data-num="1" data-anime-id="4147" style="">
+    <body class="">
+        <div id="body">
+            <div class="container" id="body-container">
+                <div id="main">
+                    <div class="content">
+                            <div class="widget player">
+                                <div class="widget-title">
+                                    <h1 class="title" id="anime-title" data-jtitle="Kage no Jitsuryokusha ni Naritakute!">The Eminence in Shadow</h1>
+                                    <link rel="stylesheet" href="https://static.animeworld.so/dist/frontend/views/play/like.css?0">
 
+<div id="loveButton" class="like " style="float:right;" data-tippy-content="Aggiungi ai preferiti" data-id="4147" data-is="">
+    <i class="icon icon-heart"></i>
+</div>
 
-                                    <script type="text/javascript"
-                                        src="https://static.animeworld.so/dist/frontend/views/partials/theme/themed-cover-switch.js"></script>
-                                    <div id="jw"></div>
-                                    <iframe id="player-iframe" src="/api/episode/serverPlayerAnimeWorld?id=Dcqo-Q"
-                                        allow="autoplay;fullscreen" frameborder="no" scrolling="no"
-                                        allowfullscreen="yes" style="width: 100%; height: 100%;"></iframe>
                                 </div>
-                            </div>
-                            <div class="trailer-show" style="display: none;">
-                                <div class="player-box" data-id="wc88rg" data-episode-id="69228" data-num="1"
-                                    data-anime-id="4147" style="">
-                                    <iframe src="https://www.youtube.com/embed/O9BBuXg0vMs"
-                                        style="width: 100%; height: 100%; border: 0;" allowfullscreen=""></iframe>
-                                </div>
-                            </div>
-                            <div id="controls">
-                                <a class="mal control tip tippy-desktop-only" data-tippy-content="Scheda MyAnimeList"
-                                    id="mal-button" href="https://myanimelist.net/anime/48316" target="_blank"
-                                    rel="noopener noreferrer" aria-label="MyAnimeList" style="width: 110px;"> <img
-                                        loading="lazy" src="https://static.animeworld.so/assets/images/svg/mal.svg"
-                                        style="width: 13px;" alt="MyAnimeList">&nbsp;<span>MyAnimeList</span> </a>
-                                <a class="anilist control tip tippy-desktop-only" data-tippy-content="Scheda AniList"
-                                    id="anilist-button" href="https://anilist.co/anime/130298" target="_blank"
-                                    rel="noopener noreferrer" aria-label="AniList" style="width: 75px;"> <img
-                                        loading="lazy" src="https://static.animeworld.so/assets/images/svg/anilist.svg"
-                                        style="width: 13px;" alt="AniList">&nbsp;<span>AniList</span> </a>
-                                <a class="mangaworld control tip tippy-desktop-only" data-tippy-content="Vai al manga"
-                                    id="mangaworld-button" href="https://www.mangaworld.in/manga/2219" target="_blank"
-                                    rel="noopener noreferrer" aria-label="MangaWorld" style="width: 115px;"> <img
-                                        loading="lazy"
-                                        src="https://static.animeworld.so/assets/images/svg/mangaworld.svg?3"
-                                        style="width: 13px;" alt="MangaWorld">&nbsp;<span>MangaWorld</span> </a>
-                                <div class="trailer control tip tippy-desktop-only"
-                                    data-url="https://www.youtube.com/embed/O9BBuXg0vMs" data-state="0"
-                                    data-target="#player" data-off="Guarda il trailer" data-on="Guarda lo streaming"> <i
-                                        class="fab fa-youtube"></i> <span>Guarda il trailer</span> </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="widget servers" id="animeId" data-id="pzm5jA" data-bind-api="#player">
-                        <div class="widget-title">
-                            <span class="title">Server</span>
-                            <span class="tabs servers-tabs">
-                                <span class="tab server-tab active" data-name="9">AnimeWorld Server</span>
-                            </span>
-                        </div>
-                        <div class="widget-body">
-                            <div class="server active" data-name="9" data-type="iframe" data-id="9"
-                                style="display: block;">
-                                <div class="range"></div>
-                                <ul class="episodes range active" data-range-id="0" style="display: block;">
-                                    <li class="episode"><a data-episode-id="69228" data-id="wc88rg" data-episode-num="1"
-                                            data-num="1" data-base="1" data-comment="1"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/wc88rg" class="">1</a></li>
-
-                                    <li class="episode"><a data-episode-id="69343" data-id="94DUwH" data-episode-num="2"
-                                            data-num="2" data-base="2" data-comment="2"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/94DUwH">2</a></li>
-
-                                    <li class="episode"><a data-episode-id="69424" data-id="767ULG" data-episode-num="3"
-                                            data-num="3" data-base="3" data-comment="3"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/767ULG">3</a></li>
-
-                                    <li class="episode"><a data-episode-id="70188" data-id="fkZv4s" data-episode-num="4"
-                                            data-num="4" data-base="4" data-comment="4"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/fkZv4s">4</a></li>
-
-                                    <li class="episode"><a data-episode-id="70272" data-id="cEA6vi" data-episode-num="5"
-                                            data-num="5" data-base="5" data-comment="5"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/cEA6vi">5</a></li>
-
-                                    <li class="episode"><a data-episode-id="70349" data-id="7oDIuU" data-episode-num="6"
-                                            data-num="6" data-base="6" data-comment="6"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/7oDIuU">6</a></li>
-
-                                    <li class="episode"><a data-episode-id="70427" data-id="UPunS4" data-episode-num="7"
-                                            data-num="7" data-base="7" data-comment="7"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/UPunS4">7</a></li>
-
-                                    <li class="episode"><a data-episode-id="70487" data-id="gbiqVl" data-episode-num="8"
-                                            data-num="8" data-base="8" data-comment="8"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/gbiqVl">8</a></li>
-
-                                    <li class="episode"><a data-episode-id="70740" data-id="tmoKKw" data-episode-num="9"
-                                            data-num="9" data-base="9" data-comment="9"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/tmoKKw">9</a></li>
-
-                                    <li class="episode"><a data-episode-id="70745" data-id="BcA9MA"
-                                            data-episode-num="10" data-num="10" data-base="10" data-comment="10"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/BcA9MA">10</a></li>
-
-                                    <li class="episode"><a data-episode-id="70749" data-id="8hK5eg"
-                                            data-episode-num="11" data-num="11" data-base="11" data-comment="11"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/8hK5eg">11</a></li>
-
-                                    <li class="episode"><a data-episode-id="70926" data-id="D5OCoH"
-                                            data-episode-num="12" data-num="12" data-base="12" data-comment="12"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/D5OCoH">12</a></li>
-
-                                    <li class="episode"><a data-episode-id="71040" data-id="Dcqo-Q"
-                                            data-episode-num="13" data-num="13" data-base="13" data-comment="13"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/Dcqo-Q" class="active">13</a></li>
-
-                                    <li class="episode"><a data-episode-id="71085" data-id="T2MdcS"
-                                            data-episode-num="14" data-num="14" data-base="14" data-comment="14"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/T2MdcS">14</a></li>
-
-                                    <li class="episode"><a data-episode-id="71173" data-id="pPGN3V"
-                                            data-episode-num="15" data-num="15" data-base="15" data-comment="15"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/pPGN3V">15</a></li>
-
-                                    <li class="episode"><a data-episode-id="71320" data-id="Q-zvit"
-                                            data-episode-num="16" data-num="16" data-base="16" data-comment="16"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/Q-zvit">16</a></li>
-
-                                    <li class="episode"><a data-episode-id="71463" data-id="DIolk7"
-                                            data-episode-num="17" data-num="17" data-base="17" data-comment="17"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/DIolk7">17</a></li>
-
-                                    <li class="episode"><a data-episode-id="71739" data-id="jhcGBX"
-                                            data-episode-num="18" data-num="18" data-base="18" data-comment="18"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/jhcGBX">18</a></li>
-
-                                    <li class="episode"><a data-episode-id="71740" data-id="36xm12"
-                                            data-episode-num="19" data-num="19" data-base="19" data-comment="19"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/36xm12">19</a></li>
-
-                                    <li class="episode"><a data-episode-id="71798" data-id="EWBjfz"
-                                            data-episode-num="20" data-num="20" data-base="20" data-comment="20"
-                                            href="/play/the-eminence-in-shadow.pzm5jA/EWBjfz">20</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="download">
-                        <div class="widget downloads">
-                            <div class="widget-title">
-                                <span class="title">Download</span>
-                                <span class="tabs" data-target=".widget.downloads .download"> <span
-                                        class="tab active">The Eminence in Shadow</span> </span>
-                            </div>
-                            <div class="widget-body" style="padding-top: 17px;padding-bottom: 17px;">
-                                <center>
-                                    <a href="https://srv13-hana.vidawave.cc/download-file.php?id=DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
-                                        id="downloadLink" class="m-1 btn btn-sm btn-primary" target="_blank"><i
-                                            class="fas fa-download"></i>&nbsp;&nbsp;Download Diretto - Ep. <span
-                                            class="episodeNum">13</span></a>
-                                    <a href="https://srv13-hana.vidawave.cc/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
-                                        id="alternativeDownloadLink" class="m-1 btn btn-sm btn-primary" target="_blank"
-                                        download=""><i class="fas fa-download"></i>&nbsp;&nbsp;Download Alternativo -
-                                        Ep. <span class="episodeNum">13</span></a>
-                                    <a href="" id="customDownloadButton" class="m-1 btn btn-sm btn-primary hidden"
-                                        target="_blank"><i class="fas fa-download"></i>&nbsp;&nbsp;Download - Ep. <span
-                                            class="episodeNum">13</span></a>
-                                </center>
-
-                                <hr id="mainServerHr" class="" style="margin-top: 10px; margin-bottom: 10px;">
-
-                                <div id="external-downloads">
-                                    <center>
-                                        <a href="https://streamtape.com/v/aYAgmJLMOXtxXMz/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
-                                            class="m-1 btn btn-sm btn-primary btn-streamtape" target="_blank"><i
-                                                class="fas fa-download"></i>&nbsp;&nbsp;Download Streamtape - Ep. <span
-                                                class="episodeNum">13</span></a>
-                                    </center>
-                                </div>
-
-                                <br>
-                                <div class="download-info">Se in alcune serie il tasto <b>Download Diretto</b> porta in
-                                    una pagina 404, utilizzate il tasto <b>Download Alternativo</b>.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="widget info">
-                        <div class="widget-body">
-                            <div class="row">
-                                <div class="thumb col-md-3 d-md-block d-sm-none d-xs-none d-none h-100"
-                                    id="thumbnail-watch">
-                                    <img loading="lazy" src="https://img.animeworld.so/locandine/pzm5j.jpg?0"
-                                        alt="The Eminence in Shadow">
-                                </div>
-                                <div class="info col-md-9">
-                                    <div class="head">
-                                        <div class="c1">
-                                            <h2 class="title" data-jtitle="Kage no Jitsuryokusha ni Naritakute!">The
-                                                Eminence in Shadow</h2>
+                                <div class="widget-body">
+                                    <div class="player-show" >
+                                        <div id="player" class="d-flex justify-content-center align-items-center player-box" data-id="Dcqo-Q" data-episode-id="71040" data-num="13" data-anime-id="4147">
+                                            <div class="cover" id="player-cover" data-dark="https://img.animeworld.so/general/Player_Dark.png" data-light="https://img.animeworld.so/general/Player_Light.png" style="background-image: url('https://img.animeworld.so/general/Player_Light.png')"></div>
+                                            
+                                            <script type="text/javascript" src="https://static.animeworld.so/dist/frontend/views/partials/theme/themed-cover-switch.js"></script>    <div id="jw"></div>
                                         </div>
-                                        <div class="thumb d-md-none d-block float-left p-0 mt-3"
-                                            id="mobile-thumbnail-watch">
-                                            <img loading="lazy" src="https://img.animeworld.so/locandine/pzm5j.jpg?0"
-                                                alt="The Eminence in Shadow">
-                                        </div>
-                                        <div class="rating mt-3 mt-md-0" data-id="4147" data-value="8.47"
-                                            data-count="4261">
-                                            <link rel="stylesheet"
-                                                href="https://static.animeworld.so/dist/frontend/views/play/rate.css?3">
-
-                                            <div id="rate-loading" class="spinner-border loading-bootstrap"
-                                                style="width: 3rem; height: 3rem; font-size: 15px; display: none;"
-                                                role="status">
-                                                <span class="sr-only">Caricamento...</span>
+                                    </div>
+                                        <div class="trailer-show" style="display: none;">
+                                            <div class="player-box" data-id="Dcqo-Q" data-episode-id="71040" data-num="13" data-anime-id="4147">
+                                                <iframe src="https://www.youtube.com/embed/O9BBuXg0vMs" style="width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
                                             </div>
-                                            <div
-                                                class="rating-container theme-krajee-fas rating-xs rating-animate is-star">
-                                                <div class="rating-stars"><span class="empty-stars"><span
-                                                            class="star"><i
-                                                                class="fa fa-star empty-star"></i></span><span
-                                                            class="star"><i
-                                                                class="fa fa-star empty-star"></i></span><span
-                                                            class="star"><i
-                                                                class="fa fa-star empty-star"></i></span><span
-                                                            class="star"><i
-                                                                class="fa fa-star empty-star"></i></span><span
-                                                            class="star"><i
-                                                                class="fa fa-star empty-star"></i></span></span><span
-                                                        class="filled-stars" style="width: 0%;"><span class="star"><i
-                                                                class="fa fa-star filled-star"></i></span><span
-                                                            class="star"><i
-                                                                class="fa fa-star filled-star"></i></span><span
-                                                            class="star"><i
-                                                                class="fa fa-star filled-star"></i></span><span
-                                                            class="star"><i
-                                                                class="fa fa-star filled-star"></i></span><span
-                                                            class="star"><i
-                                                                class="fa fa-star filled-star"></i></span></span><input
-                                                        id="rate-input" class="kv-ltr-theme-fas-star rating-input"
-                                                        value="0" dir="ltr" data-size="xs" style="display: none;"></div>
-                                            </div>
-
-                                            <div class="text rate-on-load" style="padding-top: 0px !important;"><span
-                                                    class="votes-count" id="single-vote-count">4261</span> <span
-                                                    id="votes-name">voti</span></div>
                                         </div>
-                                    </div>
-                                    <div class="clearfix"></div>
-                                    <div class="row">
-                                        <dl class="meta col-sm-6">
-                                            <dt>Categoria:</dt>
-                                            <dd>
-                                                Anime
-                                            </dd>
-                                            <dt>Audio:</dt>
-                                            <dd><a href="/filter?language=jp">Giapponese</a></dd>
-                                            <dt>Data di Uscita:</dt>
-                                            <dd>05 Ottobre 2022</dd>
-                                            <dt>Stagione:</dt>
-                                            <dd><a href="/filter?season=fall&amp;year=2022">Autunno 2022</a></dd>
-                                            <dt>Studio:</dt>
-                                            <dd>
-                                                <a href="/filter?studio=Nexus">Nexus</a>
-                                            </dd>
-                                            <dt>Genere:</dt>
-                                            <dd>
-                                                <a href="/genre/arti-marziali">Arti Marziali</a>,
-                                                <a href="/genre/adventure">Avventura</a>,
-                                                <a href="/genre/action">Azione</a>,
-                                                <a href="/genre/commedia">Commedia</a>,
-                                                <a href="/genre/fantasy">Fantasy</a>,
-                                                <a href="/genre/harem">Harem</a>,
-                                                <a href="/genre/school">Scolastico</a>
-                                            </dd>
-                                        </dl>
-                                        <dl class="meta col-sm-6">
-                                            <dt>Voto:</dt>
-                                            <dd class="rating"> <span id="average-vote">8.47</span> / 10 </dd>
-                                            <dt>Durata:</dt>
-                                            <dd>23 min/ep </dd>
-                                            <dt>Episodi:</dt>
-                                            <dd>20</dd>
-                                            <dt>Stato:</dt>
-                                            <dd>
-                                                <a href="/filter?status=1">Finito</a>
-                                            </dd>
-                                            <dt>Visualizzazioni:</dt>
-                                            <dd>1.387.659</dd>
-                                        </dl>
-                                    </div>
-                                    <hr style="margin-top: 10px;margin-bottom: 10px;">
-                                    <div class="desc">Gli uomini che vivono nell'ombra sono
-                                        quelle persone che passano inosservate, come persone ordinarie, ma in realtà
-                                        detengono il potere da dietro le quinte. Questo è ciò a cui aspira Shido e
-                                        per raggiungere il suo obiettivo vive una vita insignificante di giorno,
-                                        mentre di notte si allena duramente preparandosi alla sua ascesa al potere.
-                                        Finalmente riesce a raggiungere il suo obiettivo quando, dopo un fatale
-                                        incidente, si risveglia in un mondo misterioso e si ritrova a capo di
-                                        un'organizzazione segreta che combatte i demoni rimanendo nell'oscurità!
+                                    <div id="controls">
+                                        <div id="alternativ">
+                                            <div class="control active tippy-desktop-only" id="alternative" data-tippy-content="Utilizza il player alternativo per guardare l'episodio" data-id="Dcqo-Q" data-base="13" data-comment="'13" data-title="0" href="/play/the-eminence-in-shadow.pzm5jA/Dcqo-Q" data-target="#player" data-off="Light Off" data-value="alternative">
+                                                <i style="color:#ec4f4f;" class="icon icon-random"></i> <span>Player alternativo</span>
+                                            </div>
+                                        </div>
+                                        <div class="prevnext prev control tip tippy-desktop-only" style="display: none;" data-tippy-content="Vai indietro di un episodio" data-target="#player" data-off="Light off" data-value="prev"> <i class="icon icon-step-backward"></i> <span>Precedente</span> </div>
+                                        <div class="prevnext next control tip tippy-desktop-only" style="display: none;" data-tippy-content="Vai avanti di un episodio" data-target="#player" data-off="Light off" data-value="next"> <i class="icon icon-step-forward"></i> <span>Successivo</span> </div>
+                                        <link rel="stylesheet" href="https://static.animeworld.so/dist/frontend/views/play/bookmark.css">
+                                        
+                                        <div class="userbookmark control dropdown tip">
+                                            <div data-toggle="dropdown" class="text"> <i class="icon icon-plus"></i> <span data-label-placement="true">Watchlist</span> </div>
+                                            <ul class="dropdown-menu bookmark choices " data-id="4147">
+                                                <li  data-value="watching" data-value-alt="1"><a title='Segna come "In corso"'><i class="fa fa-eye"></i>&nbsp;&nbsp;In corso</a></li>
+                                                <li  data-value="watched" data-value-alt="2"><a title='Segna come "Completato"'><i class="fa fa-check"></i>&nbsp;&nbsp;Completati</a></li>
+                                                <li  data-value="onhold" data-value-alt="3"><a title='Segna come "In pausa"'><i class="fa fa-hand-rock"></i>&nbsp;&nbsp;In pausa</a></li>
+                                                <li  data-value="dropped" data-value-alt="4"><a title='Segna come "Droppato"'><i class="fa fa-eye-slash"></i>&nbsp;&nbsp;Droppati</a></li>
+                                                <li  data-value="planned" data-value-alt="5"><a title='Segna come "Da guardare"'><i class="fa fa-bookmark"></i>&nbsp;&nbsp;Da guardare</a></li>
+                                                <li role="separator" class="divider"></li>
+                                                <li data-value="advanced"><a title='Modifiche avanzate'><i class="fa fa-pencil-alt"></i>&nbsp;&nbsp;Modifiche avanzate</a></li>
+                                                <li role="separator" class="divider"></li>
+                                                <li data-value="remove"><a title='Rimuovi dalla lista'><i class="fa fa-times"></i>&nbsp;&nbsp;Rimuovi dalla lista</a></li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <link rel="stylesheet" href="https://static.animeworld.so/dist/frontend/views/watchlist/edit-modal.css?12314">
+                                        
+                                        <script>
+                                            window.isInList = false;
+                                        </script>
+                                        
+                                        <div class="watchlist-edit-modal hidden" data-id="" data-animes-id="4147">
+                                            <div class="watchlist-edit-modal-body px-3 pb-3">
+                                                <div class="px-3 pb-3 pt-2 text-white watchlist-edit-modal-header-row mb-4">
+                                                    <div class="d-flex justify-content-end watchlist-edit-modal-close-row">
+                                                        <i class="fa fa-times watchlist-edit-modal-close-button"></i>
+                                                    </div>
+                                                    <div class="image">
+                                                        <img src="https://img.animeworld.so/locandine/pzm5j.jpg?0" />
+                                                    </div>
+                                                    <div class="d-flex flex-column flex-grow-1 ml-3 watchlist-edit-info-wrapper">
+                                                        <h4 class="font-weight-bold watchlist-edit-modal-anime-title mb-3" data-jtitle="Kage no Jitsuryokusha ni Naritakute!">The Eminence in Shadow</h4>
+                                                        <dl class="watchlist-edit-info">
+                                                            <div class="d-flex align-items-center my-1 animeType">
+                                                                <dt>
+                                                                    Tipo:
+                                                                </dt>
+                                                                <dd>
+                                        
+                                                                            <div class="watchlist-tag anime">Anime</div>
+                                                                </dd>
+                                                            </div>
+                                                            <div class="d-flex align-items-center my-1 state">
+                                                                <dt>
+                                                                    Stato:
+                                                                </dt>
+                                                                <dd>
+                                                                        Finito
+                                                                </dd>
+                                                            </div>
+                                                            <div class="d-flex align-items-center my-1 categories">
+                                                                <dt>
+                                                                    Generi:
+                                                                </dt>
+                                                                <dd>
+                                                                                <a class="watchlist-edit-modal-tag" href="/genre/arti-marziali">Arti Marziali</a>
+                                                                                <a class="watchlist-edit-modal-tag" href="/genre/adventure">Avventura</a>
+                                                                                <a class="watchlist-edit-modal-tag" href="/genre/action">Azione</a>
+                                                                </dd>
+                                                            </div>
+                                                            <div class="d-flex align-items-center my-1 year">
+                                                                <dt>
+                                                                    Anno:
+                                                                </dt>
+                                                                <dd>
+                                                                        2022
+                                                                </dd>
+                                                            </div>
+                                                        </dl>
+                                                        <div class="watchlist-edit-modal-like-wrapper">
+                                                            <i class="far fa-heart watchlist-edit-modal-like-heart"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex flex-column ml-auto watchlist-edit-modal-hyperlinks-row">
+                                                        <a class="d-flex watchlist-edit-mal" href="https://myanimelist.net/anime/48316" target="_blank">
+                                                            <img class="mr-1" loading="lazy" src="https://static.animeworld.so/assets/images/svg/mal.svg" style="width: 17px;" alt="MyAnimeList">&nbsp;MyAnimeList
+                                                        </a>
+                                                        <a class="d-flex watchlist-edit-anilist" href="https://anilist.co/anime/130298" target="_blank">
+                                                            <img class="mr-1" loading="lazy" src="https://static.animeworld.so/assets/images/svg/anilist.svg" style="width: 17px;" alt="AniList">&nbsp;AniList
+                                                        </a>
+                                                        <a class="d-flex watchlist-edit-mangaworld" href="https://www.mangaworld.ac/manga/2219" target="_blank">
+                                                            <img class="mr-1" loading="lazy" src="https://static.animeworld.so/assets/images/svg/mangaworld.svg?3" style="width: 17px;" alt="MangaWorld">&nbsp;MangaWorld
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                        
+                                                <div class="row">
+                                                    <div class="form-group col-6 col-md-3">
+                                                        <label for="watchlist-edit-folder">Lista</label>
+                                                        <select class="selectpicker form-control" id="watchlist-edit-folder">
+                                                            <option value="1">In corso</option>
+                                                            <option value="2">Completato</option>
+                                                            <option value="3">In pausa</option>
+                                                            <option value="4">Droppato</option>
+                                                            <option value="5">Da guardare</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-6 col-md-3">
+                                                        <label for="watchlist-edit-score">Voto</label>
+                                                        <div class="input-group mb-3">
+                                                            <input type="number" class="form-control single-appended-item" id="watchlist-edit-score" placeholder="0" min="0" max="10" step="1" value="">
+                                                            <div class="input-group-append">
+                                                                <div class="d-flex flex-column justify-content-center watchlist-number-spinner single-appended-item">
+                                                                    <span class="spin-button up">
+                                                                        <i class="fa fa-angle-up"></i>
+                                                                    </span>
+                                                                    <span class="spin-button down">
+                                                                        <i class="fa fa-angle-down"></i>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group col-6 col-md-3">
+                                                        <label for="watchlist-edit-episodes">Episodi visti</label>
+                                                        <div class="input-group mb-3">
+                                                            <input type="number" class="form-control" id="watchlist-edit-episodes" placeholder="0" min="0" max="20" value="">
+                                                            <div class="input-group-append">
+                                                                <div class="d-flex flex-column justify-content-center watchlist-number-spinner">
+                                                                    <span class="spin-button up">
+                                                                        <i class="fa fa-angle-up"></i>
+                                                                    </span>
+                                                                    <span class="spin-button down">
+                                                                        <i class="fa fa-angle-down"></i>
+                                                                    </span>
+                                                                </div>
+                                                                <span class="input-group-text">/<span class="watchlist-edit-modal-max-episodes">20</span></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group col-6 col-md-3">
+                                                        <label for="watchlist-edit-rewatches">Rewatch fatti</label>
+                                                        <div class="input-group mb-3">
+                                                            <input type="number" class="form-control single-appended-item" id="watchlist-edit-rewatches" placeholder="0" min="0" value="">
+                                                            <div class="input-group-append">
+                                                                <div class="d-flex flex-column justify-content-center watchlist-number-spinner single-appended-item">
+                                                                    <span class="spin-button up">
+                                                                        <i class="fa fa-angle-up"></i>
+                                                                    </span>
+                                                                    <span class="spin-button down">
+                                                                        <i class="fa fa-angle-down"></i>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row px-3">
+                                                    <div class="form-group col-12 p-0">
+                                                        <label for="watchlist-edit-notes">Note</label>
+                                                        <textarea class="form-control" id="watchlist-edit-notes"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="row justify-content-end px-3 mt-2">
+                                                    <button class="btn btn-danger mr-2" id="watchlist-edit-modal-remove">
+                                                        <i class="fa fa-trash mr-1"></i>
+                                                        Rimuovi dalla lista
+                                                    </button>
+                                                    <button class="btn btn-primary" id="watchlist-edit-modal-save">
+                                                        <i class="fa fa-save mr-1"></i>
+                                                        Salva
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <script src="https://static.animeworld.so/dist/frontend/views/watchlist/edit-modal.js?12315"></script>
+                                        <script src="https://static.animeworld.so/dist/frontend/views/play/bookmark.js?12318"></script>                                        <div class="share control tip tippy-desktop-only" data-tippy-content="Condividi la serie con i tuoi amici"> <i class="icon icon-share-alt"></i> <span>Condividi</span> </div>
+                                        <div class="resize control tip tippy-desktop-only" data-key="resize" data-tippy-content="Ingrandisci il player" data-target=".widget.player" data-on="<i class='icon icon-arrows-in'></i> <span>Diminuisci</span>" data-off="<i class='icon icon-arrows-out'></i> <span>Espandi</span>"> <span>Espandi</span></div>
+                                        <div class="light control tip tippy-desktop-only" data-tippy-content="Spegni o accendi la luce" data-target="#player" data-off="Spegni le luci" data-on="Accendi le luci"> <i class="icon icon-light-2"></i> <span>Spegni le luci</span> </div>
+                                        <div class="report control tip tippy-desktop-only" data-tippy-content="Segnala un episodio o la serie"  id="report-modal-open-button"> <i class="icon icon-info-circle"></i> <span>Segnala</span> </div>
+                                            <a class="mal control tip tippy-desktop-only" data-tippy-content="Scheda MyAnimeList" id="mal-button" href="https://myanimelist.net/anime/48316" target="_blank" rel="noopener noreferrer" aria-label="MyAnimeList" style="width: 110px;"> <img loading="lazy" src='https://static.animeworld.so/assets/images/svg/mal.svg' style="width: 13px;" alt="MyAnimeList" />&nbsp;<span>MyAnimeList</span> </a>
+                                            <a class="anilist control tip tippy-desktop-only" data-tippy-content="Scheda AniList" id="anilist-button" href="https://anilist.co/anime/130298" target="_blank" rel="noopener noreferrer" aria-label="AniList" style="width: 75px;"> <img loading="lazy" src='https://static.animeworld.so/assets/images/svg/anilist.svg' style="width: 13px;" alt="AniList" />&nbsp;<span>AniList</span> </a>
+                                            <a class="mangaworld control tip tippy-desktop-only" data-tippy-content="Vai al manga" id="mangaworld-button" href="https://www.mangaworld.in/manga/2219" target="_blank" rel="noopener noreferrer" aria-label="MangaWorld" style="width: 115px;"> <img loading="lazy" src='https://static.animeworld.so/assets/images/svg/mangaworld.svg?3' style="width: 13px;" alt="MangaWorld" />&nbsp;<span>MangaWorld</span> </a>
+                                            <div class="trailer control tip tippy-desktop-only" data-url="https://www.youtube.com/embed/O9BBuXg0vMs" data-state="0" data-target="#player" data-off="Guarda il trailer" data-on="Guarda lo streaming"> <i class="fab fa-youtube"></i> <span>Guarda il trailer</span> </div>
+
+
+                                        <span class="clearfix"></span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                            <div class="widget servers" id="animeId" data-id="pzm5jA" data-bind-api="#player">
+                                <div class="widget-title">
+                                    <span class="title">Server</span>
+                                    <span class="tabs servers-tabs">
+                                             
+                                                                     
+                                                        <span class="tab server-tab active" data-name="9">AnimeWorld Server</span>
+                                             
+                                                                     
+                                                        <span class="tab server-tab " data-name="28">FileMoon</span>
+                                             
+                                                                     
+                                                        <span class="tab server-tab " data-name="8">Streamtape</span>
+                                             
+                                                                     
+                                             
+                                                                     
+                                             
+                                                                     
+                                             
+                                                                     
+                                             
+                                                                     
+                                             
+                                                 
+                                                        </span>
+                                </div>
+                                <div class="widget-body">
+                            
+                                        <div class="server hidden" data-name="8" data-type="iframe" data-id="8">
+                                            <div class="range"></div><ul class="episodes range active" data-range-id="0">
+                            <li class="episode"><a data-episode-id="69228" data-id="s4jAEL" data-episode-num="1" data-num="1" data-base="1" data-comment="1" href="/play/the-eminence-in-shadow.pzm5jA/s4jAEL">1</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="69343" data-id="Is8fzR" data-episode-num="2" data-num="2" data-base="2" data-comment="2" href="/play/the-eminence-in-shadow.pzm5jA/Is8fzR">2</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="69424" data-id="8tWUkG" data-episode-num="3" data-num="3" data-base="3" data-comment="3" href="/play/the-eminence-in-shadow.pzm5jA/8tWUkG">3</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70188" data-id="mZKFOt" data-episode-num="4" data-num="4" data-base="4" data-comment="4" href="/play/the-eminence-in-shadow.pzm5jA/mZKFOt">4</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70272" data-id="wp0F8k" data-episode-num="5" data-num="5" data-base="5" data-comment="5" href="/play/the-eminence-in-shadow.pzm5jA/wp0F8k">5</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70349" data-id="Se3k83" data-episode-num="6" data-num="6" data-base="6" data-comment="6" href="/play/the-eminence-in-shadow.pzm5jA/Se3k83">6</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70427" data-id="wqed4s" data-episode-num="7" data-num="7" data-base="7" data-comment="7" href="/play/the-eminence-in-shadow.pzm5jA/wqed4s">7</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70487" data-id="dabCJM" data-episode-num="8" data-num="8" data-base="8" data-comment="8" href="/play/the-eminence-in-shadow.pzm5jA/dabCJM">8</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70740" data-id="Pf6U3a" data-episode-num="9" data-num="9" data-base="9" data-comment="9" href="/play/the-eminence-in-shadow.pzm5jA/Pf6U3a">9</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70745" data-id="6NzVEb" data-episode-num="10" data-num="10" data-base="10" data-comment="10" href="/play/the-eminence-in-shadow.pzm5jA/6NzVEb">10</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70749" data-id="kkbhfq" data-episode-num="11" data-num="11" data-base="11" data-comment="11" href="/play/the-eminence-in-shadow.pzm5jA/kkbhfq">11</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70926" data-id="l8y-Ft" data-episode-num="12" data-num="12" data-base="12" data-comment="12" href="/play/the-eminence-in-shadow.pzm5jA/l8y-Ft">12</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71040" data-id="DvE-Ni" data-episode-num="13" data-num="13" data-base="13" data-comment="13" href="/play/the-eminence-in-shadow.pzm5jA/DvE-Ni">13</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71085" data-id="Y0oda8" data-episode-num="14" data-num="14" data-base="14" data-comment="14" href="/play/the-eminence-in-shadow.pzm5jA/Y0oda8">14</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71173" data-id="UOr9OB" data-episode-num="15" data-num="15" data-base="15" data-comment="15" href="/play/the-eminence-in-shadow.pzm5jA/UOr9OB">15</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71320" data-id="R-u9b9" data-episode-num="16" data-num="16" data-base="16" data-comment="16" href="/play/the-eminence-in-shadow.pzm5jA/R-u9b9">16</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71463" data-id="Bh6HNY" data-episode-num="17" data-num="17" data-base="17" data-comment="17" href="/play/the-eminence-in-shadow.pzm5jA/Bh6HNY">17</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71739" data-id="LPO8PO" data-episode-num="18" data-num="18" data-base="18" data-comment="18" href="/play/the-eminence-in-shadow.pzm5jA/LPO8PO">18</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71740" data-id="zkU8b8" data-episode-num="19" data-num="19" data-base="19" data-comment="19" href="/play/the-eminence-in-shadow.pzm5jA/zkU8b8">19</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71798" data-id="XTKNF4" data-episode-num="20" data-num="20" data-base="20" data-comment="20" href="/play/the-eminence-in-shadow.pzm5jA/XTKNF4">20</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="server active" data-name="9" data-type="iframe" data-id="9">
+                                            <div class="range"></div><ul class="episodes range active" data-range-id="0">
+                            <li class="episode"><a data-episode-id="69228" data-id="wc88rg" data-episode-num="1" data-num="1" data-base="1" data-comment="1" href="/play/the-eminence-in-shadow.pzm5jA/wc88rg">1</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="69343" data-id="94DUwH" data-episode-num="2" data-num="2" data-base="2" data-comment="2" href="/play/the-eminence-in-shadow.pzm5jA/94DUwH">2</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="69424" data-id="767ULG" data-episode-num="3" data-num="3" data-base="3" data-comment="3" href="/play/the-eminence-in-shadow.pzm5jA/767ULG">3</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70188" data-id="fkZv4s" data-episode-num="4" data-num="4" data-base="4" data-comment="4" href="/play/the-eminence-in-shadow.pzm5jA/fkZv4s">4</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70272" data-id="cEA6vi" data-episode-num="5" data-num="5" data-base="5" data-comment="5" href="/play/the-eminence-in-shadow.pzm5jA/cEA6vi">5</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70349" data-id="7oDIuU" data-episode-num="6" data-num="6" data-base="6" data-comment="6" href="/play/the-eminence-in-shadow.pzm5jA/7oDIuU">6</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70427" data-id="UPunS4" data-episode-num="7" data-num="7" data-base="7" data-comment="7" href="/play/the-eminence-in-shadow.pzm5jA/UPunS4">7</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70487" data-id="gbiqVl" data-episode-num="8" data-num="8" data-base="8" data-comment="8" href="/play/the-eminence-in-shadow.pzm5jA/gbiqVl">8</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70740" data-id="tmoKKw" data-episode-num="9" data-num="9" data-base="9" data-comment="9" href="/play/the-eminence-in-shadow.pzm5jA/tmoKKw">9</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70745" data-id="BcA9MA" data-episode-num="10" data-num="10" data-base="10" data-comment="10" href="/play/the-eminence-in-shadow.pzm5jA/BcA9MA">10</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70749" data-id="8hK5eg" data-episode-num="11" data-num="11" data-base="11" data-comment="11" href="/play/the-eminence-in-shadow.pzm5jA/8hK5eg">11</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70926" data-id="D5OCoH" data-episode-num="12" data-num="12" data-base="12" data-comment="12" href="/play/the-eminence-in-shadow.pzm5jA/D5OCoH">12</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71040" data-id="Dcqo-Q" data-episode-num="13" data-num="13" data-base="13" data-comment="13" href="/play/the-eminence-in-shadow.pzm5jA/Dcqo-Q" class="active">13</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71085" data-id="T2MdcS" data-episode-num="14" data-num="14" data-base="14" data-comment="14" href="/play/the-eminence-in-shadow.pzm5jA/T2MdcS">14</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71173" data-id="pPGN3V" data-episode-num="15" data-num="15" data-base="15" data-comment="15" href="/play/the-eminence-in-shadow.pzm5jA/pPGN3V">15</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71320" data-id="Q-zvit" data-episode-num="16" data-num="16" data-base="16" data-comment="16" href="/play/the-eminence-in-shadow.pzm5jA/Q-zvit">16</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71463" data-id="DIolk7" data-episode-num="17" data-num="17" data-base="17" data-comment="17" href="/play/the-eminence-in-shadow.pzm5jA/DIolk7">17</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71739" data-id="jhcGBX" data-episode-num="18" data-num="18" data-base="18" data-comment="18" href="/play/the-eminence-in-shadow.pzm5jA/jhcGBX">18</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71740" data-id="36xm12" data-episode-num="19" data-num="19" data-base="19" data-comment="19" href="/play/the-eminence-in-shadow.pzm5jA/36xm12">19</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71798" data-id="EWBjfz" data-episode-num="20" data-num="20" data-base="20" data-comment="20" href="/play/the-eminence-in-shadow.pzm5jA/EWBjfz">20</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="server hidden" data-name="28" data-type="iframe" data-id="28">
+                                            <div class="range"></div><ul class="episodes range active" data-range-id="0">
+                            <li class="episode"><a data-episode-id="69228" data-id="3zckBc" data-episode-num="1" data-num="1" data-base="1" data-comment="1" href="/play/the-eminence-in-shadow.pzm5jA/3zckBc">1</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="69343" data-id="MtFWq0" data-episode-num="2" data-num="2" data-base="2" data-comment="2" href="/play/the-eminence-in-shadow.pzm5jA/MtFWq0">2</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="69424" data-id="yDqB56" data-episode-num="3" data-num="3" data-base="3" data-comment="3" href="/play/the-eminence-in-shadow.pzm5jA/yDqB56">3</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70188" data-id="TP1eL3" data-episode-num="4" data-num="4" data-base="4" data-comment="4" href="/play/the-eminence-in-shadow.pzm5jA/TP1eL3">4</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70272" data-id="SfUfBQ" data-episode-num="5" data-num="5" data-base="5" data-comment="5" href="/play/the-eminence-in-shadow.pzm5jA/SfUfBQ">5</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70349" data-id="HPX7aV" data-episode-num="6" data-num="6" data-base="6" data-comment="6" href="/play/the-eminence-in-shadow.pzm5jA/HPX7aV">6</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70427" data-id="9AvO-A" data-episode-num="7" data-num="7" data-base="7" data-comment="7" href="/play/the-eminence-in-shadow.pzm5jA/9AvO-A">7</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70487" data-id="DZr9GN" data-episode-num="8" data-num="8" data-base="8" data-comment="8" href="/play/the-eminence-in-shadow.pzm5jA/DZr9GN">8</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70740" data-id="EgHLhA" data-episode-num="9" data-num="9" data-base="9" data-comment="9" href="/play/the-eminence-in-shadow.pzm5jA/EgHLhA">9</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70745" data-id="Kc5So0" data-episode-num="10" data-num="10" data-base="10" data-comment="10" href="/play/the-eminence-in-shadow.pzm5jA/Kc5So0">10</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70749" data-id="rn5l2A" data-episode-num="11" data-num="11" data-base="11" data-comment="11" href="/play/the-eminence-in-shadow.pzm5jA/rn5l2A">11</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="70926" data-id="4RWBeO" data-episode-num="12" data-num="12" data-base="12" data-comment="12" href="/play/the-eminence-in-shadow.pzm5jA/4RWBeO">12</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71040" data-id="CxfJBZ" data-episode-num="13" data-num="13" data-base="13" data-comment="13" href="/play/the-eminence-in-shadow.pzm5jA/CxfJBZ">13</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71085" data-id="kLt13R" data-episode-num="14" data-num="14" data-base="14" data-comment="14" href="/play/the-eminence-in-shadow.pzm5jA/kLt13R">14</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71173" data-id="bOZeoy" data-episode-num="15" data-num="15" data-base="15" data-comment="15" href="/play/the-eminence-in-shadow.pzm5jA/bOZeoy">15</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71320" data-id="6yEc7E" data-episode-num="16" data-num="16" data-base="16" data-comment="16" href="/play/the-eminence-in-shadow.pzm5jA/6yEc7E">16</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71463" data-id="ZqTsNj" data-episode-num="17" data-num="17" data-base="17" data-comment="17" href="/play/the-eminence-in-shadow.pzm5jA/ZqTsNj">17</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71739" data-id="d69s0P" data-episode-num="18" data-num="18" data-base="18" data-comment="18" href="/play/the-eminence-in-shadow.pzm5jA/d69s0P">18</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71740" data-id="wqmEkT" data-episode-num="19" data-num="19" data-base="19" data-comment="19" href="/play/the-eminence-in-shadow.pzm5jA/wqmEkT">19</a></li>
+                                            
+                            <li class="episode"><a data-episode-id="71798" data-id="SXxcoz" data-episode-num="20" data-num="20" data-base="20" data-comment="20" href="/play/the-eminence-in-shadow.pzm5jA/SXxcoz">20</a></li>
+                                            </ul>
+                                        </div>
+                                </div>
+                            </div>
+                            <link rel="stylesheet" href="https://static.animeworld.so/dist/frontend/views/play/downloads.css?2">
+                            
+                                <div id="download">
+                                    <div class="widget downloads">
+                                        <div class="widget-title">
+                                            <span class="title">Download</span>
+                                            <span class="tabs" data-target=".widget.downloads .download"> <span class="tab active">The Eminence in Shadow</span> </span>
+                                        </div>
+                                        <div class="widget-body" style="padding-top: 17px;padding-bottom: 17px;">
+                                            <center>
+                                                <a href="https://srv13-hana.sweetpixel.org/download-file.php?id=DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4" id="downloadLink" class="m-1 btn btn-sm btn-primary" target="_blank"><i class="fas fa-download"></i>&nbsp;&nbsp;Download Diretto - Ep. <span class="episodeNum">13</span></a>
+                                                <a href="https://srv13-hana.sweetpixel.org/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4" id="alternativeDownloadLink" class="m-1 btn btn-sm btn-primary" target="_blank" download><i class="fas fa-download"></i>&nbsp;&nbsp;Download Alternativo - Ep. <span class="episodeNum">13</span></a>
+                                                <a href="" id="customDownloadButton" class="m-1 btn btn-sm btn-primary hidden" target="_blank"><i class="fas fa-download"></i>&nbsp;&nbsp;Download - Ep. <span class="episodeNum">13</span></a>
+                                            </center>
+                            
+                                            <hr id="mainServerHr" class="" style="margin-top: 10px; margin-bottom: 10px;" />
+                            
+                                            <div id="external-downloads">
+                                                <center>
+                                                            <a href="https://streamtape.com/v/aYAgmJLMOXtxXMz/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4" class="m-1 btn btn-sm btn-primary btn-streamtape" target="_blank"><i class="fas fa-download"></i>&nbsp;&nbsp;Download Streamtape - Ep. <span class="episodeNum">13</span></a>
+                                                </center>
+                                            </div>
+                            
+                                            <br>
+                                            <div class="download-info">Se in alcune serie il tasto <b>Download Diretto</b> porta in una pagina 404, utilizzate il tasto <b>Download Alternativo</b>.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                        
+                        <div class="widget info">
+                            <div class="widget-body">
+                                <div class="row">
+                                    <div class="thumb col-md-3 d-md-block d-sm-none d-xs-none d-none h-100" id="thumbnail-watch">
+                                        <img loading="lazy" src="https://img.animeworld.so/locandine/pzm5j.jpg?0" alt="The Eminence in Shadow">
+                                    </div>
+                                    <div class="info col-md-9">
+                                        <div class="head">
+                                            <div class="c1">
+                                                <h2 class="title" data-jtitle="Kage no Jitsuryokusha ni Naritakute!">The Eminence in Shadow</h2>
+                                            </div>
+                                            <div class="thumb d-md-none d-block float-left p-0 mt-3" id="mobile-thumbnail-watch">
+                                                <img loading="lazy" src="https://img.animeworld.so/locandine/pzm5j.jpg?0" alt="The Eminence in Shadow">
+                                            </div>
+                                                <div class="rating mt-3 mt-md-0" data-id="4147" data-value="8.47" data-count="4589">
+                                                    <link rel="stylesheet" href="https://static.animeworld.so/dist/frontend/views/play/rate.css?3">
+                                            
+                                                    <div id="rate-loading" class="spinner-border loading-bootstrap" style="width: 3rem;height: 3rem;font-size: 15px;" role="status">
+                                                        <span class="sr-only">Caricamento...</span>
+                                                    </div>
+                                                    <input id="rate-input" class="kv-ltr-theme-fas-star" value="0" dir="ltr" data-size="xs" style="display: none;">
+                                            
+                                                    <div class="text rate-on-load" style="padding-top: 0!important; display: none;"><span class="votes-count" id="single-vote-count">4589</span> <span id="votes-name">voti</span></div>
+                                                </div>
+                                        </div>
+                                        <div class="clearfix"></div>
+                                        <div class="row">
+                                            <dl class="meta col-sm-6">
+                                                <dt>Categoria:</dt>
+                                                <dd>
+                                                        Anime
+                                                </dd>
+                                                <dt>Audio:</dt>
+                                                <dd><a href="/filter?language=jp">Giapponese</a></dd>
+                                                <dt>Data di Uscita:</dt>
+                                                <dd>05 Ottobre 2022</dd>
+                                                <dt>Stagione:</dt>
+                                                <dd><a href="/filter?season=fall&year=2022">Autunno 2022</a></dd>
+                                                <dt>Studio:</dt>
+                                                <dd>
+                                                        <a href="/filter?studio=Nexus">Nexus</a>
+                                                </dd>
+                                                <dt>Genere:</dt>
+                                                <dd>
+                                                        <a href="/genre/arti-marziali">Arti Marziali</a>,
+                                                        <a href="/genre/adventure">Avventura</a>,
+                                                        <a href="/genre/action">Azione</a>,
+                                                        <a href="/genre/commedia">Commedia</a>,
+                                                        <a href="/genre/fantasy">Fantasy</a>,
+                                                        <a href="/genre/harem">Harem</a>,
+                                                        <a href="/genre/school">Scolastico</a>
+                                                </dd>
+                                            </dl>
+                                            <dl class="meta col-sm-6">
+                                                <dt>Voto:</dt>
+                                                    <dd class="rating"> <span id="average-vote">8.47</span> / 10 </dd>
+                                                <dt>Durata:</dt>
+                                                <dd>23 min/ep </dd>
+                                                <dt>Episodi:</dt>
+                                                <dd>20</dd>
+                                                <dt>Stato:</dt>
+                                                <dd>
+                                                        <a href="/filter?status=1">Finito</a>
+                                                </dd>
+                                                <dt>Visualizzazioni:</dt>
+                                                <dd>1.387.659</dd>
+                                            </dl>
+                                        </div>
+                                        <hr style="margin-top: 10px;margin-bottom: 10px;" />
+                                        <div class="desc">Gli uomini che vivono nell'ombra sono quelle persone che passano inosservate, come persone ordinarie, ma in realtà detengono il potere da dietro le quinte. Questo è ciò a cui aspira Shido e per raggiungere il suo obiettivo vive una vita insignificante di giorno, mentre di notte si allena duramente preparandosi alla sua ascesa al potere. Finalmente riesce a raggiungere il suo obiettivo quando, dopo un fatale incidente, si risveglia in un mondo misterioso e si ritrova a capo di un'organizzazione segreta che combatte i demoni rimanendo nell'oscurità!</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div id="tags"> <label style="color: #367dc3;"><b>Keywords:</b></label>
+                                            <p id="tagsReload" style="max-height: 100px; overflow-y: auto; font-size: 10px; font-family: 'Nunito Sans', sans-serif;">The Eminence in Shadow SUB ITA - The Eminence in Shadow ITA - The Eminence in Shadow Streaming SUB ITA - The Eminence in Shadow Download SUB ITA - The Eminence in Shadow Streaming ITA - The Eminence in Shadow Download ITA - The Eminence in Shadow Streaming & Download SUB ITA - The Eminence in Shadow Streaming & Download ITA - The Eminence in Shadow Fansub ITA - The Eminence in Shadow Fansub SUB ITA - The Eminence in Shadow Streaming Episodi SUB ITA - The Eminence in Shadow Download Episodi SUB ITA - The Eminence in Shadow Sottotitoli Italiani - Lista Episodi The Eminence in Shadow SUB ITA - Lista Episodi The Eminence in Shadow ITA - The Eminence in Shadow Episodio <span class="episode-num-keywords">13</span> SUB ITA - The Eminence in Shadow Episodio <span class="episode-num-keywords">13</span> ITA - The Eminence in Shadow Streaming Episodio <span class="episode-num-keywords">13</span> SUB ITA - The Eminence in Shadow Streaming Episodio <span class="episode-num-keywords">13</span> ITA - The Eminence in Shadow Download Episodio <span class="episode-num-keywords">13</span> SUB ITA - The Eminence in Shadow Download Episodio <span class="episode-num-keywords">13</span> ITA
+                                                Kage no Jitsuryokusha ni Naritakute! SUB ITA - Kage no Jitsuryokusha ni Naritakute! ITA - Kage no Jitsuryokusha ni Naritakute! Streaming SUB ITA - Kage no Jitsuryokusha ni Naritakute! Download SUB ITA - Kage no Jitsuryokusha ni Naritakute! Streaming ITA - Kage no Jitsuryokusha ni Naritakute! Download ITA - Kage no Jitsuryokusha ni Naritakute! Streaming & Download SUB ITA - Kage no Jitsuryokusha ni Naritakute! Streaming & Download ITA - Kage no Jitsuryokusha ni Naritakute! Fansub ITA - Kage no Jitsuryokusha ni Naritakute! Fansub SUB ITA - Kage no Jitsuryokusha ni Naritakute! Streaming Episodi SUB ITA - Kage no Jitsuryokusha ni Naritakute! Download Episodi SUB ITA - Kage no Jitsuryokusha ni Naritakute! Sottotitoli Italiani - Lista Episodi Kage no Jitsuryokusha ni Naritakute! SUB ITA - Lista Episodi Kage no Jitsuryokusha ni Naritakute! ITA - Kage no Jitsuryokusha ni Naritakute! Episodio <span class="episode-num-keywords">13</span> SUB ITA - Kage no Jitsuryokusha ni Naritakute! Episodio <span class="episode-num-keywords">13</span> ITA - Kage no Jitsuryokusha ni Naritakute! Streaming Episodio <span class="episode-num-keywords">13</span> SUB ITA - Kage no Jitsuryokusha ni Naritakute! Streaming Episodio <span class="episode-num-keywords">13</span> ITA - Kage no Jitsuryokusha ni Naritakute! Download Episodio <span class="episode-num-keywords">13</span> SUB ITA - Kage no Jitsuryokusha ni Naritakute! Download Episodio <span class="episode-num-keywords">13</span> ITA
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>               
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</body>
+    </body>
 </html>

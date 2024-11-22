@@ -6,7 +6,7 @@ Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a hr
 </h3>
 
 ## Anteprima
-https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-95ff-dcd85b39a45c.mp4
+https://github.com/fexh10/aw-cli/assets/90156014/88e1c2e2-bb7f-4002-8784-26f70861e164
 
 ## Indice
 
@@ -23,6 +23,8 @@ https://user-images.githubusercontent.com/90156014/210212814-e73ba7af-ce12-43ad-
 ## Installazione
 
 Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html). <br /> 
+
+È richiesta l'installazione di [fzf](https://github.com/junegunn/fzf?tab=readme-ov-file#installation).<br /> 
 
 <details><summary><b>Linux, MacOS</b></summary>
 È possibile installare aw-cli da pip:
@@ -43,21 +45,15 @@ L'ultima versione per Windows richiede installare <a href="https://learn.microso
 ```
 wsl --install
 ```
-Per installare MPV su WSL, basta eseguire:
-```
-sudo apt install mpv
-``` 
-
-Per VLC:
-```
-sudo apt install vlc
-```
 
 Il programma dovrà essere installato e avviato da WSL:
 
 ```
 python3 -m pip install aw-cli
 ```
+
+Attenzione! Quando viene richiesto il path del player, è necessario inserirlo tramite il percorso di WSL. Ad esempio: `/mnt/c/Program\ Files/VideoLAN/VLC/vlc.exe` 
+
 </details>
 <details><summary><b>Versione Legacy</b></summary>
 Per installare la versione Legacy, è necessario avere <a href="https://www.git-scm.com/download/win">git</a>.

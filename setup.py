@@ -4,7 +4,6 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 installRequires = [
-        "bs4",
         "requests",
         "pySmartDL",
         "wheel",
@@ -13,7 +12,7 @@ installRequires = [
 setup(
     name="aw-cli",
     packages=find_packages(include=["awcli"]),
-    version="1.8.1",
+    version="2.0",
     python_requires=">3.9",
     description="guarda anime dal terminale e molto altro!",
     long_description=long_description,
