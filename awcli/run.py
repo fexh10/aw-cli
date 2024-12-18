@@ -14,7 +14,7 @@ def safeExit():
     exit()
 
 
-def fzf(elementi: list[str], prompt: str = "> ", cls: bool = False, esci: bool = True) -> str:
+def fzf(elementi: list[str], prompt: str = "> ", cls: bool = False, esci: bool = True, reload: bool = False) -> str:
     """
     Avvia fzf con impostazioni predefinite.
 
@@ -32,6 +32,8 @@ def fzf(elementi: list[str], prompt: str = "> ", cls: bool = False, esci: bool =
         my_print("",end="", cls=True)
     string = "\n".join(elementi)
     comando = f"""fzf --tac --height={len(elementi) + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
+    if reload:
+        comando += f"""--bind "focus:reload(cat {temp_file})" """
     output = os.popen(f"""printf "{string}" | {comando}""").read().strip()
     
     if esci and output == "":
@@ -435,9 +437,8 @@ def reloadCrono(cronologia: list[Anime]):
     if 0 not in [anime.status for anime in cronologia]:
         return
     
-    my_print("Ricerco le nuove uscite...", color="giallo")
+    #my_print("Ricerco le nuove uscite...", color="giallo")
     ultime_uscite = latest()
-    my_print(end="", cls=True)
     testo = []
 
     for i, a in reversed(list(enumerate(cronologia))):
@@ -452,10 +453,10 @@ def reloadCrono(cronologia: list[Anime]):
                     break
         testo.append(f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
     
-    if notSelected:
-        pid = os.popen("pgrep fzf").read().strip().split("\n")
-        os.system(f"kill {pid[len(pid) - 1]}")
-        scelta_anime = fzf(testo, "Scegli un anime: ")
+    with open(temp_file, "w") as file:
+        file.write("\n".join(testo))
+
+    
 
 
 def listAnimeNames(animelist: list[Anime]) -> list[str]: 
@@ -609,8 +610,10 @@ def main():
                     thread.start()
                     esci = False
                 
-                prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
-                scelta_anime = fzf(listAnimeNames(animelist), prompt, esci=esci)
+                prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "   
+                with open(temp_file, "w") as file:
+                    file.write("\n".join(listAnimeNames(animelist)))
+                scelta_anime = fzf(listAnimeNames(animelist), prompt, esci=esci, reload=True)
                 notSelected = False
                 if cronologia and args.cronologia != 'r' and thread.is_alive:
                         #controllo se l'utente ha selezionato un anime oppure se c'è stata la relaodCrono
@@ -741,6 +744,7 @@ syncplay_path = ""
 scelta_anime = ""
 openPlayer = None
 notSelected = True
+temp_file = "/tmp/anime_list.txt"
 
 anime = Anime("", "")
 
