@@ -170,6 +170,9 @@ def openMPV(url_ep: str, nome_video: str) -> int:
     Args:
         url_server (str): il link del video o il percorso del file.
         nome_video (str): il nome del video.
+
+    Returns:
+        int: il progresso percentuale dell'episodio visualizzato.
     """
 
 
@@ -323,10 +326,17 @@ def openVideos(ep: int):
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
     if ep != anime.ep_corrente+1:
         anime.progress = 0
+
     progress = openPlayer(url_ep, nome_video)
+    if progress == None:
+        progress = completeLimit
+
+    anime.ep_corrente = ep if progress >= completeLimit else ep-1
+    
+
     if offline or privato: return
 
-    addToCronologia(ep, progress if progress else 0) 
+    addToCronologia(ep, progress) 
 
     #update watchlist anilist se ho fatto l'accesso
     if anilist.tokenAnilist != 'tokenAnilist: False' and progress >= completeLimit:
