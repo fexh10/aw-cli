@@ -323,18 +323,17 @@ def openVideos(ep: int):
     else:
         url_ep = anime.get_episodio(ep)
 
-    if anime.ep_corrente+1 != ep:
-        anime.progress = 0
+    anime.progress = progresses[ep] if ep in progresses else 0
 
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
     progress = openPlayer(url_ep, nome_video)
 
-    if progress is None or progress >= completeLimit:
+    if progress is None:
         progress = completeLimit
-        anime.ep_corrente = ep 
-        anime.progress = 0
     else:
-        anime.ep_corrente = ep - 1
+        progresses[ep] = anime.progress
+
+    anime.ep_corrente = ep if progress >= completeLimit else ep - 1
     
 
     if offline or privato: return
@@ -355,6 +354,7 @@ def getCronologia() -> list[Anime]:
 
     """
     animes = []
+
     for riga in log:
         if len(riga) < 4:
             riga.append("??")
@@ -589,6 +589,7 @@ def main():
     global scelta_anime
     global notSelected
     global completeLimit
+    global progresses
 
     if update:
         updateScript()
@@ -656,6 +657,7 @@ def main():
                     continue
                 
                 anime = animelist[scelta]
+
                 #se la lista è stata selezionata, inserisco come ep_iniziale quello scelto dall'utente
                 #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
                 if lista:
@@ -684,12 +686,14 @@ def main():
             
             if cronologia:            
                 ep_iniziale = anime.ep_corrente + 1
+                progresses[ep_iniziale] = anime.progress
                 if ep_iniziale > anime.ep:
                     my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                     if len(log) == 1:
                         safeExit()
                     sleep(1)
                     continue
+                
             while not lista and not cronologia:
                 ep_iniziale = scegliEpisodi()
                 anime.ep_corrente = ep_iniziale - 1
@@ -771,6 +775,7 @@ scelta_anime = ""
 openPlayer = None
 notSelected = True
 completeLimit = 90
+progresses = {}
 
 anime = Anime("", "")
 
