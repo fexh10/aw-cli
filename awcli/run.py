@@ -323,15 +323,18 @@ def openVideos(ep: int):
     else:
         url_ep = anime.get_episodio(ep)
 
-    my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-    if ep != anime.ep_corrente+1:
+    if anime.ep_corrente+1 != ep:
         anime.progress = 0
 
+    my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
     progress = openPlayer(url_ep, nome_video)
-    if progress == None:
-        progress = completeLimit
 
-    anime.ep_corrente = ep if progress >= completeLimit else ep-1
+    if progress is None or progress >= completeLimit:
+        progress = completeLimit
+        anime.ep_corrente = ep 
+        anime.progress = 0
+    else:
+        anime.ep_corrente = ep - 1
     
 
     if offline or privato: return
