@@ -147,20 +147,27 @@ def scaricaEpisodio(ep: int, path: str):
         my_print("già scaricato, skippo...", color="giallo")
 
 
-def openSyncplay(url_ep: str, nome_video: str):
+def openSyncplay(url_ep: str, nome_video: str) -> int:
     """
     Avvia Syncplay.
 
     Args:
         url_ep (str): l'URL dell'episodio da riprodurre.
         nome_video (str): il nome dell'episodio.
+
+    Returns:
+        int: il progresso percentuale dell'episodio visualizzato.
     """
 
     if syncplay_path == "Syncplay: None":
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
+    out = os.popen(f''''{syncplay_path}' -d "{url_ep}" force-media-title="{nome_video}" start="{anime.progress}" 2>&1''').read()
+    
+    duration = max(map(int, re.findall(r'"duration": (\d+)\.?[\d]*', out)))
+    anime.progress = int(re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)[-1])
 
-    os.system(f''''{syncplay_path}' "{url_ep}" force-media-title="{nome_video}" --language it > /dev/null 2>&1''')
+    return int((anime.progress / duration) * 100) if duration != 0 else 0
 
 
 def openMPV(url_ep: str, nome_video: str) -> int:
