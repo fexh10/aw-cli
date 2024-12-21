@@ -193,12 +193,10 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     
     out = os.popen(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open --start="{progress}" 2>&1""")
 
-    res = re.findall(r'AV: (\d+:\d+:\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
+    res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
+    progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
     
-    time = res[0].split(":")
-    progress = (int(time[0]) * 3600) + (int(time[1]) * 60) + int(time[2])
-    
-    return int(res[1]) >= completeLimit, progress
+    return int(res[3]) >= completeLimit, progress
 
 
 def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
@@ -221,7 +219,37 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     
     os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen --start-time="{progress}"> /dev/null 2>&1''')
 
-    return True, 0
+    # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
+    progress = 0
+    vlc_config_path = os.path.expanduser("~/.config/vlc/vlc-qt-interface.conf")
+    if os.path.exists(vlc_config_path):
+        with open(vlc_config_path, "r") as file:
+            config = [line.strip() for line in file.readlines()]
+            index = config.index("[RecentsMRL]")
+            urls = config[index + 1].split("=")[1].split(", ")
+            positions = config[index + 2].split("=")[1].split(", ")
+        progress = int(positions[urls.index(url_ep)]) // 1000 if url_ep in urls else 0
+    
+    tmp = anime.ep_len.split()
+    # se non ho informazioni sul progresso, suppongo che sia completato
+    if progress == 0:
+        return True, 0
+    
+    # se non ho informazioni sulla durata dell'episodio, suppongo non sia completato
+    if tmp[0] == "??":
+        return False, progress
+
+    # stimo la durata dell'episodio in secondi    
+    if tmp[0].endswith("h"):
+        duration = int(tmp[0][:-1]) * 3600 + int(tmp[2]) * 60
+    else:
+        duration = int(tmp[0]) * 60
+        
+    # se il progresso è maggiore della durata dell'episodio la sitma è errata
+    if progress > duration:
+        return False, progress
+    
+    return progress*100//duration >= completeLimit, progress
 
 def addToCronologia(ep: int, progress: int):
     """
