@@ -147,7 +147,7 @@ def scaricaEpisodio(ep: int, path: str):
         my_print("già scaricato, skippo...", color="giallo")
 
 
-def openSyncplay(url_ep: str, nome_video: str) -> int:
+def openSyncplay(url_ep: str, nome_video: str) -> bool:
     """
     Avvia Syncplay.
 
@@ -156,30 +156,27 @@ def openSyncplay(url_ep: str, nome_video: str) -> int:
         nome_video (str): il nome dell'episodio.
 
     Returns:
-        int: il progresso percentuale dell'episodio visualizzato.
     """
 
     if syncplay_path == "Syncplay: None":
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
+
     out = os.popen(f''''{syncplay_path}' -d "{url_ep}" force-media-title="{nome_video}" start="{anime.progress}" 2>&1''').read()
     
     duration = max(map(int, re.findall(r'"duration": (\d+)\.?[\d]*', out)))
     anime.progress = int(re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)[-1])
 
-    return int((anime.progress / duration) * 100) if duration != 0 else 0
+    return anime.progress*100// duration >= completeLimit if duration > 0 else False
 
 
-def openMPV(url_ep: str, nome_video: str) -> int:
+def openMPV(url_ep: str, nome_video: str) -> bool:
     """
     Apre MPV per riprodurre il video.
 
     Args:
         url_server (str): il link del video o il percorso del file.
         nome_video (str): il nome del video.
-
-    Returns:
-        int: il progresso percentuale dell'episodio visualizzato.
     """
 
 
@@ -194,10 +191,10 @@ def openMPV(url_ep: str, nome_video: str) -> int:
     time = res[0].split(":")
     anime.progress = (int(time[0]) * 3600) + (int(time[1]) * 60) + int(time[2])
     
-    return int(res[1]) 
+    return int(res[1]) >= completeLimit
 
 
-def openVLC(url_ep: str, nome_video: str):
+def openVLC(url_ep: str, nome_video: str) -> bool:
     """
     Apre VLC per riprodurre il video.
 
@@ -212,7 +209,9 @@ def openVLC(url_ep: str, nome_video: str):
     
     os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen --start-time="{anime.progress}"> /dev/null 2>&1''')
 
-def addToCronologia(ep: int, progress: int = 0):
+    return True
+
+def addToCronologia(ep: int):
     """
     Aggiorna la cronologia con le informazioni esseziali relative all'episodio visualizzato.
     Le informazioni sono:
@@ -223,7 +222,6 @@ def addToCronologia(ep: int, progress: int = 0):
     - stato dell'anime
     - ultimo episodio disponibile
     - id dell'anime su AniList
-    - progresso dell'episodio visualizzato
 
     Args:
         ep (int): il numero dell'episodio visualizzato.
@@ -235,17 +233,14 @@ def addToCronologia(ep: int, progress: int = 0):
             log.pop(i)
             break
             
-    if ep == anime.ep and anime.status == 1 and progress >= completeLimit:
+    if ep == anime.ep and anime.status == 1:
         return
     #aggiungo l'anime alla cronologia con i nuovi dati  
     new = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist, anime.progress]
 
-    if ep == anime.ep and progress >= completeLimit:
-        new[7] = 0
+    if ep == anime.ep:
         log.append(new)
     else:
-        if progress < completeLimit:
-            new[1] -= 1
         log.insert(0, new)
 
 
@@ -333,23 +328,21 @@ def openVideos(ep: int):
     anime.progress = progresses[ep] if ep in progresses else 0
 
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-    progress = openPlayer(url_ep, nome_video)
-
-    if progress is None:
-        progress = completeLimit
-    else:
-        progresses[ep] = anime.progress
-
-    anime.ep_corrente = ep if progress >= completeLimit else ep - 1
-    
+    completed = openPlayer(url_ep, nome_video)
 
     if offline or privato: return
 
-    addToCronologia(ep, progress) 
-
-    #update watchlist anilist se ho fatto l'accesso
-    if anilist.tokenAnilist != 'tokenAnilist: False' and progress >= completeLimit:
-        updateAnilist(ep)
+    if completed: 
+        anime.progress = 0
+        anime.ep_corrente = ep
+        #update watchlist anilist se ho fatto l'accesso
+        if anilist.tokenAnilist != 'tokenAnilist: False':
+            updateAnilist(ep)
+    else:
+        anime.ep_corrente = ep - 1
+    
+    progresses[ep] = anime.progress
+    addToCronologia(anime.ep_corrente)     
 
 
 def getCronologia() -> list[Anime]:
