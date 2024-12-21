@@ -172,7 +172,7 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
 
     # prendo l'id di anilist
     res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
-    id_anilist = res.group(1) if res else 0
+    id_anilist = int(res.group(1)) if res else 0
         
     # prendo gli url degli episodi
     url_episodi = list[str]()
