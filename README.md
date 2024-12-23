@@ -52,8 +52,6 @@ Il programma dovrà essere installato e avviato da WSL:
 python3 -m pip install aw-cli
 ```
 
-Attenzione! Quando viene richiesto il path del player, è necessario inserirlo tramite il percorso di WSL. Ad esempio: `/mnt/c/Program\ Files/VideoLAN/VLC/vlc.exe` 
-
 </details>
 <details><summary><b>Versione Legacy</b></summary>
 Per installare la versione Legacy, è necessario avere <a href="https://www.git-scm.com/download/win">git</a>.

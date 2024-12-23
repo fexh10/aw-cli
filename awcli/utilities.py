@@ -242,22 +242,21 @@ def getConfig() -> tuple[bool, str, str]:
     config = f"{os.path.dirname(__file__)}/aw.config"
 
     with open(config, 'r+') as config_file:
-        lines = config_file.readlines()
+        lines = [line.strip() for line in config_file.readlines()]
 
         if len(lines) < 7:
             return None, "", ""
 
-        mpv = True if "mpv" in lines[0].strip() else False
-        player_path = lines[0].strip()
+        mpv = True if "mpv" in lines[0] else False
+        player_path = f'''"$(wslpath '{lines[0]}')"''' if wsl else lines[0]
 
-        anilist.tokenAnilist = lines[1].strip()
-        anilist.ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
-        anilist.preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
-        anilist.dropAnilist = True if lines[4].strip() == "dropAnilist: True" else False
+        anilist.tokenAnilist = lines[1]
+        anilist.ratingAnilist = True if lines[2] == "ratingAnilist: True" else False
+        anilist.preferitoAnilist = True if lines[3] == "preferitoAnilist: True" else False
+        anilist.dropAnilist = True if lines[4] == "dropAnilist: True" else False
         anilist.user_id = int(lines[5])
 
-        syncplay_path = lines[6].strip()
-
+        syncplay_path = f"/mnt/c/Windows/System32/cmd.exe /C '{lines[6]}'" if wsl else lines[6]
     return mpv, player_path, syncplay_path
 
 

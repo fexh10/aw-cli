@@ -159,8 +159,7 @@ def openSyncplay(url_ep: str, nome_video: str):
     if syncplay_path == "Syncplay: None":
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
-
-    os.system(f''''{syncplay_path}' "{url_ep}" force-media-title="{nome_video}" --language it > /dev/null 2>&1''')
+    os.system(f'''{syncplay_path} "{url_ep}" force-media-title="{nome_video}" --language it > /dev/null 2>&1''')
 
 
 def openMPV(url_ep: str, nome_video: str):
@@ -363,13 +362,9 @@ def setupConfig() -> None:
         my_print("", end="", cls=True)
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
-        stringa_wsl = ""
-        if wsl:
-            stringa_wsl = " tramite il percorso di WSL"
-
         player = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
         if (nome_os != "Linux" and nome_os != "Android") or wsl:
-            player = my_input(f"Inserisci il path del player{stringa_wsl}")
+            player = my_input(f"Inserisci il path del player")
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
         #animelist
@@ -407,7 +402,7 @@ def setupConfig() -> None:
         elif nome_os == "Android": 
                 syncplay = "Syncplay: None"
         else:
-            syncplay = my_input(f"Inserisci il path di Syncplay{stringa_wsl} (premere INVIO se non lo si desidera utilizzare)")
+            syncplay = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
             if syncplay == "":
                 syncplay = "Syncplay: None"
     except KeyboardInterrupt:
