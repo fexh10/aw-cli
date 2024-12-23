@@ -163,11 +163,23 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
     if syncplay_path == "Syncplay: None":
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
-
-    out = os.popen(f''''{syncplay_path}' -d "{url_ep}" force-media-title="{nome_video}" start="{progress}" 2>&1''').read()
     
-    duration = max(map(int, re.findall(r'"duration": (\d+)\.?[\d]*', out)))
-    progress = int(re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)[-1])
+    
+    args = f'''--force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
+    if not mpv:
+        args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
+    
+    out = os.popen(f''''{syncplay_path}' -d --player-path {player_path} "{url_ep}" -- {args} 2>&1''').read()
+
+    duration_match = re.findall(r'duration(?:-change)?"?: (\d+)\.?[\d]*', out)
+    progress_match = re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)
+    if not duration_match:
+        my_print("Errore durante l'avvio di Syncplay!", color="rosso")
+        return False, 0
+    
+    duration = max(map(int, duration_match))
+    progress_match = list(filter(lambda x: x>0, map(int, progress_match)))
+    progress = progress_match[-1] if progress_match else 0
 
     return progress*100// duration >= completeLimit if duration > 0 else False, progress
 
@@ -629,6 +641,7 @@ def main():
     global scelta_anime
     global notSelected
     global completeLimit
+    global mpv
 
     if update:
         updateScript()
@@ -813,6 +826,7 @@ scelta_anime = ""
 openPlayer = None
 notSelected = True
 completeLimit = 90
+mpv = True
 
 anime = Anime("", "")
 
