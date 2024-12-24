@@ -10,9 +10,13 @@ from awcli.anime import Anime
 _url = "https://www.animeworld.so"
 # controllo il tipo del dispositivo
 nome_os = system()
+wsl = False
 if nome_os == "Linux":
-    if "com.termux" in os.popen("type -p python3").read().strip():
+    out = os.popen("uname -a").read().strip()
+    if "Android" in out:
         nome_os = "Android"
+    elif "WSL" in out:
+        wsl = True
 
 def my_print(text: str = "", format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
     """
@@ -168,7 +172,7 @@ def get_info_anime(url: str) -> tuple[int, list[str], list[str]]:
 
     # prendo l'id di anilist
     res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
-    id_anilist = res.group(1) if res else 0
+    id_anilist = int(res.group(1)) if res else 0
         
     # prendo gli url degli episodi
     url_episodi = list[str]()
@@ -238,22 +242,21 @@ def getConfig() -> tuple[bool, str, str]:
     config = f"{os.path.dirname(__file__)}/aw.config"
 
     with open(config, 'r+') as config_file:
-        lines = config_file.readlines()
+        lines = [line.strip() for line in config_file.readlines()]
 
         if len(lines) < 7:
             return None, "", ""
 
-        mpv = True if "mpv" in lines[0].strip() else False
-        player_path = lines[0].strip()
+        mpv = True if "mpv" in lines[0] else False
+        player_path = f'''"$(wslpath '{lines[0]}')"''' if wsl else lines[0]
 
-        anilist.tokenAnilist = lines[1].strip()
-        anilist.ratingAnilist = True if lines[2].strip() == "ratingAnilist: True" else False
-        anilist.preferitoAnilist = True if lines[3].strip() == "preferitoAnilist: True" else False
-        anilist.dropAnilist = True if lines[4].strip() == "dropAnilist: True" else False
+        anilist.tokenAnilist = lines[1]
+        anilist.ratingAnilist = True if lines[2] == "ratingAnilist: True" else False
+        anilist.preferitoAnilist = True if lines[3] == "preferitoAnilist: True" else False
+        anilist.dropAnilist = True if lines[4] == "dropAnilist: True" else False
         anilist.user_id = int(lines[5])
 
-        syncplay_path = lines[6].strip()
-
+        syncplay_path = f"/mnt/c/Windows/System32/cmd.exe /C '{lines[6]}'" if wsl else lines[6]
     return mpv, player_path, syncplay_path
 
 

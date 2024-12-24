@@ -1,6 +1,6 @@
 import os
 import csv
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 from pySmartDL import SmartDL
 from pathlib import Path
 from threading import Thread
@@ -169,7 +169,7 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
     if not mpv:
         args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
     
-    out = os.popen(f''''{syncplay_path}' -d --player-path {player_path} "{url_ep}" -- {args} 2>&1''').read()
+    out = os.popen(f'''{syncplay_path} -d --language it --player-path {player_path} "{url_ep}" -- {args} 2>&1''').read()
 
     duration_match = re.findall(r'duration(?:-change)?"?: (\d+)\.?[\d]*', out)
     progress_match = re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)
@@ -203,7 +203,7 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return True, 0
     
-    out = os.popen(f"""'{player_path}' "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open --start="{progress}" 2>&1""")
+    out = os.popen(f'''{player_path} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open 2>&1''')
 
     res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
     progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
@@ -229,7 +229,7 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')    
         return True, 0
     
-    os.system(f''''{player_path}' "{url_ep}" --meta-title "{nome_video}" --fullscreen --start-time="{progress}"> /dev/null 2>&1''')
+    os.system(f'''{player_path} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen > /dev/null 2>&1''')
 
     # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
     progress = 0
@@ -297,7 +297,7 @@ def addToCronologia(ep: int, progress: int):
         log.insert(0, new)
 
 
-def updateAnilist(ep: int, drop: bool = False):
+def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -315,10 +315,7 @@ def updateAnilist(ep: int, drop: bool = False):
     
     voto = 0
     preferiti = False
-    status_list = 'CURRENT'
-    
-    if drop:
-        status_list = 'DROPPED'
+    status_list = 'CURRENT' if not drop else 'DROPPED'
 
     #se ho finito di vedere l'anime o lo stato è dropped    
     if (ep == anime.ep and anime.status == 1) or status_list == 'DROPPED':
@@ -327,33 +324,21 @@ def updateAnilist(ep: int, drop: bool = False):
     
         #chiedo di votare
         if anilist.ratingAnilist:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                def is_number(n):
-                    try:
-                        return float(n)
-                    except ValueError:
-                        pass
-                future_voto = executor.submit(my_input,f"Inserisci un voto per l'anime", is_number)
-                #ottengo il voto dell'anime se già inserito in precedenza
-                future_rating = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
-                voto_anilist = future_rating.result()
-
-                if int(voto_anilist) != 0:
-                    my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
-                    my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist}): ", end=" ", color="ciano", bg_color="ciano_bg")
-                voto = future_voto.result()
+            is_number = lambda n: float(n) if n.replace('.', '', 1).isdigit() else None
+            voto = my_input("Inserisci un voto per l'anime" + (f" (voto corrente: {voto_anilist})" if voto_anilist else ""), is_number)
     
         #chiedo di mettere tra i preferiti
         if anilist.preferitoAnilist and status_list == 'COMPLETED':
             my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
             preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ")
-    
-    if preferiti: 
-        thread = Thread(target=anilist.addToAnilistFavourite, args=(anime.id_anilist, ep, voto))
-    else:
-        thread = Thread(target=anilist.addToAnilist, args=(anime.id_anilist, ep, status_list, voto))
 
-    thread.start()
+    
+        #chiedo di mettere tra i preferiti
+        if anilist.preferitoAnilist and status_list == 'COMPLETED':
+            my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
+            preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
+    
+    Thread(target=anilist.updateAnilist, args=(anime.id_anilist, ep, status_list, voto, preferiti)).start()
 
 
 def openVideos(ep: int):
@@ -377,6 +362,10 @@ def openVideos(ep: int):
         return
     else:
         url_ep = anime.get_episodio(ep)
+    
+    if not (offline or privato) and anilist.tokenAnilist != 'tokenAnilist: False':
+        executor = ThreadPoolExecutor(max_workers=1)
+        voto_anilist = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
 
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
     progress = anime.progress[ep] if ep in anime.progress else 0
@@ -389,7 +378,7 @@ def openVideos(ep: int):
         anime.ep_corrente = ep
         #update watchlist anilist se ho fatto l'accesso
         if anilist.tokenAnilist != 'tokenAnilist: False':
-            updateAnilist(ep)
+            updateAnilist(ep, voto_anilist.result())
     else:
         anime.ep_corrente = ep - 1
     anime.progress[ep] = progress
@@ -447,8 +436,8 @@ def setupConfig() -> None:
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
         player = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
-        if nome_os != "Linux" and nome_os != "Android":
-            player = my_input("Inserisci il path del player")
+        if (nome_os != "Linux" and nome_os != "Android") or wsl:
+            player = my_input(f"Inserisci il path del player")
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
         #animelist
@@ -467,7 +456,7 @@ def setupConfig() -> None:
             anilist.tokenAnilist = my_input(f"Inserire il token di AniList ({link})", cls=True)
             
             #prendo l'id dell'utente tramite query
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with ThreadPoolExecutor() as executor:
                 future = executor.submit(anilist.getAnilistUserId)
                 my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
                 if fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
@@ -481,12 +470,12 @@ def setupConfig() -> None:
                 
                 anilist.user_id = future.result()
 
-        if nome_os == "Linux":
+        if nome_os == "Linux" and not wsl:
             syncplay= "syncplay"
         elif nome_os == "Android": 
                 syncplay = "Syncplay: None"
         else:
-            syncplay = my_input("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)")
+            syncplay = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
             if syncplay == "":
                 syncplay = "Syncplay: None"
     except KeyboardInterrupt:
@@ -596,7 +585,7 @@ def removeFromCrono(number: int):
                     my_print("Impossibile droppare su AniList: id anime non trovato!", color="rosso")
                     sleep(1)
                 else:
-                    updateAnilist(anime.ep_corrente, True)
+                    updateAnilist(anime.ep_corrente, drop=True)
 
         log.pop(number)
 
