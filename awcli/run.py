@@ -252,12 +252,8 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     
         #chiedo di votare
         if anilist.ratingAnilist:
-            def is_number(n):
-                try:
-                    return float(n)
-                except ValueError:
-                    pass
-            voto = my_input("Inserisci un voto per l'anime" + (f" (voto corrente: {voto_anilist}): " if voto_anilist else ": "), is_number)
+            is_number = lambda n: float(n) if n.replace('.', '', 1).isdigit() else None
+            voto = my_input("Inserisci un voto per l'anime" + (f" (voto corrente: {voto_anilist})" if voto_anilist else ""), is_number)
     
         #chiedo di mettere tra i preferiti
         if anilist.preferitoAnilist and status_list == 'COMPLETED':
@@ -295,7 +291,7 @@ def openVideos(ep: int):
     else:
         url_ep = anime.get_episodio(ep)
     
-    if anilist.tokenAnilist != 'tokenAnilist: False':
+    if not (offline or privato) and anilist.tokenAnilist != 'tokenAnilist: False':
         executor = ThreadPoolExecutor(max_workers=1)
         voto_anilist = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
 
