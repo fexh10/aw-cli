@@ -1,6 +1,6 @@
 import os
 import csv
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 from pySmartDL import SmartDL
 from pathlib import Path
 from threading import Thread
@@ -225,7 +225,7 @@ def addToCronologia(ep: int):
             log.insert(0, temp) 
 
 
-def updateAnilist(ep: int, drop: bool = False):
+def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -243,10 +243,7 @@ def updateAnilist(ep: int, drop: bool = False):
     
     voto = 0
     preferiti = False
-    status_list = 'CURRENT'
-    
-    if drop:
-        status_list = 'DROPPED'
+    status_list = 'CURRENT' if not drop else 'DROPPED'
 
     #se ho finito di vedere l'anime o lo stato è dropped    
     if (ep == anime.ep and anime.status == 1) or status_list == 'DROPPED':
@@ -255,33 +252,25 @@ def updateAnilist(ep: int, drop: bool = False):
     
         #chiedo di votare
         if anilist.ratingAnilist:
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                def is_number(n):
-                    try:
-                        return float(n)
-                    except ValueError:
-                        pass
-                future_voto = executor.submit(my_input,f"Inserisci un voto per l'anime", is_number)
-                #ottengo il voto dell'anime se già inserito in precedenza
-                future_rating = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
-                voto_anilist = future_rating.result()
-
-                if int(voto_anilist) != 0:
-                    my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
-                    my_print(f"Inserisci un voto per l'anime (voto corrente: {voto_anilist}): ", end=" ", color="ciano", bg_color="ciano_bg")
-                voto = future_voto.result()
+            def is_number(n):
+                try:
+                    return float(n)
+                except ValueError:
+                    pass
+            voto = my_input("Inserisci un voto per l'anime" + (f" (voto corrente: {voto_anilist}): " if voto_anilist else ": "), is_number)
     
         #chiedo di mettere tra i preferiti
         if anilist.preferitoAnilist and status_list == 'COMPLETED':
             my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
             preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ")
-    
-    if preferiti: 
-        thread = Thread(target=anilist.addToAnilistFavourite, args=(anime.id_anilist, ep, voto))
-    else:
-        thread = Thread(target=anilist.addToAnilist, args=(anime.id_anilist, ep, status_list, voto))
 
-    thread.start()
+    
+        #chiedo di mettere tra i preferiti
+        if anilist.preferitoAnilist and status_list == 'COMPLETED':
+            my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
+            preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
+    
+    Thread(target=anilist.updateAnilist, args=(anime.id_anilist, ep, status_list, voto, preferiti)).start()
 
 
 def openVideos(ep: int):
@@ -305,6 +294,10 @@ def openVideos(ep: int):
         return
     else:
         url_ep = anime.get_episodio(ep)
+    
+    if anilist.tokenAnilist != 'tokenAnilist: False':
+        executor = ThreadPoolExecutor(max_workers=1)
+        voto_anilist = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
 
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
     openPlayer(url_ep, nome_video)
@@ -314,7 +307,8 @@ def openVideos(ep: int):
 
     #update watchlist anilist se ho fatto l'accesso
     if anilist.tokenAnilist != 'tokenAnilist: False':
-        updateAnilist(ep)
+        updateAnilist(ep, voto_anilist.result())
+        executor.shutdown(wait=False)
 
 
 def getCronologia() -> list[Anime]:
@@ -383,7 +377,7 @@ def setupConfig() -> None:
             anilist.tokenAnilist = my_input(f"Inserire il token di AniList ({link})", cls=True)
             
             #prendo l'id dell'utente tramite query
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with ThreadPoolExecutor() as executor:
                 future = executor.submit(anilist.getAnilistUserId)
                 my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
                 if fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
@@ -512,7 +506,7 @@ def removeFromCrono(number: int):
                     my_print("Impossibile droppare su AniList: id anime non trovato!", color="rosso")
                     sleep(1)
                 else:
-                    updateAnilist(anime.ep_corrente, True)
+                    updateAnilist(anime.ep_corrente, drop=True)
 
         log.pop(number)
 

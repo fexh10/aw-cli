@@ -10,74 +10,42 @@ class TokenError(Exception):
     pass
 
 
-def addToAnilistFavourite(id_anilist: int, ep: int, voto: float): 
+def updateAnilist(id_anilist: int, ep: int, status_list: str, score: float, favourite: bool = False) -> None:
     """
-    Collegamento alle API di AniList per aggiornare
-    automaticamente gli anime.
-
-    Args:
-        id_anilist (int): l'id dell'anime su AniList.
-        ep (int): il numero dell'episodio visualizzato.
-        voto (float): il voto dell'anime.
-    """
-
-    query = """
-        mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-            SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
-                status
-                progress
-                score
-            },
-            ToggleFavourite(animeId:$idAnime){
-                anime {
-                    nodes {
-                        id
-                    }
-                }
-            }
-        }
-        """
-    
-    var = {
-        "idAnime": id_anilist,
-        "status": "COMPLETED",
-        "episodio": ep,
-        "score": voto
-    }
-
-    requestModifyAnilist(query, var)
-
-
-def addToAnilist(id_anilist: int, ep: int, status_list: str, voto: float) -> None:
-    """
-    Collegamento alle API di AniList per aggiornare
-    automaticamente gli anime.
+    Collegamento alle API di AniList per aggiornare lo stato dell'anime
 
     Args:
         id_anilist (int): l'id dell'anime su AniList.
         ep (int): il numero dell'episodio visualizzato.
         voto (float): il voto dell'anime.
         status_list (str): lo stato dell'anime per l'utente. Se è in corso verrà impostato su "CURRENT", se completato su "COMPLETED".
+        favourite (bool): se True, aggiunge l'anime ai preferiti.
     """
-
     query = """
-    mutation ($idAnime: Int, $status: MediaListStatus, $episodio : Int, $score: Float) {
-        SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episodio, score: $score) {
+    mutation ($idAnime: Int, $status: MediaListStatus, $episode : Int, $score: Float) {
+        SaveMediaListEntry (mediaId: $idAnime, status: $status, progress : $episode, score: $score) {
             status
             progress
             score
-        }
+        },""" + ("""
+        ToggleFavourite(animeId:$idAnime){
+            anime {
+                nodes {
+                    id
+                }
+            }
+        }""" if favourite else "") + """
     }
     """
 
     var = {
         "idAnime": id_anilist,
         "status": status_list,
-        "episodio": ep,
+        "episode": ep,
     }
     
-    if voto != 0:
-        var["score"] = voto
+    if score != 0:
+        var["score"] = score
 
     requestModifyAnilist(query, var)
  
@@ -109,7 +77,7 @@ def getAnilistUserId() -> int:
     return user_id
 
 
-def getAnimePrivateRating(id_anime: int) -> int:
+def getAnimePrivateRating(id_anime: int) -> (float | None):
     """
     Collegamento alle API di AniList per trovare
     il voto dato all'anime dall'utente.
@@ -118,7 +86,7 @@ def getAnimePrivateRating(id_anime: int) -> int:
         id_anime (int): l'id dell'anime su Anilist.
 
     Returns:
-        int: il voto dell'utente.
+        float: il voto dell'utente.
     """
 
     query = """
@@ -140,9 +108,9 @@ def getAnimePrivateRating(id_anime: int) -> int:
     
     risposta = requests.post('https://graphql.anilist.co',headers=header_anilist, json={'query': query, 'variables': var})
     if risposta.status_code != 200:
-        return 0
+        return None
     
-    return str(risposta.json()["data"]["MediaList"]["score"])
+    return float(risposta.json()["data"]["MediaList"]["score"])
 
 
 def requestModifyAnilist(query: str, var: dict):
