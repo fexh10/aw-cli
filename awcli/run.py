@@ -258,12 +258,6 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
         #chiedo di mettere tra i preferiti
         if anilist.preferitoAnilist and status_list == 'COMPLETED':
             my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
-            preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ")
-
-    
-        #chiedo di mettere tra i preferiti
-        if anilist.preferitoAnilist and status_list == 'COMPLETED':
-            my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
             preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
     
     Thread(target=anilist.updateAnilist, args=(anime.id_anilist, ep, status_list, voto, preferiti)).start()
