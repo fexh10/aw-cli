@@ -169,12 +169,15 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
     if not mpv:
         args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
     
-    out = os.popen(f'''{syncplay_path} -d --language it --player-path {player_path} "{url_ep}" -- {args} 2>&1''').read()
+    try :
+        out = os.popen(f'''{syncplay_path} -d --language it "{url_ep}" -- {args} 2>&1''').read()
+    except UnicodeDecodeError:
+        out = ""
 
     duration_match = re.findall(r'duration(?:-change)?"?: (\d+)\.?[\d]*', out)
     progress_match = re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)
     if not duration_match:
-        my_print("Errore durante l'avvio di Syncplay!", color="rosso")
+        my_print("Errore, impossibile leggere l'output di Syncplay!", color="rosso")
         return False, 0
     
     duration = max(map(int, duration_match))
