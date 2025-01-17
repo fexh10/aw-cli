@@ -99,7 +99,7 @@ def scegliEpisodi() -> int:
     if anime.ep == 1:
         return 1
 
-    ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)]
+    ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)] 
 
     return int(fzf(ep, "Scegli un episodio: "))
 
@@ -146,56 +146,127 @@ def scaricaEpisodio(ep: int, path: str):
     else:
         my_print("già scaricato, skippo...", color="giallo")
 
-
-def openSyncplay(url_ep: str, nome_video: str):
+def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
     Avvia Syncplay.
 
     Args:
         url_ep (str): l'URL dell'episodio da riprodurre.
         nome_video (str): il nome dell'episodio.
+        progress (int): il progresso dell'episodio.
+
+    Returns:
+        bool: True se l'episodio è stato riprodotto completamente, altrimenti False.
+        int: il progresso dell'episodio.
     """
 
     if syncplay_path == "Syncplay: None":
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
-    os.system(f'''{syncplay_path} "{url_ep}" force-media-title="{nome_video}" --language it > /dev/null 2>&1''')
+    
+    
+    args = f'''--force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
+    if not mpv:
+        args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
+    
+    try :
+        out = os.popen(f'''{syncplay_path} -d --language it "{url_ep}" -- {args} 2>&1''').read()
+    except UnicodeDecodeError:
+        out = ""
+
+    duration_match = re.findall(r'duration(?:-change)?"?: (\d+)\.?[\d]*', out)
+    progress_match = re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)
+    if not duration_match:
+        my_print("Errore, impossibile leggere l'output di Syncplay!", color="rosso")
+        return False, 0
+    
+    duration = max(map(int, duration_match))
+    progress_match = list(filter(lambda x: x>0, map(int, progress_match)))
+    progress = progress_match[-1] if progress_match else 0
+
+    return progress*100// duration >= completeLimit if duration > 0 else False, progress
 
 
-def openMPV(url_ep: str, nome_video: str):
+def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
     Apre MPV per riprodurre il video.
 
     Args:
         url_server (str): il link del video o il percorso del file.
         nome_video (str): il nome del video.
+        progress (int): il progresso dell'episodio.
+
+    Returns:
+        bool: True se l'episodio è stato riprodotto completamente, altrimenti False.
+        int: il progresso dell'episodio.
     """
 
 
     if (nome_os == "Android"):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
-        return
+        return True, 0
     
-    os.system(f'''{player_path} "{url_ep}" --force-media-title="{nome_video}" --fullscreen --keep-open > /dev/null 2>&1''')
+    out = os.popen(f'''{player_path} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open 2>&1''')
+
+    res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
+    progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
+    
+    return int(res[3]) >= completeLimit, progress
 
 
-def openVLC(url_ep: str, nome_video: str):
+def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
     Apre VLC per riprodurre il video.
 
     Args:
         url_server (str): il link del video o il percorso del file.
         nome_video (str): il nome del video.
+        progress (int): il progresso dell'episodio.
+
+    Returns:
+        bool: True se l'episodio è stato riprodotto completamente, altrimenti False.
+        int: il progresso dell'episodio.
     """
 
     if nome_os == "Android":
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')    
-        return
+        return True, 0
     
-    os.system(f'''{player_path} "{url_ep}" --meta-title "{nome_video}" --fullscreen > /dev/null 2>&1''')
+    os.system(f'''{player_path} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen > /dev/null 2>&1''')
 
+    # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
+    progress = 0
+    vlc_config_path = os.path.expanduser("~/.config/vlc/vlc-qt-interface.conf")
+    if os.path.exists(vlc_config_path):
+        with open(vlc_config_path, "r") as file:
+            config = [line.strip() for line in file.readlines()]
+            index = config.index("[RecentsMRL]")
+            urls = config[index + 1].split("=")[1].split(", ")
+            positions = config[index + 2].split("=")[1].split(", ")
+        progress = int(positions[urls.index(url_ep)]) // 1000 if url_ep in urls else 0
+    
+    tmp = anime.ep_len.split()
+    # se non ho informazioni sul progresso, suppongo che sia completato
+    if progress == 0:
+        return True, 0
+    
+    # se non ho informazioni sulla durata dell'episodio, suppongo non sia completato
+    if tmp[0] == "??":
+        return False, progress
 
-def addToCronologia(ep: int):
+    # stimo la durata dell'episodio in secondi    
+    if tmp[0].endswith("h"):
+        duration = int(tmp[0][:-1]) * 3600 + int(tmp[2]) * 60
+    else:
+        duration = int(tmp[0]) * 60
+        
+    # se il progresso è maggiore della durata dell'episodio la sitma è errata
+    if progress > duration:
+        return False, progress
+    
+    return progress*100//duration >= completeLimit, progress
+
+def addToCronologia(ep: int, progress: int):
     """
     Aggiorna la cronologia con le informazioni esseziali relative all'episodio visualizzato.
     Le informazioni sono:
@@ -206,6 +277,7 @@ def addToCronologia(ep: int):
     - stato dell'anime
     - ultimo episodio disponibile
     - id dell'anime su AniList
+    - progresso dell'episodio in secondi
 
     Args:
         ep (int): il numero dell'episodio visualizzato.
@@ -215,14 +287,17 @@ def addToCronologia(ep: int):
     for i, riga in enumerate(log):
         if riga[0] == anime.name:
             log.pop(i)
+            break
             
-    #aggiungo l'anime alla cronologia con i nuovi dati    
-    if ep != anime.ep or anime.status == 0:
-        temp = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist]
-        if ep == anime.ep:
-            log.append(temp)
-        else:
-            log.insert(0, temp) 
+    if ep == anime.ep and anime.status == 1:
+        return
+    #aggiungo l'anime alla cronologia con i nuovi dati  
+    new = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist, progress]
+
+    if ep == anime.ep:
+        log.append(new)
+    else:
+        log.insert(0, new)
 
 
 def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
@@ -290,15 +365,22 @@ def openVideos(ep: int):
         voto_anilist = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
 
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-    openPlayer(url_ep, nome_video)
+    progress = anime.progress[ep] if ep in anime.progress else 0
+    completed, progress = openPlayer(url_ep, nome_video, progress)
+
     if offline or privato: return
 
-    addToCronologia(ep)
+    if completed: 
+        progress = 0
+        anime.ep_corrente = ep
+        #update watchlist anilist se ho fatto l'accesso
+        if anilist.tokenAnilist != 'tokenAnilist: False':
+            updateAnilist(ep, voto_anilist.result())
+    else:
+        anime.ep_corrente = ep - 1
+    anime.progress[ep] = progress
 
-    #update watchlist anilist se ho fatto l'accesso
-    if anilist.tokenAnilist != 'tokenAnilist: False':
-        updateAnilist(ep, voto_anilist.result())
-        executor.shutdown(wait=False)
+    addToCronologia(anime.ep_corrente, progress)     
 
 
 def getCronologia() -> list[Anime]:
@@ -310,6 +392,7 @@ def getCronologia() -> list[Anime]:
 
     """
     animes = []
+
     for riga in log:
         if len(riga) < 4:
             riga.append("??")
@@ -319,10 +402,13 @@ def getCronologia() -> list[Anime]:
             riga.append(riga[1])    
         if len(riga) < 7:
             riga.append(0)
+        if len(riga) < 8:
+            riga.append(0)
         a = Anime(name=riga[0], url=riga[2], ep=int(riga[5]), ep_totali=riga[3])
         a.ep_corrente = int(riga[1])
         a.status = int(riga[4])
         a.id_anilist = int(riga[6])
+        a.progress[a.ep_corrente+1] = int(riga[7])
         animes.append(a)
 
     #se il file esiste ma non contiene dati stampo un messaggio di errore
@@ -540,6 +626,8 @@ def main():
     global openPlayer
     global scelta_anime
     global notSelected
+    global completeLimit
+    global mpv
 
     if update:
         updateScript()
@@ -607,6 +695,7 @@ def main():
                     continue
                 
                 anime = animelist[scelta]
+
                 #se la lista è stata selezionata, inserisco come ep_iniziale quello scelto dall'utente
                 #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
                 if lista:
@@ -641,8 +730,10 @@ def main():
                         safeExit()
                     sleep(1)
                     continue
+                
             while not lista and not cronologia:
                 ep_iniziale = scegliEpisodi()
+                anime.ep_corrente = ep_iniziale - 1
                 if not downl:
                     break
                 
@@ -720,6 +811,8 @@ syncplay_path = ""
 scelta_anime = ""
 openPlayer = None
 notSelected = True
+completeLimit = 90
+mpv = True
 
 anime = Anime("", "")
 

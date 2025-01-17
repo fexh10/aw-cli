@@ -14,7 +14,8 @@ class Anime:
     def __init__(self, name, url, ep=0, ep_totali="") -> None:
         self.name = name
         self.url = url
-        self.ep_corrente = ep
+        self.ep_corrente = ep-1
+        self.progress = {}
         self.ep = ep
         self.ep_totali = ep_totali
         self.ep_ini = 1
