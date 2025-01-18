@@ -77,6 +77,15 @@ def getHtml(url: str) -> str:
     except requests.exceptions.ConnectionError:
         my_print("Errore di connessione", color="rosso")
         exit()
+
+    if result.status_code == 202: 
+        print(result.text) 
+        match = re.search(r'(SecurityAW-\w+)=(.*) ;', result.text) 
+        print(match) 
+        key = match.group(1) 
+        value = match.group(2) 
+        cookies = {key: value} 
+        result = requests.get(url, headers=headers, cookies=cookies)
     
     if result.status_code != 200:
         my_print("Errore: pagina non trovata", color="rosso")
