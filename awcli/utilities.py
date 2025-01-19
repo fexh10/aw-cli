@@ -79,9 +79,8 @@ def getHtml(url: str) -> str:
         exit()
 
     if result.status_code == 202: 
-        print(result.text) 
-        match = re.search(r'(SecurityAW-\w+)=(.*) ;', result.text) 
-        print(match) 
+        my_print("Reindirizzamento...", color="giallo", end="\n") 
+        match = re.search(r'(SecurityAW-\w+)=(.*) ;', result.text)
         key = match.group(1) 
         value = match.group(2) 
         cookies = {key: value} 
