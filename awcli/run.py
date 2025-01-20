@@ -104,7 +104,7 @@ def scegliEpisodi() -> list[int]:
         return 1
 
     ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)] 
-    return [int(ep) for ep in fzf(ep, "Scegli un episodio: ", multi=True).split("\n")]
+    return sorted([int(ep) for ep in fzf(ep, "Scegli un episodio: ", multi=downl).split("\n")])
 
 
 def downloadPath(create: bool = True) -> str:
@@ -727,13 +727,11 @@ def main():
                     sleep(1)
                     continue
 
-            scelta_download = False
-            while not lista and not cronologia:
+            if not lista and not cronologia:
                 listaEpisodi = scegliEpisodi()
                 anime.ep_corrente = listaEpisodi[0] - 1
-                if not downl:
-                    break
                 
+            if downl:
                 path = f"{downloadPath()}/{anime.name}"
                 for ep in listaEpisodi:
                     scaricaEpisodio(ep, path)
@@ -748,18 +746,10 @@ def main():
                 if risp == "esci":
                     safeExit()
                 if risp == "indietro":
-                    scelta_download = True
-                
-                listaEpisodi = [listaEpisodi[0]]
-                break
-            
-            if scelta_download:
-                scelta_download = False
-                continue
+                    continue
 
             while True:
-                for ep in listaEpisodi:
-                    openVideos(ep)
+                openVideos(listaEpisodi[0])
 
                 prossimo = True
                 antecedente = True
