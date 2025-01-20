@@ -216,24 +216,24 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
             path (str): il path dell'anime scelto dall'utente.
         """
         nomi_episodi = os.listdir(path)
-        togli = f"{anime.name} Ep. "
-        if len(nomi_episodi) != 0:
-            temp = nomi_episodi[0].replace(togli, "")
-            minimo = int(temp.replace(".mp4", ""))
-            massimo = minimo
+        if len(nomi_episodi) == 0:
+            return
 
-            for stringa in nomi_episodi:
-                stringa = stringa.replace(togli, "")
-                stringa = int(stringa.replace(".mp4", ""))
-                if stringa < minimo:
-                    minimo = stringa
-                if stringa > massimo:
-                    massimo = stringa
-            anime.ep = massimo 
-            anime.ep_ini = minimo
-        else:
-            anime.ep = 0
-            anime.ep_ini = 0
+        togli = f"{anime.name} Ep. "
+        temp = nomi_episodi[0].replace(togli, "")
+        minimo = int(temp.replace(".mp4", ""))
+        massimo = minimo
+
+        for stringa in nomi_episodi:
+            stringa = stringa.replace(togli, "")
+            stringa = int(stringa.replace(".mp4", ""))
+            if stringa < minimo:
+                minimo = stringa
+            if stringa > massimo:
+                massimo = stringa
+        anime.ep = massimo 
+        anime.ep_ini = minimo
+        
 
 
 def getConfig() -> tuple[bool, str, str]:
