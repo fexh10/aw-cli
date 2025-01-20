@@ -14,13 +14,15 @@ def safeExit():
     exit()
 
 
-def fzf(elementi: list[str], prompt: str = "> ", cls: bool = False, esci: bool = True) -> str:
+def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool = False, esci: bool = True) -> str:
     """
     Avvia fzf con impostazioni predefinite.
 
     Args:
         elementi (list[str]): lista da passare ad fzf con gli elementi da selezionare.
         prompt (str, optional): il prompt che fzf deve stampare. Valore predefinito: "> ".
+        multi (bool, optional): se True, permette la selezione multipla, con aggiunta di un costum bind crtl+a che 
+         permette di selezionare tutto. Valore predefinito: False.
         cls (bool, optional): se impostato a True, pulisce lo schermo prima di stampare il testo. Valore predefinito: False.
         esci (bool, optional): se True, esce dal programma se l'input dell'utente è vuoto. Valore predefinito: True.
 
@@ -32,8 +34,10 @@ def fzf(elementi: list[str], prompt: str = "> ", cls: bool = False, esci: bool =
         my_print("",end="", cls=True)
     string = "\n".join(elementi)
     comando = f"""fzf --tac --height={len(elementi) + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
+    if multi:
+        comando += "--multi --bind 'ctrl-a:toggle-all'"
     output = os.popen(f"""printf "{string}" | {comando}""").read().strip()
-    
+
     if esci and output == "":
         safeExit()
 
@@ -82,7 +86,7 @@ def animeScaricati(path: str) -> list[Anime]:
     return animes
 
 
-def scegliEpisodi() -> int:
+def scegliEpisodi() -> list[int]:
     """
     Fa scegliere all'utente gli episodi dell'anime da guardare.
 
@@ -100,8 +104,7 @@ def scegliEpisodi() -> int:
         return 1
 
     ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)] 
-
-    return int(fzf(ep, "Scegli un episodio: "))
+    return [int(ep) for ep in fzf(ep, "Scegli un episodio: ", multi=True).split("\n")]
 
 
 def downloadPath(create: bool = True) -> str:
@@ -205,7 +208,7 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     if (nome_os == "Android"):
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return True, 0
-    
+
     out = os.popen(f'''{player_path} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open 2>&1''')
 
     res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
@@ -694,10 +697,10 @@ def main():
                 removeFromCrono(scelta)
                 continue
 
-            #se la lista è stata selezionata, inserisco come ep_iniziale quello scelto dall'utente
+            #se la lista è stata selezionata, inserisco come episodio quello scelto dall'utente
             #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
             if lista:
-                ep_iniziale = anime.ep
+                listaEpisodi = [anime.ep]
 
             anime.load_info() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
@@ -716,9 +719,9 @@ def main():
                 continue          
             
             if cronologia:            
-                ep_iniziale = anime.ep_corrente + 1
-                if ep_iniziale > anime.ep:
-                    my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
+                listaEpisodi = [anime.ep_corrente + 1]
+                if listaEpisodi[0] > anime.ep:
+                    my_print(f"L'episodio {listaEpisodi[0]} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                     if len(log) == 1:
                         safeExit()
                     sleep(1)
@@ -726,13 +729,14 @@ def main():
 
             scelta_download = False
             while not lista and not cronologia:
-                ep_iniziale = scegliEpisodi()
-                anime.ep_corrente = ep_iniziale - 1
+                listaEpisodi = scegliEpisodi()
+                anime.ep_corrente = listaEpisodi[0] - 1
                 if not downl:
                     break
                 
                 path = f"{downloadPath()}/{anime.name}"
-                scaricaEpisodio(ep_iniziale, path)
+                for ep in listaEpisodi:
+                    scaricaEpisodio(ep, path)
 
                 my_print("\nVideo scaricato correttamente!\nLo puoi trovare nella cartella", color="verde", end=" ")
                 if nome_os == "Android":
@@ -740,22 +744,22 @@ def main():
                 else:
                     my_print("Video/Anime\n", color="verde")
                     
-                    risp = fzf(["esci","indietro","guarda","continua"])
-                    if risp == "esci":
-                        safeExit()
-                    if risp == "continua":
-                        continue
-                    if risp == "indietro":
-                        scelta_download = True
-                    
-                    break
+                risp = fzf(["esci","indietro","guarda"])
+                if risp == "esci":
+                    safeExit()
+                if risp == "indietro":
+                    scelta_download = True
+                
+                listaEpisodi = [listaEpisodi[0]]
+                break
             
             if scelta_download:
                 scelta_download = False
                 continue
 
             while True:
-                openVideos(ep_iniziale)
+                for ep in listaEpisodi:
+                    openVideos(ep)
 
                 prossimo = True
                 antecedente = True
@@ -767,12 +771,12 @@ def main():
                     lista_menu.append("seleziona")
                 else:
                     seleziona = False
-                if ep_iniziale != anime.ep_ini:
+                if listaEpisodi[-1] != anime.ep_ini:
                     lista_menu.append("antecedente")
                 else:
                     antecedente = False
                 lista_menu.append("riguarda")
-                if ep_iniziale != anime.ep:
+                if listaEpisodi[-1] != anime.ep:
                     lista_menu.append("prossimo")
                 else:
                     prossimo = False
@@ -780,15 +784,16 @@ def main():
                 scelta_menu = fzf(lista_menu)
 
                 if scelta_menu == "prossimo" and prossimo:
-                    ep_iniziale += 1
+                    listaEpisodi = [listaEpisodi[-1] + 1]
                     continue
                 elif scelta_menu == "riguarda":
+                    listaEpisodi = [listaEpisodi[-1]]
                     continue            
                 elif scelta_menu == "antecedente" and antecedente:
-                    ep_iniziale -= 1
+                    listaEpisodi = [listaEpisodi[-1] - 1]
                     continue
                 elif scelta_menu == "seleziona" and seleziona:
-                    ep_iniziale = scegliEpisodi()
+                    listaEpisodi = scegliEpisodi()
                 elif scelta_menu == "indietro":
                     break
                 elif scelta_menu == "esci":
