@@ -433,8 +433,13 @@ def setupConfig() -> None:
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
         player = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
-        if (nome_os != "Linux" and nome_os != "Android") or wsl:
-            player = my_input(f"Inserisci il path del player")
+        if nome_os != "Android":
+            res = os.popen(f"whereis -b {player} 2>&1").read().removeprefix(f"{player}:").strip().split()
+            if len(res) == 0:
+                my_print(f"Player {player} non trovato!", color="rosso")
+                player = my_input(f"Inserisci il path di {player} manualmente se è installato")
+            else:
+                player = res[0]
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
         #animelist
@@ -467,14 +472,15 @@ def setupConfig() -> None:
                 
                 anilist.user_id = future.result()
 
-        if nome_os == "Linux" and not wsl:
-            syncplay= "syncplay"
-        elif nome_os == "Android": 
-                syncplay = "Syncplay: None"
-        else:
-            syncplay = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
-            if syncplay == "":
-                syncplay = "Syncplay: None"
+        if nome_os != "Android":
+            res = os.popen(f"whereis -b syncplay 2>&1").read().removeprefix(f"syncplay:").strip().split()
+            if len(res) == 0:
+                my_print("Syncplay non trovato!", color="rosso")
+                syncplay = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
+            else:
+                syncplay = res[0]
+        if syncplay == "":
+            syncplay = "Syncplay: None"
     except KeyboardInterrupt:
         safeExit()
     #creo il file
