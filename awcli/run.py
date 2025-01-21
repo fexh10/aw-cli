@@ -368,16 +368,16 @@ def openVideos(ep: int):
         voto_anilist = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
 
     my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
-    progress = anime.progress[ep] if ep in anime.progress else 0
+    progress = anime.progress[ep]
     completed, progress = openPlayer(url_ep, nome_video, progress)
 
-    if offline or privato: return
+    if privato: return
 
     if completed: 
         progress = 0
         anime.ep_corrente = ep
         #update watchlist anilist se ho fatto l'accesso
-        if anilist.tokenAnilist != 'tokenAnilist: False':
+        if not offline and anilist.tokenAnilist != 'tokenAnilist: False':
             updateAnilist(ep, voto_anilist.result())
     else:
         anime.ep_corrente = ep - 1
@@ -667,10 +667,10 @@ def main():
                     animelist = getCronologia()
                 elif lista:
                     animelist = latest(args.lista)
-                elif offline:
-                    animelist = animeScaricati(downloadPath())
                 else:
                     animelist = RicercaAnime()
+                if offline:
+                    animelist = [anime for anime in animelist if anime.name in [a.name for a in animeScaricati(downloadPath())]]
 
             my_print("", end="", cls=True)
             esci = True
@@ -730,6 +730,9 @@ def main():
             if not lista and not cronologia:
                 listaEpisodi = scegliEpisodi()
                 anime.ep_corrente = listaEpisodi[0] - 1
+
+            if not privato:
+                addToCronologia(anime.ep_corrente, anime.progress[anime.ep_corrente + 1])
                 
             if downl:
                 path = f"{downloadPath()}/{anime.name}"
