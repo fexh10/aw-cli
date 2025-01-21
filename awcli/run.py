@@ -747,43 +747,34 @@ def main():
                     safeExit()
                 if risp == "indietro":
                     continue
-
+            
+            episodio = listaEpisodi[0]
             while True:
-                openVideos(listaEpisodi[0])
+                openVideos(episodio)
 
-                prossimo = True
-                antecedente = True
-                seleziona = True
                 # menù che si visualizza dopo aver finito la riproduzione
                 lista_menu = ["esci", "indietro"]
 
                 if anime.ep != 1:
                     lista_menu.append("seleziona")
-                else:
-                    seleziona = False
-                if listaEpisodi[-1] != anime.ep_ini:
+                if episodio != anime.ep_ini:
                     lista_menu.append("antecedente")
-                else:
-                    antecedente = False
                 lista_menu.append("riguarda")
-                if listaEpisodi[-1] != anime.ep:
+                if episodio != anime.ep:
                     lista_menu.append("prossimo")
-                else:
-                    prossimo = False
         
                 scelta_menu = fzf(lista_menu)
 
-                if scelta_menu == "prossimo" and prossimo:
-                    listaEpisodi = [listaEpisodi[-1] + 1]
+                if scelta_menu == "prossimo":
+                    episodio = episodio + 1
                     continue
                 elif scelta_menu == "riguarda":
-                    listaEpisodi = [listaEpisodi[-1]]
                     continue            
-                elif scelta_menu == "antecedente" and antecedente:
-                    listaEpisodi = [listaEpisodi[-1] - 1]
+                elif scelta_menu == "antecedente":
+                    episodio = episodio - 1
                     continue
-                elif scelta_menu == "seleziona" and seleziona:
-                    listaEpisodi = scegliEpisodi()
+                elif scelta_menu == "seleziona":
+                    episodio = scegliEpisodi()[0]
                 elif scelta_menu == "indietro":
                     break
                 elif scelta_menu == "esci":
