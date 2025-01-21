@@ -1,3 +1,4 @@
+from collections import defaultdict
 import awcli.utilities as utilities
 
 class Anime:
@@ -15,7 +16,7 @@ class Anime:
         self.name = name
         self.url = url
         self.ep_corrente = ep-1
-        self.progress = {}
+        self.progress = defaultdict(int)
         self.ep = ep
         self.ep_totali = ep_totali
         self.ep_ini = 1

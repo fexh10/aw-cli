@@ -1,1 +1,1 @@
-versione = "2.0rP"
+versione = "2.0sM"
