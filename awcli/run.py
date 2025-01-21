@@ -619,20 +619,12 @@ def updateScript():
 
 def main():
     global log
-    global syncpl
-    global downl
-    global lista
-    global offline
-    global cronologia
-    global info
-    global privato
     global anime
     global player_path
     global syncplay_path
     global openPlayer
     global scelta_anime
     global notSelected
-    global completeLimit
     global mpv
 
     if update:
@@ -699,43 +691,36 @@ def main():
             removeFromCrono(scelta)
             continue
 
-        #se la lista è stata selezionata, inserisco come ep_iniziale quello scelto dall'utente
-        #succcessivamente anime.ep verrà sovrascritto con il numero reale dell'episodio finale
-        if lista:
-            ep_iniziale = anime.ep
-
         anime.load_info() if not offline else downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
         if info:
             anime.print_info()
-            #stampo piccolo menu
-            #se ho l'args -i e ho scelto di tornare indietro, faccio una continue sul ciclo while True
+            #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
             if fzf(["indietro","guardare"]) == "indietro":
                 continue
 
         if anime.ep == 0:
-            # se l'anime non ha episodi non può essere selezionato
             my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
             sleep(1)
             reload = False
             continue          
         
-        if cronologia:            
+        if lista or cronologia:            
             ep_iniziale = anime.ep_corrente + 1
-            if ep_iniziale > anime.ep:
-                my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
-                if len(log) == 1:
-                    safeExit()
-                sleep(1)
-                continue
-
-        scelta_download = False
-        while not lista and not cronologia:
+        else:
             ep_iniziale = scegliEpisodi()
             anime.ep_corrente = ep_iniziale - 1
-            if not downl:
-                break
-            
+
+        if ep_iniziale > anime.ep:
+            my_print(f"L'episodio {ep_iniziale} di {anime.name} non è ancora stato rilasciato!", color='rosso')
+            sleep(1)
+            if len(animelist) == 1:
+                safeExit()
+            reload = False
+            continue
+
+        scelta_download = False
+        while downl:
             path = f"{downloadPath()}/{anime.name}"
             scaricaEpisodio(ep_iniziale, path)
 
