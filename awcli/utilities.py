@@ -72,11 +72,20 @@ def getHtml(url: str) -> str:
     Returns:
         str: l'html della pagina web selezionata.
     """
+    global cookies
     try:
-        result = requests.get(url, headers=headers)
+        result = requests.get(url, headers=headers, cookies=cookies)
     except requests.exceptions.ConnectionError:
         my_print("Errore di connessione", color="rosso")
         exit()
+
+    if result.status_code == 202: 
+        my_print("Reindirizzamento...", color="giallo", end="\n") 
+        match = re.search(r'(SecurityAW-\w+)=(.*) ;', result.text)
+        key = match.group(1) 
+        value = match.group(2) 
+        cookies = {key: value} 
+        result = requests.get(url, headers=headers, cookies=cookies)
     
     if result.status_code != 200:
         my_print("Errore: pagina non trovata", color="rosso")
@@ -264,3 +273,5 @@ def getConfig() -> tuple[bool, str, str]:
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
 }
+
+cookies = {}
