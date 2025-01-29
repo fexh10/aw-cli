@@ -140,12 +140,15 @@ def latest(filter = "all") -> list[Anime]:
     for url, name, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
         if ".5" not in ep:
             animes.append(Anime(unescape(name), _url + url, int(ep)))
-            
-    match filter[0]:
-        case 's': return animes[45:90]
-        case 'd': return animes[90:135]
-        case 't': return animes[135:]
-        case  _ : return animes[:45]
+    
+    if filter[0] == 's':
+        return animes[45:90]
+    elif filter[0] == 'd':
+        return animes[90:135]
+    elif filter[0] == 't':
+        return animes[135:]
+    else:
+        return animes[:45]
 
 def download(url_ep: str) -> str:
     """
