@@ -1,3 +1,4 @@
+from collections import defaultdict
 import awcli.utilities as utilities
 
 class Anime:
@@ -14,7 +15,8 @@ class Anime:
     def __init__(self, name, url, ep=0, ep_totali="") -> None:
         self.name = name
         self.url = url
-        self.ep_corrente = ep
+        self.ep_corrente = ep-1
+        self.progress = defaultdict(int)
         self.ep = ep
         self.ep_totali = ep_totali
         self.ep_ini = 1
@@ -97,9 +99,9 @@ class Anime:
         utilities.my_print(self.ep_totali, format=0)
         utilities.my_print("Stato: ", end="", color="azzurro")
         if self.status == 0:
-            utilities.my_print("Finito", format=0)
-        elif self.status == 1:
             utilities.my_print("In corso", format=0)
+        elif self.status == 1:
+            utilities.my_print("Finito", format=0)
         elif self.status == 2:
             utilities.my_print("Non rilasciato", format=0)
         utilities.my_print("Visualizzazioni: ", end="", color="azzurro")

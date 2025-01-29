@@ -105,6 +105,7 @@ args = parser.parse_args()
 
 if args.offline:
     offline = True
+    cronologia = True
 elif args.cronologia == 'r':
         cronologia = True
 elif args.update or '-u' in sys.argv:
