@@ -476,6 +476,7 @@ def setupConfig() -> None:
             
             anilist.user_id = future.result()
 
+    syncplay = "Syncplay: None"
     if nome_os != "Android":
         res = os.popen(f"whereis -b syncplay 2>&1").read().removeprefix(f"syncplay:").strip().split()
         if len(res) == 0:
@@ -483,8 +484,8 @@ def setupConfig() -> None:
             syncplay = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
         else:
             syncplay = res[0]
-    if syncplay == "":
-        syncplay = "Syncplay: None"
+        if syncplay == "":
+            syncplay = "Syncplay: None"
     
     #creo il file
     config = f"{os.path.dirname(__file__)}/aw.config"
