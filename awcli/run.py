@@ -14,7 +14,7 @@ def safeExit():
         csv.writer(file).writerows(log)
     exit()
 
-signal(SIGINT, safeExit)
+signal(SIGINT, lambda signum, frame: safeExit())
 
 def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool = False, esci: bool = True) -> str:
     """
