@@ -69,7 +69,7 @@ Android richiede l'installazione di <a href="https://github.com/termux/termux-ap
 
 ```
 pkg update && pkg upgrade
-pkg install python python-pip libxml2 libxslt pkg-config
+pkg install python python-pip fzf
 python3 -m pip install aw-cli
 ```
 </details>
