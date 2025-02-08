@@ -425,31 +425,45 @@ def getCronologia() -> list[Anime]:
 
 def setupConfig() -> None:
     """
-    Crea un file di configurazione chiamato "aw.config"
+    Crea un file di configurazione chiamato "config.toml"
     nella stessa directory dello script.
     Le informazioni riportate saranno scelte dall'utente.
     Sarà possibile scegliere il Player predefinito, 
     se collegare il proprio profilo AniList e 
     se inserire il path di syncplay.  
     """
+    configData = {
+        "player": {
+            "type": None,
+            "path": None
+        },
+        "anilist": {
+            "token": "",
+            "rating": False,
+            "favorite": False,
+            "drop": False,
+            "user_id": -1
+        },
+        "syncplay": {
+            "path": ""
+        }
+    }
+
     #player predefinito
     my_print("", end="", cls=True)
     my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
-    player = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
+    configData["player"]["type"]  = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
     if nome_os != "Android":
-        res = os.popen(f"whereis -b {player} 2>&1").read().removeprefix(f"{player}:").strip().split()
+        res = os.popen(f"whereis -b {configData["player"]["type"]} 2>&1").read().removeprefix(f"{configData["player"]["type"]}:").strip().split()
         if len(res) == 0:
-            my_print(f"Player {player} non trovato!", color="rosso")
-            player = my_input(f"Inserisci il path di {player} manualmente se è installato")
+            my_print(f"Player {configData["player"]["type"]} non trovato!", color="rosso")
+            configData["player"]["path"] = my_input(f"Inserisci il path di {configData["player"]["type"]} manualmente se è installato")
         else:
-            player = res[0]
+            configData["player"]["path"] = res[0]
         my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
-    #animelist
-    ratingAnilist = "ratingAnilist: False"
-    preferitoAnilist = "preferitoAnilist: False"
-    dropAnilist = "dropAnilist: False"
+    #anilist
     
     if fzf(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
         link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
@@ -460,38 +474,38 @@ def setupConfig() -> None:
 
         #inserimento token
         anilist.tokenAnilist = my_input(f"Inserire il token di AniList ({link})", cls=True)
-        
+        configData["anilist"]["token"] = anilist.tokenAnilist
+
         #prendo l'id dell'utente tramite query
         with ThreadPoolExecutor() as executor:
             future = executor.submit(anilist.getAnilistUserId)
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
             if fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
-                ratingAnilist = "ratingAnilist: True "
+                configData["anilist"]["rating"] = True
                 
             if fzf(["sì","no"], "Chiedere se mettere l'anime tra i preferiti una volta completato? ") == "sì":
-                preferitoAnilist = "preferitoAnilist: True"
+                configData["anilist"]["favorite"] = True
             
             if fzf(["sì","no"], "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
-                dropAnilist = "dropAnilist: True"
+                configData["anilist"]["drop"] = True
             
             anilist.user_id = future.result()
+            configData["anilist"]["user_id"] = anilist.user_id
 
-    syncplay = "Syncplay: None"
+    #syncplay
     if nome_os != "Android":
         res = os.popen(f"whereis -b syncplay 2>&1").read().removeprefix(f"syncplay:").strip().split()
         if len(res) == 0:
             my_print("Syncplay non trovato!", color="rosso")
-            syncplay = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
+            configData["syncplay"]["path"] = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
         else:
-            syncplay = res[0]
-        if syncplay == "":
-            syncplay = "Syncplay: None"
-    
-    #creo il file
-    config = f"{os.path.dirname(__file__)}/aw.config"
-    with open(config, 'w') as config_file:
-        config_file.write(f"{player}\n{anilist.tokenAnilist}\n{ratingAnilist}\n{preferitoAnilist}\n{dropAnilist}\n{anilist.user_id}\n{syncplay}")
+            configData["syncplay"]["path"] = res[0]
 
+    #creo il file
+    config = f"{os.path.dirname(__file__)}/config.toml"
+    with open(config, 'w') as f:
+        toml.dump(configData, f)
+        
 
 def reloadCrono(cronologia: list[Anime]):
     """
@@ -641,7 +655,7 @@ def main():
         pass
     
     #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
-    if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/aw.config"):
+    if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/config.toml"):
         setupConfig()
 
     mpv, player_path, syncplay_path = getConfig()
