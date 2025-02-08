@@ -1,14 +1,8 @@
 import requests
-
-tokenAnilist = "tokenAnilist: False"
-user_id = -1
-ratingAnilist = False
-preferitoAnilist = False
-dropAnilist = False
+from awcli.utilities import configData
 
 class TokenError(Exception):
     pass
-
 
 def updateAnilist(id_anilist: int, ep: int, status_list: str, score: float, favourite: bool = False) -> None:
     """
@@ -67,7 +61,7 @@ def getAnilistUserId() -> int:
         }
     """
 
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+    header_anilist = {'Authorization': 'Bearer ' + configData["anilist"]["token"], 'Content-Type': 'application/json', 'Accept': 'application/json'}
     risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query})
     if risposta.status_code != 200:
         raise TokenError("Errore: Token AniList sbagliato")
@@ -98,11 +92,11 @@ def getAnimePrivateRating(id_anime: int) -> (float | None):
     """
     var = {
         "idAnime": id_anime,
-        "userId": user_id
+        "userId": configData["anilist"]["user_id"]
     }
 
     header_anilist = {
-        'Authorization': 'Bearer ' + tokenAnilist,
+        'Authorization': 'Bearer ' + configData["anilist"]["token"],
         'Content-Type': 'application/json', 'Accept': 'application/json'
     }
     
@@ -123,7 +117,7 @@ def requestModifyAnilist(query: str, var: dict):
         var (dict): dizionario che contiene le variabili da passare alla query.
     """
 
-    header_anilist = {'Authorization': 'Bearer ' + tokenAnilist, 'Content-Type': 'application/json', 'Accept': 'application/json'}
+    header_anilist = {'Authorization': 'Bearer ' + configData["anilist"]["token"], 'Content-Type': 'application/json', 'Accept': 'application/json'}
     risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var})
     
     if risposta.status_code != 200:

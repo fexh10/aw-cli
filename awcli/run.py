@@ -165,17 +165,17 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
         int: il progresso dell'episodio.
     """
 
-    if syncplay_path == "":
+    if "syncplay" not in configData:
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
     
     
     args = f'''--force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
-    if not mpv:
+    if configData["player"]["type"] == "vlc":
         args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
     
     try :
-        out = os.popen(f'''{syncplay_path} -d --language it "{url_ep}" -- {args} 2>&1''').read()
+        out = os.popen(f'''{configData["syncplay"]["path"]} -d --language it "{url_ep}" -- {args} 2>&1''').read()
     except UnicodeDecodeError:
         out = ""
 
@@ -211,7 +211,7 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return True, 0
 
-    out = os.popen(f'''{player_path} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open 2>&1''')
+    out = os.popen(f'''{configData["player"]["path"]} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open 2>&1''')
 
     res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
     progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
@@ -237,7 +237,7 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')    
         return True, 0
     
-    os.system(f'''{player_path} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen > /dev/null 2>&1''')
+    os.system(f'''{configData["player"]["path"]} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen > /dev/null 2>&1''')
 
     # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
     progress = 0
@@ -331,12 +331,12 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
             status_list = 'COMPLETED'
     
         #chiedo di votare
-        if anilist.ratingAnilist:
+        if configData["anilist"]["rating"]:
             is_number = lambda n: float(n) if n.replace('.', '', 1).isdigit() else None
             voto = my_input("Inserisci un voto per l'anime" + (f" (voto corrente: {voto_anilist})" if voto_anilist else ""), is_number)
     
         #chiedo di mettere tra i preferiti
-        if anilist.preferitoAnilist and status_list == 'COMPLETED':
+        if configData["anilist"]["favorite"] and status_list == 'COMPLETED':
             my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
             preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
     
@@ -365,7 +365,7 @@ def openVideos(ep: int):
     else:
         url_ep = anime.get_episodio(ep)
     
-    if not (offline or privato) and anilist.tokenAnilist != "":
+    if not (offline or privato) and "anilist" in configData:
         executor = ThreadPoolExecutor(max_workers=1)
         voto_anilist = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
 
@@ -379,7 +379,7 @@ def openVideos(ep: int):
         progress = 0
         anime.ep_corrente = ep
         #update watchlist anilist se ho fatto l'accesso
-        if not offline and anilist.tokenAnilist != "":
+        if not offline and "anilist" in configData:
             updateAnilist(ep, voto_anilist.result())
     else:
         anime.ep_corrente = ep - 1
@@ -581,23 +581,20 @@ def removeFromCrono(number: int):
 
     global log
 
-    delete = fzf(["sì","no"], f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ")
+    if fzf(["sì","no"], f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ") == "no":
+        return
 
-    if delete == "sì":
-        if anilist.dropAnilist:
-            drop = fzf(["sì","no"], f"Droppare {anime.name} su AniList? ")
+    if "anilist" in configData and configData["anilist"]["drop"] and fzf(["sì","no"], f"Droppare {anime.name} su AniList? ") == "sì":
+        if anime.id_anilist == 0:
+            my_print("Impossibile droppare su AniList: id anime non trovato!", color="rosso")
+            sleep(1)
+        else:
+            updateAnilist(anime.ep_corrente, drop=True)
 
-            if drop == "sì":
-                if anime.id_anilist == 0:
-                    my_print("Impossibile droppare su AniList: id anime non trovato!", color="rosso")
-                    sleep(1)
-                else:
-                    updateAnilist(anime.ep_corrente, drop=True)
+    log.pop(number)
 
-        log.pop(number)
-
-        if fzf(["esci","continua"], cls=True) == "esci":
-            safeExit()
+    if fzf(["esci","continua"], cls=True) == "esci":
+        safeExit()
 
 
 def updateScript():
@@ -622,12 +619,9 @@ def updateScript():
 def main():
     global log
     global anime
-    global player_path
-    global syncplay_path
     global openPlayer
     global scelta_anime
     global notSelected
-    global mpv
 
     if update:
         updateScript()
@@ -644,7 +638,7 @@ def main():
 
     getConfig()
 
-    openPlayer = openMPV if mpv else openVLC
+    openPlayer = openMPV if configData["player"]["type"] == "mpv" else openVLC
 
     if nome_os != "Android" and args.syncpl:
         openPlayer = openSyncplay
@@ -760,13 +754,10 @@ def main():
         reload = True
 
 log = []
-player_path = ""
-syncplay_path = ""
 scelta_anime = ""
 openPlayer = None
 notSelected = True
 completeLimit = 90
-mpv = True
 
 anime = Anime("", "")
 
