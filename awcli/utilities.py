@@ -1,8 +1,7 @@
 import os
 import re
-import requests
 import toml
-from platform import system
+import requests
 from time import sleep
 from html import unescape
 from collections import defaultdict
@@ -10,15 +9,20 @@ from awcli.anime import Anime
 
 _url = "https://www.animeworld.so"
 configData = defaultdict(dict)
+
 # controllo il tipo del dispositivo
-nome_os = system()
-wsl = False
-if nome_os == "Linux":
-    out = os.popen("uname -a").read().strip()
-    if "Android" in out:
-        nome_os = "Android"
-    elif "WSL" in out:
-        wsl = True
+def get_os() -> str:
+    out = os.popen("uname -a").read().strip().split()
+    nome_os = out[0]
+    if nome_os == "Linux":
+        if "Android" == out[-1]:
+            nome_os = "Android"
+        elif "WSL" in out[2]:
+            nome_os = "WSL"
+    return nome_os
+
+nome_os = get_os()
+
 
 def my_print(text: str = "", format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
     """
@@ -236,7 +240,7 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
         anime.ep = massimo 
         anime.ep_ini = minimo
         
-
+        
 def getConfig() -> None:
     """
     Prende le impostazioni scelte dall'utente
@@ -252,11 +256,10 @@ def getConfig() -> None:
     with open(configPath, 'r') as f:
         configData = toml.load(f)
     
-    if wsl: configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''
-    
-    if "syncplay" in configData and wsl:
-        configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'"
-
+    if nome_os == "WSL": 
+        configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''
+        if "syncplay" in configData:
+            configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'"
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
