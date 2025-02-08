@@ -165,7 +165,7 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
         int: il progresso dell'episodio.
     """
 
-    if syncplay_path == "Syncplay: None":
+    if syncplay_path == "":
         my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         safeExit()
     
@@ -365,7 +365,7 @@ def openVideos(ep: int):
     else:
         url_ep = anime.get_episodio(ep)
     
-    if not (offline or privato) and anilist.tokenAnilist != 'tokenAnilist: False':
+    if not (offline or privato) and anilist.tokenAnilist != "":
         executor = ThreadPoolExecutor(max_workers=1)
         voto_anilist = executor.submit(anilist.getAnimePrivateRating, anime.id_anilist)
 
@@ -379,7 +379,7 @@ def openVideos(ep: int):
         progress = 0
         anime.ep_corrente = ep
         #update watchlist anilist se ho fatto l'accesso
-        if not offline and anilist.tokenAnilist != 'tokenAnilist: False':
+        if not offline and anilist.tokenAnilist != "":
             updateAnilist(ep, voto_anilist.result())
     else:
         anime.ep_corrente = ep - 1
@@ -610,9 +610,7 @@ def removeFromCrono(number: int):
 
         log.pop(number)
 
-        scelta = fzf(["esci","continua"], cls=True)
-
-        if scelta == "esci":
+        if fzf(["esci","continua"], cls=True) == "esci":
             safeExit()
 
 
