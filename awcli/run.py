@@ -659,14 +659,7 @@ def main():
         setupConfig()
 
     mpv, player_path, syncplay_path = getConfig()
-    #se la prima riga del config corrisponde a una versione vecchia, faccio rifare il config
-    if player_path.startswith("Player") or mpv == None:
-        my_print("Ci sono stati dei cambiamenti nella configurazione...", color="giallo")
-        sleep(1)
-        setupConfig()
-        mpv, player_path, syncplay_path = getConfig()
 
-   
     openPlayer = openMPV if mpv else openVLC
 
     if nome_os != "Android" and args.syncpl:

@@ -249,24 +249,16 @@ def getConfig() -> tuple[bool, str, str]:
         syncplay_path restituisce il path di syncplay.
     """
 
-    config = f"{os.path.dirname(__file__)}/aw.config"
+    configPath = f"{os.path.dirname(__file__)}/config.toml"
+    configData = {}
+    with open(configPath, 'r') as f:
+        configData = toml.load(f)
+    
+    mpv = True if configData["player"]["type"] == "mpv" else False
+    player_path = f'''"$(wslpath '{configData["player"]["path"]}')"''' if wsl else configData["player"]["path"]
 
-    with open(config, 'r+') as config_file:
-        lines = [line.strip() for line in config_file.readlines()]
-
-        if len(lines) < 7:
-            return None, "", ""
-
-        mpv = True if "mpv" in lines[0] else False
-        player_path = f'''"$(wslpath '{lines[0]}')"''' if wsl else lines[0]
-
-        anilist.tokenAnilist = lines[1]
-        anilist.ratingAnilist = True if lines[2] == "ratingAnilist: True" else False
-        anilist.preferitoAnilist = True if lines[3] == "preferitoAnilist: True" else False
-        anilist.dropAnilist = True if lines[4] == "dropAnilist: True" else False
-        anilist.user_id = int(lines[5])
-
-        syncplay_path = f"/mnt/c/Windows/System32/cmd.exe /C '{lines[6]}'" if wsl else lines[6]
+    anilist.tokenAnilist, anilist.ratingAnilist, anilist.preferitoAnilist, anilist.dropAnilist, anilist.user_id = (configData["anilist"][key] for key in ["token", "rating", "favorite", "drop", "user_id"])
+    syncplay_path = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'" if wsl else configData["syncplay"]["path"]
     return mpv, player_path, syncplay_path
 
 
