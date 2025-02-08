@@ -236,7 +236,6 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
         anime.ep_ini = minimo
         
 
-
 def getConfig() -> tuple[bool, str, str]:
     """
     Prende le impostazioni scelte dall'utente
