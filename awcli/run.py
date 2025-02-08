@@ -467,10 +467,11 @@ def setupConfig() -> None:
     
     if fzf(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
         link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
-        if nome_os == "Linux" or nome_os == "Android":
-            os.system(f"xdg-open '{link}' > /dev/null 2>&1")
-        else: 
+        if nome_os == "Darwin":
             os.system(f"open '{link}' > /dev/null 2>&1")
+        else:
+            os.system(f"xdg-open '{link}' > /dev/null 2>&1")
+
 
         #inserimento token
         anilist.tokenAnilist = my_input(f"Inserire il token di AniList ({link})", cls=True)

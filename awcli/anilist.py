@@ -1,7 +1,7 @@
 import requests
 
 tokenAnilist = "tokenAnilist: False"
-user_id = 0
+user_id = -1
 ratingAnilist = False
 preferitoAnilist = False
 dropAnilist = False
