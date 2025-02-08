@@ -432,22 +432,7 @@ def setupConfig() -> None:
     se collegare il proprio profilo AniList e 
     se inserire il path di syncplay.  
     """
-    configData = {
-        "player": {
-            "type": None,
-            "path": None
-        },
-        "anilist": {
-            "token": "",
-            "rating": False,
-            "favorite": False,
-            "drop": False,
-            "user_id": -1
-        },
-        "syncplay": {
-            "path": ""
-        }
-    }
+    configData = defaultdict(dict)
 
     #player predefinito
     my_print("", end="", cls=True)
@@ -474,11 +459,11 @@ def setupConfig() -> None:
 
 
         #inserimento token
-        anilist.tokenAnilist = my_input(f"Inserire il token di AniList ({link})", cls=True)
-        configData["anilist"]["token"] = anilist.tokenAnilist
+        configData["anilist"]["token"] = my_input(f"Inserire il token di AniList ({link})", cls=True)
 
         #prendo l'id dell'utente tramite query
         with ThreadPoolExecutor() as executor:
+            configData["anilist"]["rating"], configData["anilist"]["favorite"], configData["anilist"]["drop"] = False, False, False
             future = executor.submit(anilist.getAnilistUserId)
             my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
             if fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
@@ -490,15 +475,15 @@ def setupConfig() -> None:
             if fzf(["sì","no"], "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
                 configData["anilist"]["drop"] = True
             
-            anilist.user_id = future.result()
-            configData["anilist"]["user_id"] = anilist.user_id
+            configData["anilist"]["user_id"]  = future.result()
 
     #syncplay
     if nome_os != "Android":
         res = os.popen(f"whereis -b syncplay 2>&1").read().removeprefix(f"syncplay:").strip().split()
         if len(res) == 0:
             my_print("Syncplay non trovato!", color="rosso")
-            configData["syncplay"]["path"] = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
+            syncplay = my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
+            if syncplay != "": configData["syncplay"]["path"] = syncplay
         else:
             configData["syncplay"]["path"] = res[0]
 
@@ -657,7 +642,7 @@ def main():
     if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/config.toml"):
         setupConfig()
 
-    mpv, player_path, syncplay_path = getConfig()
+    getConfig()
 
     openPlayer = openMPV if mpv else openVLC
 

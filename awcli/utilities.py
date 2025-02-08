@@ -5,10 +5,11 @@ import toml
 from platform import system
 from time import sleep
 from html import unescape
-import awcli.anilist as anilist
+from collections import defaultdict
 from awcli.anime import Anime
 
 _url = "https://www.animeworld.so"
+configData = defaultdict(dict)
 # controllo il tipo del dispositivo
 nome_os = system()
 wsl = False
@@ -236,29 +237,25 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
         anime.ep_ini = minimo
         
 
-def getConfig() -> tuple[bool, str, str]:
+def getConfig() -> None:
     """
     Prende le impostazioni scelte dall'utente
     dal file di configurazione.
 
     Returns:
-        tuple[bool, str, int]: 
-        mpv restituisce True se è stato scelto MPV, altrimenti false se è VLC.
-        player_path restituisce il path del player predefinito.
-        syncplay_path restituisce il path di syncplay.
+        None
     """
-
+    global configData
+    
     configPath = f"{os.path.dirname(__file__)}/config.toml"
-    configData = {}
+    
     with open(configPath, 'r') as f:
         configData = toml.load(f)
     
-    mpv = True if configData["player"]["type"] == "mpv" else False
-    player_path = f'''"$(wslpath '{configData["player"]["path"]}')"''' if wsl else configData["player"]["path"]
-
-    anilist.tokenAnilist, anilist.ratingAnilist, anilist.preferitoAnilist, anilist.dropAnilist, anilist.user_id = (configData["anilist"][key] for key in ["token", "rating", "favorite", "drop", "user_id"])
-    syncplay_path = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'" if wsl else configData["syncplay"]["path"]
-    return mpv, player_path, syncplay_path
+    if wsl: configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''
+    
+    if "syncplay" in configData and wsl:
+        configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'"
 
 
 headers = {
