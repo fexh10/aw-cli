@@ -1,12 +1,13 @@
 import os
 import re
 import requests
+import toml
 from platform import system
 from time import sleep
 from html import unescape
 import awcli.anilist as anilist
 from awcli.anime import Anime
-   
+
 _url = "https://www.animeworld.so"
 # controllo il tipo del dispositivo
 nome_os = system()

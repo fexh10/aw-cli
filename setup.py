@@ -7,7 +7,8 @@ installRequires = [
         "requests",
         "pySmartDL",
         "wheel",
-        "regex",]
+        "regex",
+        "toml",]
 
 setup(
     name="aw-cli",
