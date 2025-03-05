@@ -103,7 +103,7 @@ def scegliEpisodi() -> list[int]:
     my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
     if anime.ep == 1:
-        return 1
+        return [1]
 
     ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)] 
     return sorted([int(ep) for ep in fzf(ep, "Scegli un episodio: ", multi=downl).split("\n")])
