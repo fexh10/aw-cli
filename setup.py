@@ -7,12 +7,13 @@ installRequires = [
         "requests",
         "pySmartDL",
         "wheel",
-        "regex",]
+        "regex",
+        "toml",]
 
 setup(
     name="aw-cli",
     packages=find_packages(include=["awcli"]),
-    version="2.1",
+    version="2.1.2",
     python_requires=">3.9",
     description="guarda anime dal terminale e molto altro!",
     long_description=long_description,

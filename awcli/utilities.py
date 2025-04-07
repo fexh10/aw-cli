@@ -1,22 +1,28 @@
 import os
 import re
+import toml
 import requests
-from platform import system
 from time import sleep
 from html import unescape
-import awcli.anilist as anilist
+from collections import defaultdict
 from awcli.anime import Anime
-   
+
 _url = "https://www.animeworld.so"
+configData = defaultdict(dict)
+
 # controllo il tipo del dispositivo
-nome_os = system()
-wsl = False
-if nome_os == "Linux":
-    out = os.popen("uname -a").read().strip()
-    if "Android" in out:
-        nome_os = "Android"
-    elif "WSL" in out:
-        wsl = True
+def get_os() -> str:
+    out = os.popen("uname -a").read().strip().split()
+    nome_os = out[0]
+    if nome_os == "Linux":
+        if "Android" == out[-1]:
+            nome_os = "Android"
+        elif "WSL" in out[2]:
+            nome_os = "WSL"
+    return nome_os
+
+nome_os = get_os()
+
 
 def my_print(text: str = "", format: int = 1, color: str = "bianco", bg_color: str = "nero", cls: bool = False, end: str = "\n"):
     """
@@ -237,40 +243,26 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
         anime.ep = massimo 
         anime.ep_ini = minimo
         
-
-
-def getConfig() -> tuple[bool, str, str]:
+        
+def getConfig() -> None:
     """
     Prende le impostazioni scelte dall'utente
     dal file di configurazione.
 
     Returns:
-        tuple[bool, str, int]: 
-        mpv restituisce True se è stato scelto MPV, altrimenti false se è VLC.
-        player_path restituisce il path del player predefinito.
-        syncplay_path restituisce il path di syncplay.
+        None
     """
-
-    config = f"{os.path.dirname(__file__)}/aw.config"
-
-    with open(config, 'r+') as config_file:
-        lines = [line.strip() for line in config_file.readlines()]
-
-        if len(lines) < 7:
-            return None, "", ""
-
-        mpv = True if "mpv" in lines[0] else False
-        player_path = f'''"$(wslpath '{lines[0]}')"''' if wsl else lines[0]
-
-        anilist.tokenAnilist = lines[1]
-        anilist.ratingAnilist = True if lines[2] == "ratingAnilist: True" else False
-        anilist.preferitoAnilist = True if lines[3] == "preferitoAnilist: True" else False
-        anilist.dropAnilist = True if lines[4] == "dropAnilist: True" else False
-        anilist.user_id = int(lines[5])
-
-        syncplay_path = f"/mnt/c/Windows/System32/cmd.exe /C '{lines[6]}'" if wsl else lines[6]
-    return mpv, player_path, syncplay_path
-
+    global configData
+    
+    configPath = f"{os.path.dirname(__file__)}/config.toml"
+    
+    with open(configPath, 'r') as f:
+        configData = toml.load(f)
+    
+    if nome_os == "WSL": 
+        configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''
+        if "syncplay" in configData:
+            configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'"
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
