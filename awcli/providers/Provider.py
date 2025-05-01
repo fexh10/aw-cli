@@ -1,11 +1,11 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from awcli.anime import Anime
 
 class Provider(ABC):
     """
     Classe astratta che rappresenta un generico Provider.
     """
-
+    @abstractmethod
     def search(input: str) -> list[Anime]:
         """
         Ricerca un anime in base al titolo.
@@ -14,9 +14,10 @@ class Provider(ABC):
             input (str): il titolo dell'anime da ricercare.
 
         Returns:
-        list[Anime]: la lista degli anime trovati.
+            list[Anime]: la lista degli anime trovati.
         """
 
+    @abstractmethod
     def latest(filter = "all") -> list[Anime]:
         """
         Restituisce le ultime uscite degli anime.
@@ -28,6 +29,7 @@ class Provider(ABC):
             list[Anime]: la lista degli anime trovati.
         """
     
+    @abstractmethod
     def episode_link(anime: Anime, ep: int) -> str:
         """
         Cerca il link del video dell'episodio. 
@@ -40,6 +42,7 @@ class Provider(ABC):
             str: il link.
         """
     
+    @abstractmethod
     def info_anime(anime: Anime):
         """
         Prende le informazioni dell'anime selezionato,
@@ -49,6 +52,7 @@ class Provider(ABC):
             anime (Anime): l'anime di riferimento.
         """
 
+    @abstractmethod
     def episodes(anime: Anime):
         """
         Ottiene i riferimenti agli episodi disponibili dell'anime,

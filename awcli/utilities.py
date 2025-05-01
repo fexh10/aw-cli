@@ -7,7 +7,6 @@ from html import unescape
 from collections import defaultdict
 from awcli.anime import Anime
 
-_url = "https://www.animeworld.so"
 configData = defaultdict(dict)
 
 # controllo il tipo del dispositivo
@@ -97,37 +96,7 @@ def getHtml(url: str) -> str:
         my_print("Errore: pagina non trovata", color="rosso")
         exit()
     
-    return result.text
-
-def search(input: str) -> list[Anime]:
-    """
-    Ricerca l'anime selezionato su AnimeWorld.
-
-    Args:
-        input (str): la stringa di ricerca da effettuare.
-        nome_os (str): il nome del sistema operativo in uso.
-
-    Returns:
-        list[Anime]: la lista degli anime trovati
-    """
-    # cerco l'anime su animeworld
-    my_print("Ricerco...", color="giallo")
-    url_ricerca = _url + "/search?keyword=" + input.replace(" ", "+")
-    html = getHtml(url_ricerca)
-    if re.search(r'<div class="alert alert-danger">', html):
-        return []
-
-    animes = list[Anime]()
-    # prendo i link degli anime relativi alla ricerca
-    for url, name in re.findall(r'<div class="inner">(?:.|\n)+?<a href="([^"]+)"\s+data-jtitle="[^"]+"\s+class="name">([^<]+)', html):
-        if nome_os == "Android":
-            caratteri_proibiti = '"*/:<>?\|'
-            caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
-            for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
-                name = name.replace(a, b)
-        animes.append(Anime(unescape(name), _url+url))
-    
-    return animes
+    return result.text    
 
 def latest(filter = "all") -> list[Anime]:
     """
