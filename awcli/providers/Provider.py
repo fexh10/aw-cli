@@ -4,7 +4,21 @@ from awcli.anime import Anime
 class Provider(ABC):
     """
     Classe astratta che rappresenta un generico Provider.
+
+    Attributes:
+        _url (str): l'url del sito del provider.
+        _headers (dict): gli headers da utilizzare per le richieste HTTP.
     """
+    def __init__(self, url: str):
+        """
+        Costruisce un'instanza di Provider.
+        
+        Args:
+            url (str): l'url del sito del provider.
+        """
+        self._url = url
+        self._headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'}
+
     @abstractmethod
     def search(input: str) -> list[Anime]:
         """
@@ -30,6 +44,16 @@ class Provider(ABC):
         """
     
     @abstractmethod
+    def episodes(anime: Anime):
+        """
+        Ottiene i riferimenti agli episodi disponibili dell'anime,
+        caricandole dentro `anime` che viene modificato di conseguenza.
+
+        Args:
+            anime (Anime): l'anime di riferimento.
+        """
+
+    @abstractmethod
     def episode_link(anime: Anime, ep: int) -> str:
         """
         Cerca il link del video dell'episodio. 
@@ -48,16 +72,6 @@ class Provider(ABC):
         Prende le informazioni dell'anime selezionato,
         caricandole dentro `anime` che viene modificato di conseguenza.
         
-        Args:
-            anime (Anime): l'anime di riferimento.
-        """
-
-    @abstractmethod
-    def episodes(anime: Anime):
-        """
-        Ottiene i riferimenti agli episodi disponibili dell'anime,
-        caricandole dentro `anime` che viene modificato di conseguenza.
-
         Args:
             anime (Anime): l'anime di riferimento.
         """

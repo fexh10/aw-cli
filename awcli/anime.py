@@ -21,18 +21,14 @@ class Anime:
         self.ep_totali = ep_totali
         self.ep_ini = 1
         
-    def load_info(self) -> None:
+    def _set_info(self, anilist_id, infos) -> None:
         """
-        Cerca le informazioni dell'anime e le salva.
-        """
-        try:
-            res = utilities.get_info_anime(self.url)
-        except IndexError:
-            utilities.my_print("Il link è stato cambiato", color="rosso", end="\n")
-            self.url = utilities.search(self.name)[0].url
-            res = utilities.get_info_anime(self.url)
-            
-        self.id_anilist, self.url_episodi, infos = res
+        Imposta le informazioni dell'anime.
+        Args:
+            anilist_id (int): l'ID di Anilist dell'anime.
+            infos (list): lista delle informazioni dell'anime.
+        """ 
+        self.id_anilist = anilist_id
         self.ep = len(self.url_episodi)
         self.category = infos[0]
         self.audio = infos[1]
@@ -46,21 +42,6 @@ class Anime:
         self.status = int(infos[9])
         self.views = infos[10]
         self.plot = infos[11]
-        
-    def get_episodio(self, ep: int) -> str:
-        """
-        Restituisce il link dell'episodio specificato.
-
-        Args:
-            ep (int): il numero dell'episodio.
-
-        Returns:
-            str: il link dell'episodio.
-        """
-
-        ep -= 1
-        if ep in range(self.ep):
-            return utilities.download(self.url_episodi[ep])
         
     def ep_name(self, ep: int) -> str:
         """
