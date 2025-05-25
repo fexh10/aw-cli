@@ -8,7 +8,8 @@ installRequires = [
         "pySmartDL",
         "wheel",
         "regex",
-        "toml",]
+        "toml",
+        "pip-system-certs",]
 
 setup(
     name="aw-cli",
