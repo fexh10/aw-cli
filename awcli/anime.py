@@ -20,6 +20,7 @@ class Anime:
         self.ep = ep
         self.ep_totali = ep_totali
         self.ep_ini = 1
+        self.url_episodi = []
         
     def _set_info(self, anilist_id, infos) -> None:
         """

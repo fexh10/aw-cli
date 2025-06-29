@@ -9,6 +9,7 @@ from threading import Thread
 from awcli import anilist, utilities as ut
 from awcli.anime import Anime
 from awcli.arg_parser import *
+from awcli.providers.animeworld import Animeworld
 
 def safeExit():
     with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='', encoding='utf-8') as file:
@@ -46,7 +47,6 @@ def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool 
 
     return output
 
-
 def RicercaAnime() -> list[Anime]:
     """
     Dato in input un nome di un anime inserito dall'utente, restituisce una lista con gli URL degli anime
@@ -59,13 +59,12 @@ def RicercaAnime() -> list[Anime]:
     def check_search(s: str):
         if s == "exit":
             safeExit() 
-        result = ut.search(s)
+        result = provider.search(s)
         if len(result) != 0:
             return result
 
     ut.my_print("", end="", cls=True)
     return ut.my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
-
 
 def animeScaricati(path: str) -> list[Anime]:
     """
@@ -88,7 +87,6 @@ def animeScaricati(path: str) -> list[Anime]:
         animes.append(Anime(name, f"{path}/{name}"))
     return animes
 
-
 def scegliEpisodi() -> list[int]:
     """
     Fa scegliere all'utente gli episodi dell'anime da guardare.
@@ -109,7 +107,6 @@ def scegliEpisodi() -> list[int]:
     ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)] 
     return sorted([int(ep) for ep in fzf(ep, "Scegli un episodio: ", multi=downl).split("\n")])
 
-
 def downloadPath(create: bool = True) -> str:
     """
     Restituisce il percorso di download dell'anime, a seconda del sistema operativo in uso.
@@ -129,7 +126,6 @@ def downloadPath(create: bool = True) -> str:
     if create and not os.path.exists(path):
         os.makedirs(path)
     return path
-
 
 def scaricaEpisodio(ep: int, path: str):
     """
@@ -192,7 +188,6 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
 
     return progress*100// duration >= completeLimit if duration > 0 else False, progress
 
-
 def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
     Apre MPV per riprodurre il video.
@@ -218,7 +213,6 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
     
     return int(res[3]) >= completeLimit, progress
-
 
 def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
@@ -305,7 +299,6 @@ def addToCronologia(ep: int, progress: int):
     else:
         log.insert(0, new)
 
-
 def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     """
     Procede ad aggiornare l'anime su AniList.
@@ -343,7 +336,6 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     
     Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, ep, status_list, voto, preferiti)).start()
 
-
 def openVideos(ep: int):
     """
     Riproduce l'episodio dell'anime.
@@ -364,7 +356,7 @@ def openVideos(ep: int):
         ut.my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
         return
     else:
-        url_ep = anime.get_episodio(ep)
+        url_ep = provider.episode_link(anime, ep)
     
     if not (offline or privato) and "anilist" in ut.configData:
         executor = ThreadPoolExecutor(max_workers=1)
@@ -387,7 +379,6 @@ def openVideos(ep: int):
     anime.progress[ep] = progress
 
     addToCronologia(anime.ep_corrente, progress)     
-
 
 def getCronologia() -> list[Anime]:
     """
@@ -422,7 +413,6 @@ def getCronologia() -> list[Anime]:
         ut.my_print("Cronologia inesistente!", color='rosso')
         safeExit()
     return animes
-
 
 def setupConfig() -> None:
     """
@@ -492,7 +482,6 @@ def setupConfig() -> None:
     with open(config, 'w') as f:
         ut.toml.dump(ut.configData, f)
         
-
 def reloadCrono(cronologia: list[Anime]):
     """
     Aggiorna la cronologia degli anime con le ultime uscite disponibili e la ristampa.
@@ -511,7 +500,7 @@ def reloadCrono(cronologia: list[Anime]):
         return
     
     ut.my_print("Ricerco le nuove uscite...", color="giallo")
-    ultime_uscite = ut.latest()
+    ultime_uscite = provider.latest()
     ut.my_print(end="", cls=True)
     testo = []
 
@@ -531,7 +520,6 @@ def reloadCrono(cronologia: list[Anime]):
         pid = os.popen("pgrep fzf").read().strip().split("\n")
         os.system(f"kill {pid[-1]}")
         scelta_anime = fzf(testo, "Scegli un anime: ")
-
 
 def listAnimeNames(animelist: list[Anime]) -> list[str]: 
     """
@@ -566,7 +554,6 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
         
     return nomi
 
-
 def removeFromCrono(number: int):
     """
     Rimuove l'anime selezionato dalla cronologia
@@ -596,7 +583,6 @@ def removeFromCrono(number: int):
     if fzf(["esci","continua"], cls=True) == "esci":
         safeExit()
 
-
 def updateScript():
     """
     Aggiorna di default il programma in base 
@@ -616,7 +602,6 @@ def updateScript():
     
     ut.my_print("aw-cli aggiornato con successo!", color="bianco")
     exit()
-
 
 def main():
     global log
@@ -651,7 +636,7 @@ def main():
             if cronologia:
                 animelist = getCronologia()
             elif lista:
-                animelist = ut.latest(args.lista)
+                animelist = provider.latest(args.lista)
             else:
                 animelist = RicercaAnime()
             if offline:
@@ -682,13 +667,14 @@ def main():
             removeFromCrono(scelta)
             continue
 
-        anime.load_info() if not offline else ut.downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
-
         if info:
+            provider.info_anime(anime)
             anime.print_info()
             #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
             if fzf(["indietro","guardare"]) == "indietro":
                 continue
+
+        provider.episodes(anime) if not offline else ut.downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
         if anime.ep == 0:
             ut.my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
@@ -711,6 +697,7 @@ def main():
             continue
 
         if not privato:
+            provider.info_anime(anime)
             addToCronologia(anime.ep_corrente, anime.progress[anime.ep_corrente + 1])
             
         if downl:
@@ -760,6 +747,7 @@ scelta_anime = ""
 openPlayer = None
 notSelected = True
 completeLimit = 90
+provider = Animeworld()
 
 anime = Anime("", "")
 

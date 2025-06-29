@@ -2,7 +2,7 @@ import re
 import requests
 from html import unescape
 from awcli.anime import Anime
-from awcli.providers import Provider
+from awcli.providers.provider import Provider
 from awcli import utilities as ut
 
 class Animeworld(Provider):
@@ -30,6 +30,7 @@ class Animeworld(Provider):
         Args:
             url (str): la pagina web da cui prendere l'html.
 
+ImportError: cannot import name 'Anime' from par
         Returns:
             str: l'html della pagina web selezionata.
         """
@@ -106,6 +107,7 @@ class Animeworld(Provider):
                     continue
                 episodes_url.append(self._url + url)
         anime.url_episodi = episodes_url
+        anime.ep = len(episodes_url)
 
     def episode_link(self, anime: Anime, ep: int) -> str:
         pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
