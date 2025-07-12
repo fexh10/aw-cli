@@ -106,9 +106,9 @@ ImportError: cannot import name 'Anime' from par
                 if int(num) <= len(episodes_url):
                     continue
                 episodes_url.append(self._url + url)
-        anime.url_episodi = episodes_url
-        anime.ep = len(episodes_url)
-
+        anime._set_episodes(episodes_url)
+        
+        
     def episode_link(self, anime: Anime, ep: int) -> str:
         pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
         if ep - 1 in range(anime.ep):
@@ -129,13 +129,17 @@ ImportError: cannot import name 'Anime' from par
 
         res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
         anilist_id = int(res.group(1)) if res else 0
-                
-        info = re.findall(r'<dd(?: class="rating")?>((?:.|\n)+?)</dd>', html)
-        info.extend(re.findall(r'<div.*class="desc">((?:.|\n)+?)</div>', html))
-        info = info [-12:]
+        
+        temp = re.findall(r'<dt>(.*?):</dt>[\n\s]*<dd(?: class="[^"]*")?>((?:.|\n)+?)</dd>', html)
+        temp.append(("Trama", re.search(r'<div class="desc">((?:.|\n)+?)</div>', html).group(1)))
 
-        for i, text in enumerate(info):
-            res = re.search(r'<a[\s\n]*href=".*status=(\d+)"', text)
-            text = res.group(1) if res else re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', text)).strip()
-            info[i] = unescape(text)
+        info = dict[str, str]()
+        for key, value in temp:
+            key, value = key.strip(), value.strip()
+            if key == "Stato":
+                value = re.search(r'<a.*href="[^"]*status=(\d+)"', value).group(1)
+            else:
+                value = re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', value)).strip()
+            info[key] = unescape(value)
+
         anime._set_info(anilist_id, info)

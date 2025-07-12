@@ -21,8 +21,17 @@ class Anime:
         self.ep_totali = ep_totali
         self.ep_ini = 1
         self.url_episodi = []
+
+    def _set_episodes(self, episodi: list[str]) -> None:
+        """
+        Imposta i riferienti degli episodi dell'anime.
+        Args:
+            episodi (list[str]): lista dei riferimeti delgli episodi dell'anime (URL/ID).
+        """
+        self.url_episodi = episodi
+        self.ep = len(episodi)
         
-    def _set_info(self, anilist_id, infos) -> None:
+    def _set_info(self, anilist_id, info: dict[str:str]) -> None:
         """
         Imposta le informazioni dell'anime.
         Args:
@@ -31,18 +40,9 @@ class Anime:
         """ 
         self.id_anilist = anilist_id
         self.ep = len(self.url_episodi)
-        self.category = infos[0]
-        self.audio = infos[1]
-        self.release_date = infos[2]
-        self.season = infos[3]
-        self.studios = infos[4]
-        self.genres = infos[5]
-        self.vote = infos[6]
-        self.ep_len = infos[7]
-        self.ep_totali = infos[8]
-        self.status = int(infos[9])
-        self.views = infos[10]
-        self.plot = infos[11]
+        self.info = info
+        self.ep_totali = info["Episodi"]
+        self.status = int(info["Stato"])
         
     def ep_name(self, ep: int) -> str:
         """
@@ -62,23 +62,23 @@ class Anime:
         """
         utilities.my_print(self.name, cls=True)
         utilities.my_print("Categoria: ", end="", color="azzurro")
-        utilities.my_print(self.category, format=0)
+        utilities.my_print(self.info["Categoria"], format=0)
         utilities.my_print("Audio: ", end="", color="azzurro")
-        utilities.my_print(self.audio, format=0)
-        utilities.my_print("Data di uscita: ", end="", color="azzurro")
-        utilities.my_print(self.release_date, format=0)
+        utilities.my_print(self.info["Audio"], format=0)
+        utilities.my_print("Data di Uscita: ", end="", color="azzurro")
+        utilities.my_print(self.info["Data di Uscita"], format=0)
         utilities.my_print("Stagione: ", end="", color="azzurro")
-        utilities.my_print(self.season, format=0)
+        utilities.my_print(self.info["Stagione"], format=0)
         utilities.my_print("Studios: ", end="", color="azzurro")
-        utilities.my_print(self.studios, format=0)
+        utilities.my_print(self.info["Studio"], format=0)
         utilities.my_print("Generi: ", end="", color="azzurro")
-        utilities.my_print(self.genres, format=0)
+        utilities.my_print(self.info["Genere"], format=0)
         utilities.my_print("Voto medio: ", end="", color="azzurro")
-        utilities.my_print(self.vote, format=0)
+        utilities.my_print(self.info["Voto"], format=0)
         utilities.my_print("Durata: ", end="", color="azzurro")
-        utilities.my_print(self.ep_len, format=0)
+        utilities.my_print(self.info["Durata"], format=0)
         utilities.my_print("Episodi: ", end="", color="azzurro")
-        utilities.my_print(self.ep_totali, format=0)
+        utilities.my_print(self.info["Episodi"], format=0)
         utilities.my_print("Stato: ", end="", color="azzurro")
         match self.status:
             case 0:
@@ -88,8 +88,8 @@ class Anime:
             case 2:
                 utilities.my_print("Non rilasciato", format=0)
         utilities.my_print("Visualizzazioni: ", end="", color="azzurro")
-        utilities.my_print(self.views, format=0)
+        utilities.my_print(self.info["Visualizzazioni"], format=0)
         utilities.my_print("Trama: ", end="", color="azzurro")
-        utilities.my_print(self.plot, end="\n\n", format=0)
+        utilities.my_print(self.info["Trama"], end="\n\n", format=0)
         
  

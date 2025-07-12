@@ -245,7 +245,7 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
             positions = config[index + 2].split("=")[1].split(", ")
         progress = int(positions[urls.index(url_ep)]) // 1000 if url_ep in urls else 0
     
-    tmp = anime.ep_len.split()
+    tmp = anime.info["Durata"].split()
     # se non ho informazioni sul progresso, suppongo che sia completato
     if progress == 0:
         return True, 0
