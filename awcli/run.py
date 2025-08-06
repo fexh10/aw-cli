@@ -9,7 +9,6 @@ from threading import Thread
 from awcli import anilist, utilities as ut
 from awcli.anime import Anime
 from awcli.arg_parser import *
-from awcli.providers.animeworld import Animeworld
 
 def safeExit():
     with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='', encoding='utf-8') as file:
@@ -439,6 +438,9 @@ def setupConfig() -> None:
             ut.configData["player"]["path"] = res[0]
         ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
+    #provider preferito
+    ut.configData["provider"]["source"] = fzf(["animeunity", "animeworld"], "Scegli il provider: ")
+
     #anilist
     if fzf(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
         link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
@@ -606,6 +608,7 @@ def updateScript():
 def main():
     global log
     global anime
+    global provider
     global openPlayer
     global scelta_anime
     global notSelected
@@ -624,6 +627,17 @@ def main():
         setupConfig()
 
     ut.getConfig()
+
+    match ut.configData["provider"]["source"]:
+        case "animeworld":
+            from awcli.providers.animeworld import Animeworld
+            provider = Animeworld()
+        case "animeunity":
+            from awcli.providers.animeunity import Animeunity
+            provider = Animeunity()
+        case _:
+            ut.my_print("Provider non supportato", color="rosso")
+            safeExit()
 
     openPlayer = openMPV if ut.configData["player"]["type"] == "mpv" else openVLC
 
@@ -649,8 +663,8 @@ def main():
             thread = Thread(target=reloadCrono, args=[animelist])    
             thread.start()
             esci = False
-        
-        prompt = "Rimuovi un anime: " if args.cronologia == 'r' else "Scegli un anime: "                
+
+        prompt = "Scegli un anime: " if args.cronologia != 'r' else "Rimuovi un anime: "
         scelta_anime = fzf(listAnimeNames(animelist), prompt, esci=esci)
         notSelected = False
         if cronologia and args.cronologia != 'r' and thread.is_alive:
@@ -747,7 +761,7 @@ scelta_anime = ""
 openPlayer = None
 notSelected = True
 completeLimit = 90
-provider = Animeworld()
+provider = None
 
 anime = Anime("", "")
 

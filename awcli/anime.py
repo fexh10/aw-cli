@@ -39,7 +39,6 @@ class Anime:
             infos (list): lista delle informazioni dell'anime.
         """ 
         self.id_anilist = anilist_id
-        self.ep = len(self.url_episodi)
         self.info = info
         self.ep_totali = info["Episodi"]
         self.status = int(info["Stato"])
