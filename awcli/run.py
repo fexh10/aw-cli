@@ -86,7 +86,7 @@ def animeScaricati(path: str) -> list[Anime]:
         animes.append(Anime(name, f"{path}/{name}"))
     return animes
 
-def scegliEpisodi() -> list[int]:
+def scegliEpisodi() -> list[Episode]:
     """
     Fa scegliere all'utente gli episodi dell'anime da guardare.
 
@@ -94,17 +94,17 @@ def scegliEpisodi() -> list[int]:
     In caso contrario, l'utente può scegliere un episodio.
 
     Returns:
-        int: il numero dell'episodio da riprodurre.
+        str: il numero dell'episodio da riprodurre.
     """
 
     
     ut.my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
     if anime.ep == 1:
-        return [1]
+        return anime._episodes
 
-    ep = [str(i) for i in range(anime.ep, anime.ep_ini - 1, -1)] 
-    return sorted([int(ep) for ep in fzf(ep, "Scegli un episodio: ", multi=downl).split("\n")])
+    res = fzf(anime.episodes(), "Scegli un episodio: ", multi=downl).split("\n")
+    return list(map(lambda num: anime.episode(num), sorted(res)))
 
 def downloadPath(create: bool = True) -> str:
     """
@@ -126,23 +126,19 @@ def downloadPath(create: bool = True) -> str:
         os.makedirs(path)
     return path
 
-def scaricaEpisodio(ep: int, path: str):
+def scaricaEpisodio(ep: Episode, path: str):
     """
     Scarica l'episodio dell'anime e lo salva nella cartella specificata.
     Se l'episodio è già presente nella cartella, non viene riscaricato.
 
     Args:
-        ep (int): il numero dell'episodio da scaricare.
+        ep (Episode): L'episodio da scaricare.
         path (str): il percorso dove salvare l'episodio.
     """
-
-    url_ep = anime.get_episodio(ep)
-    nome_video = anime.ep_name(ep)
-    
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
-    ut.my_print(nome_video, color="blu", end=":\n")
-    if not os.path.exists(f"{path}/{nome_video}.mp4"):
-        SDL = SmartDL(url_ep, f"{path}/{nome_video}.mp4")
+    ut.my_print(ep, color="blu", end=":\n")
+    if not os.path.exists(f"{path}/{ep}.mp4"):
+        SDL = SmartDL(provider.episode_link(ep), f"{path}/{ep}.mp4")
         SDL.start()
     else:
         ut.my_print("già scaricato, skippo...", color="giallo")
@@ -281,19 +277,18 @@ def addToCronologia(ep: int, progress: int):
     Args:
         ep (int): il numero dell'episodio visualizzato.
     """
-    
     #rimuovo l'anime dalla cronologia se è già presente
     for i, riga in enumerate(log):
         if riga[0] == anime.name:
             log.pop(i)
             break
-            
-    if ep == anime.ep and anime.status == 1:
+    # se è stato completato l'ultimo episodio, non lo aggiungo alla cronologia 
+    if ep == anime.ep and progress == 0 and anime.status == 1:
         return
     #aggiungo l'anime alla cronologia con i nuovi dati  
     new = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist, progress]
 
-    if ep == anime.ep:
+    if ep == anime.ep and progress == 0:
         log.append(new)
     else:
         log.insert(0, new)
@@ -335,17 +330,16 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     
     Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, ep, status_list, voto, preferiti)).start()
 
-def openVideos(ep: int):
+def openVideos(episodio: Episode):
     """
     Riproduce l'episodio dell'anime.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
     Altrimenti, viene riprodotto in streaming.
 
     Args:
-        ep (int): il numero di episodio da riprodurre.
+        ep (Episode): l'episodio da riprodurre.
     """
 
-    episodio = anime.url_episodi[ep]
     #se il video è già stato scaricato lo riproduco invece di farlo in streaming
     path = f"{downloadPath(create=False)}/{anime.name}/{episodio}.mp4"
 
@@ -362,20 +356,19 @@ def openVideos(ep: int):
         voto_anilist = executor.submit(anilist.getAnimePrivateRating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
 
     ut.my_print(f"Riproduco {episodio}...", color="giallo", cls=True)
-    progress = anime.progress[ep]
+    progress = anime.progress.get(episodio.num, 0)
     completed, progress = openPlayer(url_ep, str(episodio), progress)
 
     if privato: return
 
     if completed: 
         progress = 0
-        anime.ep_corrente = ep
         #update watchlist anilist se ho fatto l'accesso
         if not offline and "anilist" in ut.configData:
-            updateAnilist(ep, voto_anilist.result())
-    else:
-        anime.ep_corrente = ep - 1
-    anime.progress[ep] = progress
+            updateAnilist(episodio.numeric(), voto_anilist.result())
+
+    anime.ep_corrente = episodio.num
+    anime.progress[episodio.num] = progress
 
     addToCronologia(anime.ep_corrente, progress)     
 
@@ -400,11 +393,11 @@ def getCronologia() -> list[Anime]:
             riga.append(0)
         if len(riga) < 8:
             riga.append(0)
-        a = Anime(name=riga[0], url=riga[2], ep=int(riga[5]), ep_totali=riga[3])
-        a.ep_corrente = int(riga[1])
+        a = Anime(name=riga[0], url=riga[2], ep=riga[5], ep_totali=riga[3])
+        a.ep_corrente = riga[1]
         a.status = int(riga[4])
         a.id_anilist = int(riga[6])
-        a.progress[a.ep_corrente+1] = int(riga[7])
+        a.progress[a.ep_corrente] = int(riga[7])#
         animes.append(a)
 
     #se il file esiste ma non contiene dati stampo un messaggio di errore
@@ -483,7 +476,13 @@ def setupConfig() -> None:
     config = f"{os.path.dirname(__file__)}/config.toml"
     with open(config, 'w') as f:
         ut.toml.dump(ut.configData, f)
-        
+
+def isGreen(anime: Anime) -> bool:
+    """
+    Controlla se ci sono episodi disponibili per l'anime.
+    """
+    return anime.status == 1 or anime.ep_corrente != anime.ep or anime.progress[anime.ep_corrente] != 0
+
 def reloadCrono(cronologia: list[Anime]):
     """
     Aggiorna la cronologia degli anime con le ultime uscite disponibili e la ristampa.
@@ -507,10 +506,10 @@ def reloadCrono(cronologia: list[Anime]):
     testo = []
 
     for i, a in reversed(list(enumerate(cronologia))):
-        colore = 1 #2 verde, 1 rosso
-        if a.status == 1 or a.ep_corrente < a.ep:
+        colore = 1 #rosso
+        if isGreen(a):
             colore = 2
-        else:    
+        else:
             for anime_latest in ultime_uscite:
                 if a.name == anime_latest.name and a.ep_corrente < anime_latest.ep:
                     log[i][5] = anime_latest.ep
@@ -539,10 +538,8 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
     nomi = []
 
     for i, a in reversed(list(enumerate(animelist))):
-        if cronologia:
+        if cronologia and not isGreen(a):
             colore = 1
-            if a.status == 1 or a.ep_corrente < a.ep:
-                colore = 2
         
         nome = f"\033[0;3{colore}m{i + 1}  \033[0;37m"
 
@@ -694,62 +691,67 @@ def main():
             ut.my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
             ut.sleep(1)
             reload = False
-            continue          
+            continue      
+
         
-        if lista or cronologia:
-            listaEpisodi = [anime.ep_corrente + 1]
+        if cronologia and anime.progress[anime.ep_corrente] == 0:
+            episode = anime.episode(anime.ep_corrente)
+            next = episode.next()
+            if next is None:
+                ut.my_print(f"L'episodio {episode.numeric() + 1} di {anime.name} non è ancora stato rilasciato!", color='rosso')
+                ut.sleep(1)
+                if len(animelist) == 1:
+                    safeExit()
+                reload = False
+                continue
+            listaEpisodi = [next]
+        elif lista or cronologia:
+            listaEpisodi = [anime.episode(anime.ep_corrente)]
         else:
             listaEpisodi = scegliEpisodi()
-            anime.ep_corrente = listaEpisodi[0] - 1
-
-        if listaEpisodi[0] > anime.ep:
-            ut.my_print(f"L'episodio {listaEpisodi[0]} di {anime.name} non è ancora stato rilasciato!", color='rosso')
-            ut.sleep(1)
-            if len(animelist) == 1:
-                safeExit()
-            reload = False
-            continue
+            
+        episode = listaEpisodi[0]
 
         if not privato:
-            provider.info_anime(anime)
-            addToCronologia(anime.ep_corrente, anime.progress[anime.ep_corrente + 1])
-            
+            provider.info_anime(anime) # da spostare
+
         if downl:
             path = f"{downloadPath()}/{anime.name}"
             for ep in listaEpisodi:
                 scaricaEpisodio(ep, path)
-
             ut.my_print(f"\nVideo scaricato correttamente!\nLo puoi trovare nella cartella {path}\n", color="verde")
+
+            num, progress = episode.prev().num, anime.progress.get(episode.prev().num, 0) if episode.prev() else (0, 0)
+            addToCronologia(num, progress)
                 
             risp = fzf(["esci","indietro","guarda"])
             if risp == "esci":
                 safeExit()
             if risp == "indietro":
                 continue
-        
-        episodio = listaEpisodi[0]
+
         while True:
-            openVideos(episodio)
+            openVideos(episode)
 
             # menù che si visualizza dopo aver finito la riproduzione
             lista_menu = ["esci", "indietro"]
 
             if anime.ep != 1:
                 lista_menu.append("seleziona")
-            if episodio != anime.ep_ini:
+            if episode.prev():
                 lista_menu.append("antecedente")
             lista_menu.append("riguarda")
-            if episodio != anime.ep:
+            if episode.next():
                 lista_menu.append("prossimo")
     
             scelta_menu = fzf(lista_menu)
 
             if scelta_menu == "prossimo":
-                episodio = episodio + 1      
+                episode = episode.next()    
             elif scelta_menu == "antecedente":
-                episodio = episodio - 1
+                episode = episode.prev()
             elif scelta_menu == "seleziona":
-                episodio = scegliEpisodi()[0]
+                episode = scegliEpisodi()[0]
             elif scelta_menu == "indietro":
                 break
             elif scelta_menu == "esci":

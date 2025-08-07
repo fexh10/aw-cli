@@ -1,7 +1,5 @@
 from __future__ import annotations
-from collections import defaultdict
 import awcli.utilities as utilities
-
 
 class Anime:
     """
@@ -14,25 +12,47 @@ class Anime:
         ep_totali (str, optional): il numero reale di episodi totali dell'anime.
     """ 
 
-    def __init__(self, name, url, ep=0, ep_totali="") -> None:
+    def __init__(self, name, url, ep="0", ep_totali="") -> None:
         self.name = name
         self.url = url
-        self.ep_corrente = ep-1
-        self.progress = defaultdict(int)
+        self.ep_corrente = ep
+        self.progress = dict[str, int]()
         self.ep = ep
         self.ep_totali = ep_totali
-        self.ep_ini = 1
-        self.url_episodi = list[Episode]
+        self._episodes = list[Episode]()
+        self._num_to_index = dict[str, int]()
 
-    def _set_episodes(self, episodi: list[str]) -> None:
+    def _set_episodes(self, episode: dict[str, str]) -> None:
         """
-        Imposta i riferienti degli episodi dell'anime.
+        Imposta i riferimenti degli episodi dell'anime.
         Args:
-            episodi (list[str]): lista dei riferimeti delgli episodi dell'anime (URL/ID).
+            episodi (dict[str, str]): dizionario dei riferimenti degli episodi dell'anime (numero->URL/ID).
         """
-        self.url_episodi = [Episode(self, num, ref) for num, ref in enumerate(episodi)]
-        self.ep = len(episodi)
-        
+        self._episodes = [Episode(self,num, ref) for num, ref in episode.items()]
+        self._num_to_index = {num: i for i, num in enumerate(episode.keys())}
+        self.ep = self._episodes[-1].num
+
+    def episodes(self):
+        """
+        Restituisce le chiavi degli episodi disponibili.
+        """
+        return self._num_to_index.keys()
+    
+    def episode(self, ep: str) -> Episode | None:
+        """
+        Restituisce il riferimento dell'episodio corrispondente al numero specificato.
+        Args:
+            ep (str): Il numero dell'episodio.
+        Returns:
+            (Episode | None): l'episodio corrispondente al numero,
+                 oppure None se non è presente.
+        """
+
+        if ep not in self._num_to_index:
+            return None
+
+        return self._episodes[self._num_to_index[ep]]
+    
     def _set_info(self, anilist_id, info: dict[str:str]) -> None:
         """
         Imposta le informazioni dell'anime.
@@ -96,3 +116,44 @@ class Episode:
 
     def __str__(self) -> str:
         return f"{self._anime.name} Ep. {self.num}"
+
+    def next(self) -> Episode | None:
+        """
+        Restituisce l'episodio successivo.
+
+        Returns:
+            (Episode | None): l'episodio successivo, oppure None se non esiste.
+        """
+        index = self._anime._num_to_index[self.num]+1
+        if index >= len(self._anime._episodes):
+            return None
+        return self._anime._episodes[index]
+
+    def prev(self) -> Episode | None:
+        """
+        Restituisce l'episodio precedente.
+
+        Returns:
+            (Episode | None): l'episodio precedente, oppure None se non esiste.
+        """
+        index = self._anime._num_to_index[self.num]-1
+        if index < 0:
+            return None
+        return self._anime._episodes[index]
+    
+    def numeric(self) -> int:
+        """
+        Restituisce il numero dell'episodio come intero.
+
+        - se è x.5 arrotonda a x.
+        - se è x-y restituisce y.
+
+        Returns:
+            int: il numero dell'episodio.
+        """
+        if '.' in self.num:
+            return int(self.num.split('.')[0])
+        if '-' in self.num:
+            return int(self.num.split('-')[1])
+        return int(self.num)
+        
