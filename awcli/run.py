@@ -100,10 +100,10 @@ def scegliEpisodi() -> list[Episode]:
     
     ut.my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
-    if anime.ep == 1:
+    if anime.last_ep == 1:
         return anime._episodes
 
-    res = fzf(anime.episodes(), "Scegli un episodio: ", multi=downl).split("\n")
+    res = fzf(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
     return list(map(lambda num: anime.episode(num), sorted(res)))
 
 def downloadPath(create: bool = True) -> str:
@@ -283,12 +283,12 @@ def addToCronologia(ep: int, progress: int):
             log.pop(i)
             break
     # se è stato completato l'ultimo episodio, non lo aggiungo alla cronologia 
-    if ep == anime.ep and progress == 0 and anime.status == 1:
+    if ep == anime.last_ep and progress == 0 and anime.info["Stato"] == "1":
         return
     #aggiungo l'anime alla cronologia con i nuovi dati  
-    new = [anime.name, ep, anime.url, anime.ep_totali, anime.status, anime.ep, anime.id_anilist, progress]
+    new = [anime.name, ep, anime.url, anime.info["Episodi"], anime.info["Stato"], anime.last_ep, anime.id_anilist, progress]
 
-    if ep == anime.ep and progress == 0:
+    if ep == anime.last_ep and progress == 0:
         log.append(new)
     else:
         log.insert(0, new)
@@ -314,7 +314,7 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     status_list = 'CURRENT' if not drop else 'DROPPED'
 
     #se ho finito di vedere l'anime o lo stato è dropped    
-    if (ep == anime.ep and anime.status == 1) or status_list == 'DROPPED':
+    if (ep == anime.last_ep and anime.info["Stato"] == "1") or status_list == 'DROPPED':
         if status_list == 'CURRENT':
             status_list = 'COMPLETED'
     
@@ -325,7 +325,7 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     
         #chiedo di mettere tra i preferiti
         if ut.configData["anilist"]["favorite"] and status_list == 'COMPLETED':
-            ut.my_print(f"Riproduco {anime.name} Ep. {anime.ep}", color="giallo", cls=True)
+            ut.my_print(f"Riproduco {anime.name} Ep. {anime.last_ep}", color="giallo", cls=True)
             preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
     
     Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, ep, status_list, voto, preferiti)).start()
@@ -367,10 +367,10 @@ def openVideos(episodio: Episode):
         if not offline and "anilist" in ut.configData:
             updateAnilist(episodio.numeric(), voto_anilist.result())
 
-    anime.ep_corrente = episodio.num
+    anime.curr_ep = episodio.num
     anime.progress[episodio.num] = progress
 
-    addToCronologia(anime.ep_corrente, progress)     
+    addToCronologia(anime.curr_ep, progress)     
 
 def getCronologia() -> list[Anime]:
     """
@@ -393,12 +393,11 @@ def getCronologia() -> list[Anime]:
             riga.append(0)
         if len(riga) < 8:
             riga.append(0)
-        a = Anime(name=riga[0], url=riga[2], ep=riga[5], ep_totali=riga[3])
-        a.ep_corrente = riga[1]
-        a.status = int(riga[4])
-        a.id_anilist = int(riga[6])
-        a.progress[a.ep_corrente] = int(riga[7])#
-        animes.append(a)
+        anime = Anime(name=riga[0], url=riga[2], ep=riga[5])
+        anime.curr_ep = riga[1]
+        anime.progress[anime.curr_ep] = int(riga[7])
+        anime._set_info(riga[6], {"Episodi": riga[3], "Stato": riga[4]})
+        animes.append(anime)
 
     #se il file esiste ma non contiene dati stampo un messaggio di errore
     if len(animes) == 0:
@@ -483,7 +482,7 @@ def isGreen(anime: Anime) -> bool:
     """
     Controlla se ci sono episodi disponibili per l'anime.
     """
-    return anime.status == 1 or anime.ep_corrente != anime.ep or anime.progress[anime.ep_corrente] != 0
+    return anime.info["Stato"] == "1" or anime.curr_ep != anime.last_ep or anime.progress[anime.curr_ep] != 0
 
 def reloadCrono(cronologia: list[Anime]):
     """
@@ -498,8 +497,8 @@ def reloadCrono(cronologia: list[Anime]):
     """
     global scelta_anime
     global notSelected
-    
-    if 0 not in [anime.status for anime in cronologia]:
+
+    if "0" not in [anime.info["Stato"] for anime in cronologia]:
         return
     
     ut.my_print("Ricerco le nuove uscite...", color="giallo")
@@ -513,11 +512,11 @@ def reloadCrono(cronologia: list[Anime]):
             colore = 2
         else:
             for anime_latest in ultime_uscite:
-                if a.name == anime_latest.name and a.ep_corrente < anime_latest.ep:
-                    log[i][5] = anime_latest.ep
+                if a.name == anime_latest.name and a.curr_ep < anime_latest.last_ep:
+                    log[i][5] = anime_latest.last_ep
                     colore = 2
                     break
-        testo.append(f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
+        testo.append(f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.curr_ep}/{a.info['Episodi']}]")
     
     if notSelected:
         pid = os.popen("pgrep fzf").read().strip().split("\n")
@@ -546,9 +545,9 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
         nome = f"\033[0;3{colore}m{i + 1}  \033[0;37m"
 
         if cronologia:
-            nome += f"{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]"
+            nome += f"{a.name} [Ep {a.curr_ep}/{a.info['Episodi']}]"
         elif lista:
-            nome += f"{a.name} [Ep {a.ep}]" 
+            nome += f"{a.name} [Ep {a.last_ep}]" 
         else:
             nome += f"{a.name}"
         nomi.append(nome)
@@ -577,7 +576,7 @@ def removeFromCrono(number: int):
             ut.my_print("Impossibile droppare su AniList: id anime non trovato!", color="rosso")
             ut.sleep(1)
         else:
-            updateAnilist(anime.ep_corrente, drop=True)
+            updateAnilist(anime.curr_ep, drop=True)
 
     log.pop(number)
 
@@ -689,15 +688,15 @@ def main():
 
         provider.episodes(anime) if not offline else ut.downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
 
-        if anime.ep == 0:
+        if anime.last_ep == 0:
             ut.my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
             ut.sleep(1)
             reload = False
             continue      
 
         
-        if cronologia and anime.progress[anime.ep_corrente] == 0:
-            episode = anime.episode(anime.ep_corrente)
+        if cronologia and anime.progress[anime.curr_ep] == 0:
+            episode = anime.episode(anime.curr_ep)
             next = episode.next()
             if next is None:
                 ut.my_print(f"L'episodio {episode.numeric() + 1} di {anime.name} non è ancora stato rilasciato!", color='rosso')
@@ -708,7 +707,7 @@ def main():
                 continue
             listaEpisodi = [next]
         elif lista or cronologia:
-            listaEpisodi = [anime.episode(anime.ep_corrente)]
+            listaEpisodi = [anime.episode(anime.curr_ep)]
         else:
             listaEpisodi = scegliEpisodi()
             
@@ -738,7 +737,7 @@ def main():
             # menù che si visualizza dopo aver finito la riproduzione
             lista_menu = ["esci", "indietro"]
 
-            if anime.ep != 1:
+            if anime.last_ep != 1:
                 lista_menu.append("seleziona")
             if episode.prev():
                 lista_menu.append("antecedente")

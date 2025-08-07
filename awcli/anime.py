@@ -9,16 +9,14 @@ class Anime:
         name (str): il nome dell'anime.
         url (str): l'URL della pagina dell'anime su AnimeWorld.  
         ep (int, optional):
-        ep_totali (str, optional): il numero reale di episodi totali dell'anime.
     """ 
 
-    def __init__(self, name, url, ep="0", ep_totali="") -> None:
+    def __init__(self, name, url, ep="0") -> None:
         self.name = name
         self.url = url
-        self.ep_corrente = ep
+        self.curr_ep = ep
+        self.last_ep = ep
         self.progress = dict[str, int]()
-        self.ep = ep
-        self.ep_totali = ep_totali
         self._episodes = list[Episode]()
         self._num_to_index = dict[str, int]()
 
@@ -32,11 +30,11 @@ class Anime:
         self._episodes = []
         self._num_to_index = dict[str, int]()
         for num, ref in episode.items():
-            if not utilities.configData["aw-cli"]["specials"] and ("." in num or num == "0"):
+            if not utilities.configData["general"]["specials"] and ("." in num or num == "0"):
                 continue
             self._episodes.append(Episode(self, num, ref))
             self._num_to_index[num] = len(self._episodes) - 1
-        self.ep = self._episodes[-1].num
+        self.last_ep = self._episodes[-1].num
 
     def episodes(self):
         """
@@ -68,8 +66,6 @@ class Anime:
         """ 
         self.id_anilist = anilist_id
         self.info = info
-        self.ep_totali = info["Episodi"]
-        self.status = int(info["Stato"])
     
     def print_info(self):
         """
@@ -95,12 +91,12 @@ class Anime:
         utilities.my_print("Episodi: ", end="", color="azzurro")
         utilities.my_print(self.info["Episodi"], format=0)
         utilities.my_print("Stato: ", end="", color="azzurro")
-        match self.status:
-            case 0:
+        match self.info["Stato"]:
+            case "0":
                 utilities.my_print("In corso", format=0)
-            case 1:
+            case "1":
                 utilities.my_print("Finito", format=0)
-            case 2:
+            case "2":
                 utilities.my_print("Non rilasciato", format=0)
         utilities.my_print("Visualizzazioni: ", end="", color="azzurro")
         utilities.my_print(self.info["Visualizzazioni"], format=0)

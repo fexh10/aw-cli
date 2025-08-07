@@ -82,7 +82,7 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
             episodes_url[num] = f"{path}/{nomi}"
         anime._set_episodes(episodes_url)
                 
-def agetConfig() -> None:
+def getConfig() -> None:
     """
     Prende le impostazioni scelte dall'utente
     dal file di configurazione.
