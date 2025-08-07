@@ -40,7 +40,8 @@ ImportError: cannot import name 'Anime' from par
             response = requests.get(url, headers=self._headers, cookies=self._cookies)
         except requests.exceptions.ConnectionError:
             ut.my_print("Errore di connessione", color="rosso")
-            exit()
+        except requests.exceptions.MissingSchema:
+            raise requests.exceptions.HTTPError("Errore 404: pagina non trovata")
 
         if response.status_code == 202: 
             ut.my_print("Reindirizzamento...", color="giallo", end="\n") 
@@ -52,8 +53,8 @@ ImportError: cannot import name 'Anime' from par
             ut.my_print("Errore: pagina non trovata", color="rosso")
             exit()
         if "Errore 404" in response.text:
-            raise requests.exceptions.ConnectionError("Errore 404: pagina non trovata")
-        
+            raise requests.exceptions.HTTPError("Errore 404: pagina non trovata")
+
         self._visited[url] = response.text
         return response.text    
 
@@ -93,9 +94,9 @@ ImportError: cannot import name 'Anime' from par
     def episodes(self, anime: Anime):
         try:
             html = self._get_html(anime.url)
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.HTTPError:
             ut.my_print("Il link è stato cambiato", color="rosso", end="\n")
-            anime.url = self._search(anime.name)[0].url
+            anime.url = self.search(anime.name)[0].url
             html = self._get_html(anime.url)
         episodes_url = list[str]()
         for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
