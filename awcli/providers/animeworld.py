@@ -80,7 +80,6 @@ ImportError: cannot import name 'Anime' from par
         animes = list[Anime]()
 
         for url, name, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
-            #if ".5" not in ep:
             animes.append(Anime(unescape(name), self._url + url, ep))
                 
         match filter[0]:
@@ -107,8 +106,6 @@ ImportError: cannot import name 'Anime' from par
         html = self._get_anime(anime)
         episodes_url = dict[str, str]()
         for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
-            #if num.endswith(".5") or num == "0":
-            #    continue
             episodes_url[num] = self._url + url
         anime._set_episodes(episodes_url)
 

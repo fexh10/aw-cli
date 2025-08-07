@@ -28,8 +28,14 @@ class Anime:
         Args:
             episodi (dict[str, str]): dizionario dei riferimenti degli episodi dell'anime (numero->URL/ID).
         """
-        self._episodes = [Episode(self,num, ref) for num, ref in episode.items()]
-        self._num_to_index = {num: i for i, num in enumerate(episode.keys())}
+        
+        self._episodes = []
+        self._num_to_index = dict[str, int]()
+        for num, ref in episode.items():
+            if not utilities.configData["aw-cli"]["specials"] and ("." in num or num == "0"):
+                continue
+            self._episodes.append(Episode(self, num, ref))
+            self._num_to_index[num] = len(self._episodes) - 1
         self.ep = self._episodes[-1].num
 
     def episodes(self):

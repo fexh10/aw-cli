@@ -421,7 +421,7 @@ def setupConfig() -> None:
     ut.my_print("", end="", cls=True)
     ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
-    ut.configData["player"]["type"]  = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
+    ut.configData["player"]["type"] = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
     if ut.nome_os != "Android":
         res = os.popen(f"whereis -b {ut.configData["player"]["type"]} 2>&1").read().removeprefix(f"{ut.configData["player"]["type"]}:").strip().split()
         if len(res) == 0:
@@ -430,6 +430,8 @@ def setupConfig() -> None:
         else:
             ut.configData["player"]["path"] = res[0]
         ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
+
+    ut.configData["general"]["specials"] = fzf(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
 
     #provider preferito
     ut.configData["provider"]["source"] = fzf(["animeunity", "animeworld"], "Scegli il provider: ")
