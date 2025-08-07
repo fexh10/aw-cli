@@ -7,7 +7,7 @@ from pySmartDL import SmartDL
 from pathlib import Path
 from threading import Thread
 from awcli import anilist, utilities as ut
-from awcli.anime import Anime
+from awcli.anime import Anime, Episode
 from awcli.arg_parser import *
 
 def safeExit():
@@ -345,25 +345,25 @@ def openVideos(ep: int):
         ep (int): il numero di episodio da riprodurre.
     """
 
-    nome_video = anime.ep_name(ep)
+    episodio = anime.url_episodi[ep]
     #se il video è già stato scaricato lo riproduco invece di farlo in streaming
-    path = f"{downloadPath(create=False)}/{anime.name}/{nome_video}.mp4"
-    
+    path = f"{downloadPath(create=False)}/{anime.name}/{episodio}.mp4"
+
     if os.path.exists(path):
         url_ep = "file://" + path if ut.nome_os == "Android" else path
     elif offline:
-        ut.my_print(f"Episodio {nome_video} non scaricato, skippo...", color='giallo')
+        ut.my_print(f"Episodio {episodio} non scaricato, skippo...", color='giallo')
         return
     else:
-        url_ep = provider.episode_link(anime, ep)
+        url_ep = provider.episode_link(episodio)
     
     if not (offline or privato) and "anilist" in ut.configData:
         executor = ThreadPoolExecutor(max_workers=1)
         voto_anilist = executor.submit(anilist.getAnimePrivateRating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
 
-    ut.my_print(f"Riproduco {nome_video}...", color="giallo", cls=True)
+    ut.my_print(f"Riproduco {episodio}...", color="giallo", cls=True)
     progress = anime.progress[ep]
-    completed, progress = openPlayer(url_ep, nome_video, progress)
+    completed, progress = openPlayer(url_ep, str(episodio), progress)
 
     if privato: return
 
@@ -696,7 +696,7 @@ def main():
             reload = False
             continue          
         
-        if lista or cronologia:            
+        if lista or cronologia:
             listaEpisodi = [anime.ep_corrente + 1]
         else:
             listaEpisodi = scegliEpisodi()

@@ -1,5 +1,7 @@
+from __future__ import annotations
 from collections import defaultdict
 import awcli.utilities as utilities
+
 
 class Anime:
     """
@@ -20,7 +22,7 @@ class Anime:
         self.ep = ep
         self.ep_totali = ep_totali
         self.ep_ini = 1
-        self.url_episodi = []
+        self.url_episodi = list[Episode]
 
     def _set_episodes(self, episodi: list[str]) -> None:
         """
@@ -28,7 +30,7 @@ class Anime:
         Args:
             episodi (list[str]): lista dei riferimeti delgli episodi dell'anime (URL/ID).
         """
-        self.url_episodi = episodi
+        self.url_episodi = [Episode(self, num, ref) for num, ref in enumerate(episodi)]
         self.ep = len(episodi)
         
     def _set_info(self, anilist_id, info: dict[str:str]) -> None:
@@ -42,18 +44,6 @@ class Anime:
         self.info = info
         self.ep_totali = info["Episodi"]
         self.status = int(info["Stato"])
-        
-    def ep_name(self, ep: int) -> str:
-        """
-        Restituisce il nome dell'episodio specificato.
-
-        Args:
-            ep (int): il numero dell'episodio.
-
-        Returns:
-            str: il nome dell'episodio.
-        """
-        return f"{self.name} Ep. {ep}"
     
     def print_info(self):
         """
@@ -90,5 +80,19 @@ class Anime:
         utilities.my_print(self.info["Visualizzazioni"], format=0)
         utilities.my_print("Trama: ", end="", color="azzurro")
         utilities.my_print(self.info["Trama"], end="\n\n", format=0)
-        
- 
+
+class Episode:
+    """
+    Classe che rappresenta un episodio di un anime.
+
+    Attributes:
+        num (str): il numero dell'episodio.
+        ref (str): il riferimento dell'episodio.
+    """
+    def __init__(self, anime, num: str, ref: str) -> None:
+        self._anime = anime
+        self.num = num
+        self.ref = ref
+
+    def __str__(self) -> str:
+        return f"{self._anime.name} Ep. {self.num}"
