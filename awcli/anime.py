@@ -8,7 +8,7 @@ class Anime:
     Attributes:
         name (str): il nome dell'anime.
         url (str): l'URL della pagina dell'anime su AnimeWorld.  
-        ep (int, optional):
+        ep (str, optional):.
     """ 
 
     def __init__(self, name, url, ep="0") -> None:
@@ -16,11 +16,11 @@ class Anime:
         self.url = url
         self.curr_ep = ep
         self.last_ep = ep
-        self.progress = dict[str, int]()
+        self.progress = dict[str, int]() # da spostare in Episode
         self._episodes = list[Episode]()
         self._num_to_index = dict[str, int]()
 
-    def _set_episodes(self, episode: dict[str, str]) -> None:
+    def _set_episodes(self, episode: dict[str, str], specials: bool = True) -> None:
         """
         Imposta i riferimenti degli episodi dell'anime.
         Args:
@@ -30,19 +30,20 @@ class Anime:
         self._episodes = []
         self._num_to_index = dict[str, int]()
         for num, ref in episode.items():
-            if not utilities.configData["general"]["specials"] and ("." in num or num == "0"):
+            if not specials and ("." in num or num == "0"):
                 continue
             self._episodes.append(Episode(self, num, ref))
             self._num_to_index[num] = len(self._episodes) - 1
-        self.last_ep = self._episodes[-1].num
+        
+        self.last_ep = self._episodes[-1].num if self._episodes else "0"
 
-    def episodes(self):
+    def episodes(self) -> list[str]:
         """
-        Restituisce le chiavi degli episodi disponibili.
+        Restituisce una lista dei numeri degli episodi disponibili.
         """
-        return self._num_to_index.keys()
-    
-    def episode(self, ep: str) -> Episode | None:
+        return list(self._num_to_index.keys())
+
+    def episode(self, ep_num: str) -> Episode | None:
         """
         Restituisce il riferimento dell'episodio corrispondente al numero specificato.
         Args:
@@ -52,11 +53,11 @@ class Anime:
                  oppure None se non è presente.
         """
 
-        if ep not in self._num_to_index:
+        if ep_num not in self._num_to_index:
             return None
 
-        return self._episodes[self._num_to_index[ep]]
-    
+        return self._episodes[self._num_to_index[ep_num]]
+
     def _set_info(self, anilist_id, info: dict[str:str]) -> None:
         """
         Imposta le informazioni dell'anime.

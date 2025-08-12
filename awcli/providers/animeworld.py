@@ -107,7 +107,7 @@ ImportError: cannot import name 'Anime' from par
         episodes_url = dict[str, str]()
         for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
             episodes_url[num] = self._url + url
-        anime._set_episodes(episodes_url)
+        anime._set_episodes(episodes_url, ut.configData["general"]["specials"])
 
 
     def episode_link(self, episode: Episode) -> str:
