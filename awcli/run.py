@@ -589,7 +589,8 @@ def removeFromCrono(number: int):
             ut.my_print("Impossibile droppare su AniList: id anime non trovato!", color="rosso")
             ut.sleep(1)
         else:
-            updateAnilist(anime.ep_corrente, drop=True)
+            rating = anilist.getAnimePrivateRating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
+            updateAnilist(anime.ep_corrente, rating, drop=True)
 
     log.pop(number)
 
