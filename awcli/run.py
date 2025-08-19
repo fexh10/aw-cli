@@ -713,8 +713,8 @@ def main():
             
         episode = listaEpisodi[0]
 
-        if not privato:
-            provider.info_anime(anime) # da spostare
+        if not (privato or offline):
+            provider.info_anime(anime)
 
         if downl:
             path = f"{downloadPath()}/{anime.name}"
