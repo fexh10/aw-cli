@@ -1,8 +1,7 @@
 import re
 import requests
 from html import unescape
-from awcli.anime import Anime
-from awcli.providers.provider import Provider
+from awcli.providers.provider import Provider, Anime, Episode
 from awcli import utilities as ut
 
 class Animeworld(Provider):
@@ -82,8 +81,7 @@ ImportError: cannot import name 'Anime' from par
         animes = list[Anime]()
 
         for url, name, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
-            if ".5" not in ep:
-                animes.append(Anime(unescape(name), self._url + url, int(ep)))
+            animes.append(Anime(unescape(name), self._url + url, ep))
                 
         match filter[0]:
             case 's': return animes[45:90]
@@ -91,42 +89,38 @@ ImportError: cannot import name 'Anime' from par
             case 't': return animes[135:]
             case  _ : return animes[:45]
 
-    def episodes(self, anime: Anime):
+    def _get_anime(self, anime):
+        """
+        Ottiene il riferimento dell'anime.
+        
+        Se il riferimento non è valido, cerca l'anime per nome e aggiorna il riferimento.
+        """
         try:
             html = self._get_html(anime.url)
         except requests.exceptions.HTTPError:
             ut.my_print("Il link è stato cambiato", color="rosso", end="\n")
             anime.url = self.search(anime.name)[0].url
             html = self._get_html(anime.url)
-        episodes_url = list[str]()
-        for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
-            if num.endswith(".5") or num == "0":
-                continue
-            nums = num.split("-")
-            for num in nums:
-                if int(num) <= len(episodes_url):
-                    continue
-                episodes_url.append(self._url + url)
-        anime._set_episodes(episodes_url)
-        
-        
-    def episode_link(self, anime: Anime, ep: int) -> str:
-        pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
-        if ep - 1 in range(anime.ep):
-            res = re.search(pattern, self._get_html(anime.url_episodi[ep - 1]))
+        return html
 
-        if res is None:
-            exit()
-        
-        return res.group(1)
+    def episodes(self, anime: Anime):
+        html = self._get_anime(anime)
+        episodes_url = dict[str, str]()
+        for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
+            episodes_url[num] = self._url + url
+        anime._set_episodes(episodes_url, ut.configData["general"]["specials"])
+
+
+    def episode_link(self, episode: Episode) -> str:
+        pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
+        res = re.search(pattern, self._get_html(episode.ref)) 
+        if res:
+            return res.group(1)
+        exit()
+    
     
     def info_anime(self, anime: Anime):
-        try:
-            html = self._get_html(anime.url)
-        except requests.exceptions.ConnectionError:
-            ut.my_print("Il link è stato cambiato", color="rosso", end="\n")
-            anime.url = self._search(anime.name)[0].url
-            html = self._get_html(anime.url)
+        html = self._get_anime(anime)
 
         res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
         anilist_id = int(res.group(1)) if res else 0

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from awcli.anime import Anime
+from awcli.anime import Anime, Episode
 
 class Provider(ABC):
     """
@@ -54,13 +54,12 @@ class Provider(ABC):
         """
 
     @abstractmethod
-    def episode_link(anime: Anime, ep: int) -> str:
+    def episode_link(episode: Episode) -> str:
         """
         Cerca il link del video dell'episodio. 
 
         Args:
-            anime (Anime): l'anime di riferimento. 
-            ep (int): l'episodio scelto.
+            episode (Episode): l'episodio di riferimento.
 
         Returns:
             str: il link.

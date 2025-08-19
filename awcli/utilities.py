@@ -75,21 +75,12 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
         nomi_episodi = os.listdir(path)
         if len(nomi_episodi) == 0:
             return
-
-        togli = f"{anime.name} Ep. "
-        temp = nomi_episodi[0].replace(togli, "")
-        minimo = int(temp.replace(".mp4", ""))
-        massimo = minimo
-
-        for stringa in nomi_episodi:
-            stringa = stringa.replace(togli, "")
-            stringa = int(stringa.replace(".mp4", ""))
-            if stringa < minimo:
-                minimo = stringa
-            if stringa > massimo:
-                massimo = stringa
-        anime.ep = massimo 
-        anime.ep_ini = minimo
+        
+        episodes_url = dict[str, str]()
+        for nomi in nomi_episodi:
+            num = nomi.split("Ep. ")[1].split(".mp4")[0]
+            episodes_url[num] = f"{path}/{nomi}"
+        anime._set_episodes(episodes_url, configData["general"]["specials"])
                 
 def getConfig() -> None:
     """
