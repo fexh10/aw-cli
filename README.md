@@ -87,37 +87,44 @@ Nota che la velocità di download e caricamento molto bassa è un problema di iS
 </details>
 
 ## Problemi noti
-Se è impossibile avviare `aw-cli`, è possibile che non si abbia la cartella degli script Python aggiunta al path. <br /> 
 
-<details> <summary><b>Linux/Windows WSL</b></summary>
-Aggiungere la seguente linea al file di profilo (.bashrc, .zshrc, o altro):
+- Se è impossibile avviare `aw-cli`, è possibile che non si abbia la cartella degli script Python aggiunta al path. <br /> 
 
-```
-export PATH=$PATH:$HOME/.local/bin
-```
-Riavviare il terminale o eseguire `source ~/.bashrc`.
+  <details> <summary><b>Linux/Windows WSL</b></summary>
+  Aggiungere la seguente linea al file di profilo (.bashrc, .zshrc, o altro):
 
-</details>
+  ```
+  export PATH=$PATH:$HOME/.local/bin
+  ```
+  Riavviare il terminale o eseguire `source ~/.bashrc`.
 
-<details> <summary><b>MacOS</b></summary>
-Aggiungere la seguente linea al file di profilo (.bashrc, .zshrc, o altro):
+  </details>
 
-```
-export PATH=$PATH:$HOME/Library/Python/3.x/bin
-```
-Sostituire `3.x` con la propria versione di Python. <br>
-Riavviare il terminale o eseguire `source ~/.bashrc`. 
-</details>
+  <details> <summary><b>MacOS</b></summary>
+  Aggiungere la seguente linea al file di profilo (.bashrc, .zshrc, o altro):
 
-<details> <summary><b>Windows Legacy</b></summary>
-Inserire da linea di comando:
+  ```
+  export PATH=$PATH:$HOME/Library/Python/3.x/bin
+  ```
+  Sostituire `3.x` con la propria versione di Python. <br>
+  Riavviare il terminale o eseguire `source ~/.bashrc`. 
+  </details>
 
-```
-setx PATH "%PATH%;%APPDATA%\Local\Programs\Python\Python3x\Scripts
-```
-Sostituire `3.x` con la propria versione di Python. <br/>
-Se necessario, riavviare il sistema. 
-</details>
+  <details> <summary><b>Windows Legacy</b></summary>
+  Inserire da linea di comando:
+
+  ```
+  setx PATH "%PATH%;%APPDATA%\Local\Programs\Python\Python3x\Scripts
+  ```
+  Sostituire `3.x` con la propria versione di Python. <br/>
+  Se necessario, riavviare il sistema. 
+  </details>
+
+- Se il programma si avvia ma appare "Errore di connessione", potrebbe essere un problema relativo ai certificati SSL. Scaricare il certificato `SSL.com TLS Transit ECC CA R2` al seguente [link](https://ssl.com/repo/certs/SSL.com-TLS-T-ECC-R2.pem) ed eseguire il comando:
+
+  ```bash
+  trust anchor SSL.com-TLS-T-ECC-R2.pem
+  ```
 
 ## Disinstallazione 
 
