@@ -628,15 +628,12 @@ def main():
     ut.getConfig()
 
     match ut.configData["provider"]["source"]:
-        case "animeworld":
-            from awcli.providers.animeworld import Animeworld
-            provider = Animeworld()
         case "animeunity":
             from awcli.providers.animeunity import Animeunity
             provider = Animeunity()
         case _:
-            ut.my_print("Provider non supportato", color="rosso")
-            safeExit()
+            from awcli.providers.animeworld import Animeworld
+            provider = Animeworld()
 
     openPlayer = openMPV if ut.configData["player"]["type"] == "mpv" else openVLC
 
