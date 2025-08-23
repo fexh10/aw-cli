@@ -11,11 +11,11 @@ class Anime:
         ep (str, optional):.
     """ 
 
-    def __init__(self, name, url, ep="0") -> None:
+    def __init__(self, name, url, curr_ep="0", last_ep="0") -> None:
         self.name = name
         self.url = url
-        self.curr_ep = ep
-        self.last_ep = ep
+        self.curr_ep = curr_ep
+        self.last_ep = last_ep if last_ep != "0" else curr_ep
         self.progress = dict[str, int]() # da spostare in Episode
         self._episodes = list[Episode]()
         self._num_to_index = dict[str, int]()
@@ -34,8 +34,9 @@ class Anime:
                 continue
             self._episodes.append(Episode(self, num, ref))
             self._num_to_index[num] = len(self._episodes) - 1
-        
-        self.last_ep = self._episodes[-1].num if self._episodes else "0"
+
+        if len(self._episodes) > 0 and self._episodes[-1].numeric() > numeric(self.last_ep):
+            self.last_ep = self._episodes[-1].num
 
     def episodes(self) -> list[str]:
         """
@@ -154,9 +155,12 @@ class Episode:
         Returns:
             int: il numero dell'episodio.
         """
-        if '.' in self.num:
-            return int(self.num.split('.')[0])
-        if '-' in self.num:
-            return int(self.num.split('-')[1])
-        return int(self.num)
-        
+        return numeric(self.num)
+    
+
+def numeric(num) -> int:
+    if '.' in num:
+        return int(num.split('.')[0])
+    if '-' in num:
+        return int(num.split('-')[1])
+    return int(num)

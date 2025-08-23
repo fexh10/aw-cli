@@ -547,7 +547,7 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
         if cronologia:
             nome += f"{a.name} [Ep {a.curr_ep}/{a.info['Episodi']}]"
         elif lista:
-            nome += f"{a.name} [Ep {a.last_ep}]" 
+            nome += f"{a.name} [Ep {a.curr_ep}]" 
         else:
             nome += f"{a.name}"
         nomi.append(nome)
@@ -684,9 +684,12 @@ def main():
             if fzf(["indietro","guardare"]) == "indietro":
                 continue
 
-        provider.episodes(anime) if not offline else ut.downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
+        if offline:
+            ut.downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
+        elif len(anime.episodes()) < 1:
+            provider.episodes(anime)
 
-        if anime.last_ep == 0:
+        if anime.last_ep == '0':
             ut.my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
             ut.sleep(1)
             reload = False
@@ -737,19 +740,25 @@ def main():
 
             if anime.last_ep != 1:
                 lista_menu.append("seleziona")
-            if episode.prev():
+            if episode.prev() or episode.numeric() > 1:
                 lista_menu.append("antecedente")
             lista_menu.append("riguarda")
-            if episode.next():
+            if episode.next() or episode.num != anime.last_ep:
                 lista_menu.append("prossimo")
     
             scelta_menu = fzf(lista_menu)
 
             if scelta_menu == "prossimo":
+                if not episode.next():
+                    provider.episodes(anime)
                 episode = episode.next()    
             elif scelta_menu == "antecedente":
+                if not episode.prev():
+                    provider.episodes(anime)
                 episode = episode.prev()
             elif scelta_menu == "seleziona":
+                if len(anime.episodes()) == 1:
+                    provider.episodes(anime)
                 episode = scegliEpisodi()[0]
             elif scelta_menu == "indietro":
                 break
