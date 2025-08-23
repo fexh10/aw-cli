@@ -17,6 +17,7 @@ def read():
         with open(f"{os.path.dirname(__file__)}/history.json", encoding='utf-8') as file:
             data = json.load(file)
     except FileNotFoundError:
+        anime_log = legacy()
         save() # Crea il file se non lo trova
         return []
 
@@ -101,3 +102,39 @@ def save() -> None:
             ensure_ascii=False,
             indent=4
         )
+
+def legacy() -> list[Anime]:
+    """
+    Legge i dati dalla vecchia cronologia in csv
+    """
+    import csv
+    try:
+        with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", encoding='utf-8') as file:
+            legacy = [riga for riga in csv.reader(file)]
+    except FileNotFoundError:
+        pass
+    if not legacy:
+        return []
+
+    animes = []
+    for riga in legacy:
+        if len(riga) < 4:
+            riga.append("??")
+        if len(riga) < 5:
+            riga.append(0)
+        if len(riga) < 6:
+            riga.append(riga[1])    
+        if len(riga) < 7:
+            riga.append(0)
+        if len(riga) < 8:
+            riga.append(0)
+        anime = Anime(name=riga[0], url=riga[2], curr_ep=riga[1], last_ep=riga[5])
+        anime._set_episodes({anime.curr_ep: "Not available"}, ut.configData["general"]["specials"])
+        if (progress := int(riga[7])) == 0:
+            anime.episode(anime.curr_ep).mark_completed()
+        else:
+            anime.episode(anime.curr_ep).set_progress(progress)
+        anime._set_info(riga[6], {"Episodi": riga[3], "Stato": riga[4]})
+        animes.append(anime)
+
+    return animes

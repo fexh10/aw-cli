@@ -519,7 +519,7 @@ def main():
         ut.my_print("", end="", cls=True)
         esci = True
         if cronologia and args.cronologia != 'r':
-            # history.reload(provider.latest())
+            history.reload(provider.latest())
             pass
 
         prompt = "Scegli un anime: " if args.cronologia != 'r' else "Rimuovi un anime: "
