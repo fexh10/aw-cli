@@ -279,9 +279,9 @@ def addToCronologia(ep: int, progress: int):
     """
     #rimuovo l'anime dalla cronologia se è già presente
     for i, riga in enumerate(log):
-        if riga[0] == anime.name:
+        if riga[6] == anime.id_anilist if anime.id_anilist else riga[0] == anime.name:
             log.pop(i)
-            break
+
     # se è stato completato l'ultimo episodio, non lo aggiungo alla cronologia 
     if ep == anime.last_ep and progress == 0 and anime.info["Stato"] == "1":
         return
@@ -377,8 +377,7 @@ def getCronologia() -> list[Anime]:
             riga.append(0)
         if len(riga) < 8:
             riga.append(0)
-        anime = Anime(name=riga[0], url=riga[2], ep=riga[5])
-        anime.curr_ep = riga[1]
+        anime = Anime(name=riga[0], url=riga[2], curr_ep=riga[1], last_ep=riga[5])
         anime.progress[anime.curr_ep] = int(riga[7])
         anime._set_info(riga[6], {"Episodi": riga[3], "Stato": riga[4]})
         animes.append(anime)
