@@ -350,27 +350,11 @@ def openVideos(episodio: Episode):
         return
     else:
         url_ep = provider.episode_link(episodio)
-    
-    if not (offline or privato) and "anilist" in ut.configData:
-        executor = ThreadPoolExecutor(max_workers=1)
-        voto_anilist = executor.submit(anilist.getAnimePrivateRating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
 
     ut.my_print(f"Riproduco {episodio}...", color="giallo", cls=True)
-    progress = anime.progress.get(episodio.num, 0)
-    completed, progress = openPlayer(url_ep, str(episodio), progress)
+    return openPlayer(url_ep, str(episodio), anime.progress.get(episodio.num, 0))
 
-    if privato: return
-
-    if completed: 
-        progress = 0
-        #update watchlist anilist se ho fatto l'accesso
-        if not offline and "anilist" in ut.configData:
-            updateAnilist(episodio.numeric(), voto_anilist.result())
-
-    anime.curr_ep = episodio.num
-    anime.progress[episodio.num] = progress
-
-    addToCronologia(anime.curr_ep, progress)     
+      
 
 def getCronologia() -> list[Anime]:
     """
@@ -715,7 +699,9 @@ def main():
         episode = listaEpisodi[0]
 
         if not (privato or offline):
-            provider.info_anime(anime)
+            # Recupero informazioni anime in un Thread
+            info_thread = Thread(target=provider.info_anime, args=[anime])
+            info_thread.start()
 
         if downl:
             path = f"{downloadPath()}/{anime.name}"
@@ -733,7 +719,23 @@ def main():
                 continue
 
         while True:
-            openVideos(episode)
+            if not (offline or privato) and "anilist" in ut.configData:
+                executor = ThreadPoolExecutor(max_workers=1)
+                voto_anilist = executor.submit(anilist.getAnimePrivateRating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
+
+            completed, progress = openVideos(episode)
+
+            if not privato:
+                if completed: 
+                    progress = 0
+                    #update watchlist anilist se ho fatto l'accesso
+                    if voto_anilist:
+                        updateAnilist(episode.numeric(), voto_anilist.result())
+
+                anime.curr_ep = episode.num
+                anime.progress[episode.num] = progress
+
+                addToCronologia(anime.curr_ep, progress)   
 
             # menù che si visualizza dopo aver finito la riproduzione
             lista_menu = ["esci", "indietro"]
