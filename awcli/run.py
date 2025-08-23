@@ -1,18 +1,20 @@
 import os
 import re
-import csv
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from pySmartDL import SmartDL
 from pathlib import Path
 from threading import Thread
-from awcli import anilist, utilities as ut
+from awcli import (
+    anilist, 
+    history,
+    utilities as ut,
+)
 from awcli.anime import Anime, Episode
 from awcli.arg_parser import *
 
 def safeExit():
-    with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", 'w', newline='', encoding='utf-8') as file:
-        csv.writer(file).writerows(log)
+    history.save()
     exit()
 
 signal(SIGINT, lambda signum, frame: safeExit())
@@ -261,38 +263,6 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     
     return progress*100//duration >= completeLimit, progress
 
-def addToCronologia(ep: int, progress: int):
-    """
-    Aggiorna la cronologia con le informazioni esseziali relative all'episodio visualizzato.
-    Le informazioni sono:
-    - nome dell'anime
-    - episodio visualizzato
-    - URL dell'anime
-    - numero totale di episodi
-    - stato dell'anime
-    - ultimo episodio disponibile
-    - id dell'anime su AniList
-    - progresso dell'episodio in secondi
-
-    Args:
-        ep (int): il numero dell'episodio visualizzato.
-    """
-    #rimuovo l'anime dalla cronologia se è già presente
-    for i, riga in enumerate(log):
-        if riga[6] == anime.id_anilist if anime.id_anilist else riga[0] == anime.name:
-            log.pop(i)
-
-    # se è stato completato l'ultimo episodio, non lo aggiungo alla cronologia 
-    if ep == anime.last_ep and progress == 0 and anime.info["Stato"] == "1":
-        return
-    #aggiungo l'anime alla cronologia con i nuovi dati  
-    new = [anime.name, ep, anime.url, anime.info["Episodi"], anime.info["Stato"], anime.last_ep, anime.id_anilist, progress]
-
-    if ep == anime.last_ep and progress == 0:
-        log.append(new)
-    else:
-        log.insert(0, new)
-
 def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     """
     Procede ad aggiornare l'anime su AniList.
@@ -330,63 +300,29 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     
     Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, ep, status_list, voto, preferiti)).start()
 
-def openVideos(episodio: Episode):
+def openVideos(episode: Episode):
     """
     Riproduce l'episodio dell'anime.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
     Altrimenti, viene riprodotto in streaming.
 
     Args:
-        ep (Episode): l'episodio da riprodurre.
+        episode (Episode): l'episodio da riprodurre.
     """
 
     #se il video è già stato scaricato lo riproduco invece di farlo in streaming
-    path = f"{downloadPath(create=False)}/{anime.name}/{episodio}.mp4"
+    path = f"{downloadPath(create=False)}/{anime.name}/{episode}.mp4"
 
     if os.path.exists(path):
         url_ep = "file://" + path if ut.nome_os == "Android" else path
     elif offline:
-        ut.my_print(f"Episodio {episodio} non scaricato, skippo...", color='giallo')
+        ut.my_print(f"Episodio {episode} non scaricato, skippo...", color='giallo')
         return
     else:
-        url_ep = provider.episode_link(episodio)
+        url_ep = provider.episode_link(episode)
 
-    ut.my_print(f"Riproduco {episodio}...", color="giallo", cls=True)
-    return openPlayer(url_ep, str(episodio), anime.progress.get(episodio.num, 0))
-
-      
-
-def getCronologia() -> list[Anime]:
-    """
-    Prende i dati dalla cronologia.
-
-    Returns:
-        list[Anime]: la lista degli anime trovati 
-
-    """
-    animes = []
-
-    for riga in log:
-        if len(riga) < 4:
-            riga.append("??")
-        if len(riga) < 5:
-            riga.append(0)
-        if len(riga) < 6:
-            riga.append(riga[1])    
-        if len(riga) < 7:
-            riga.append(0)
-        if len(riga) < 8:
-            riga.append(0)
-        anime = Anime(name=riga[0], url=riga[2], curr_ep=riga[1], last_ep=riga[5])
-        anime.progress[anime.curr_ep] = int(riga[7])
-        anime._set_info(riga[6], {"Episodi": riga[3], "Stato": riga[4]})
-        animes.append(anime)
-
-    #se il file esiste ma non contiene dati stampo un messaggio di errore
-    if len(animes) == 0:
-        ut.my_print("Cronologia inesistente!", color='rosso')
-        safeExit()
-    return animes
+    ut.my_print(f"Riproduco {episode}...", color="giallo", cls=True)
+    return openPlayer(url_ep, str(episode), episode.progress)
 
 def setupConfig() -> None:
     """
@@ -461,51 +397,6 @@ def setupConfig() -> None:
     with open(config, 'w') as f:
         ut.toml.dump(ut.configData, f)
 
-def isGreen(anime: Anime) -> bool:
-    """
-    Controlla se ci sono episodi disponibili per l'anime.
-    """
-    return anime.info["Stato"] == "1" or anime.curr_ep != anime.last_ep or anime.progress[anime.curr_ep] != 0
-
-def reloadCrono(cronologia: list[Anime]):
-    """
-    Aggiorna la cronologia degli anime con le ultime uscite disponibili e la ristampa.
-
-    Questa funzione esamina ciascun anime nella lista `animelist` e verifica se sono disponibili nuove uscite.
-    Se trova nuove uscite per un anime, ne aggiorna lo stato.
-
-    Args:
-        cronologia (list[Anime]): Una lista Anime in cronologia.
-
-    """
-    global scelta_anime
-    global notSelected
-
-    if "0" not in [anime.info["Stato"] for anime in cronologia]:
-        return
-    
-    ut.my_print("Ricerco le nuove uscite...", color="giallo")
-    ultime_uscite = provider.latest()
-    ut.my_print(end="", cls=True)
-    testo = []
-
-    for i, a in reversed(list(enumerate(cronologia))):
-        colore = 1 #rosso
-        if isGreen(a):
-            colore = 2
-        else:
-            for anime_latest in ultime_uscite:
-                if a.name == anime_latest.name and a.curr_ep < anime_latest.last_ep:
-                    log[i][5] = anime_latest.last_ep
-                    colore = 2
-                    break
-        testo.append(f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.curr_ep}/{a.info['Episodi']}]")
-    
-    if notSelected:
-        pid = os.popen("pgrep fzf").read().strip().split("\n")
-        os.system(f"kill {pid[-1]}")
-        scelta_anime = fzf(testo, "Scegli un anime: ")
-
 def listAnimeNames(animelist: list[Anime]) -> list[str]: 
     """
     Genera una lista di stringhe formattate con i 
@@ -518,13 +409,12 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
         str: lista di stringhe formattate.
     """
 
-    colore = 2 #2 verde, 1 rosso
     nomi = []
-
     for i, a in reversed(list(enumerate(animelist))):
-        if cronologia and not isGreen(a):
+        colore = 2 #2 verde, 1 rosso
+        if cronologia and a.curr_ep == a.last_ep and ((ep := a.episode(a.curr_ep)) is None or ep.is_completed()):
             colore = 1
-        
+
         nome = f"\033[0;3{colore}m{i + 1}  \033[0;37m"
 
         if cronologia:
@@ -549,8 +439,6 @@ def removeFromCrono(number: int):
         None.
     """
 
-    global log
-
     if fzf(["sì","no"], f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ") == "no":
         return
 
@@ -562,7 +450,7 @@ def removeFromCrono(number: int):
             rating = anilist.getAnimePrivateRating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
             updateAnilist(anime.curr_ep, rating, drop=True)
 
-    log.pop(number)
+    history.anime_log.pop(number)
 
     if fzf(["esci","continua"], cls=True) == "esci":
         safeExit()
@@ -588,27 +476,20 @@ def updateScript():
     exit()
 
 def main():
-    global log
     global anime
     global provider
     global openPlayer
     global scelta_anime
-    global notSelected
 
     if update:
         updateScript()
-
-    try:
-        with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", encoding='utf-8') as file:
-            log = [riga for riga in csv.reader(file)]
-    except FileNotFoundError:
-        pass
     
     #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
     if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/config.toml"):
         setupConfig()
 
     ut.getConfig()
+    history.read()
 
     match ut.configData["provider"]["source"]:
         case "animeunity":
@@ -627,7 +508,7 @@ def main():
     while True:
         if reload:
             if cronologia:
-                animelist = getCronologia()
+                animelist = history.get()
             elif lista:
                 animelist = provider.latest(args.lista)
             else:
@@ -638,20 +519,11 @@ def main():
         ut.my_print("", end="", cls=True)
         esci = True
         if cronologia and args.cronologia != 'r':
-            notSelected = True 
-            thread = Thread(target=reloadCrono, args=[animelist])    
-            thread.start()
-            esci = False
+            # history.reload(provider.latest())
+            pass
 
         prompt = "Scegli un anime: " if args.cronologia != 'r' else "Rimuovi un anime: "
-        scelta_anime = fzf(listAnimeNames(animelist), prompt, esci=esci)
-        notSelected = False
-        if cronologia and args.cronologia != 'r' and thread.is_alive:
-                #controllo se l'utente ha selezionato un anime oppure se c'è stata la relaodCrono
-                if scelta_anime == "":
-                    thread.join()
-                    if scelta_anime == "":
-                        safeExit()                        
+        scelta_anime = fzf(listAnimeNames(animelist), prompt, esci=esci)        
 
         scelta = int(scelta_anime.split("  ")[0]) - 1
         anime = animelist[scelta]
@@ -678,8 +550,8 @@ def main():
             reload = False
             continue      
 
-        
-        if cronologia and anime.progress[anime.curr_ep] == 0:
+
+        if cronologia and anime.episode(anime.curr_ep).is_completed():
             episode = anime.episode(anime.curr_ep)
             next = episode.next()
             if next is None:
@@ -708,8 +580,7 @@ def main():
                 scaricaEpisodio(ep, path)
             ut.my_print(f"\nVideo scaricato correttamente!\nLo puoi trovare nella cartella {path}\n", color="verde")
 
-            num, progress = episode.prev().num, anime.progress.get(episode.prev().num, 0) if episode.prev() else (0, 0)
-            addToCronologia(num, progress)
+            history.update(anime, episode)
                 
             risp = fzf(["esci","indietro","guarda"])
             if risp == "esci":
@@ -725,16 +596,15 @@ def main():
             completed, progress = openVideos(episode)
 
             if not privato:
+                episode.set_progress(progress)
                 if completed: 
-                    progress = 0
+                    episode.mark_completed()
                     #update watchlist anilist se ho fatto l'accesso
                     if voto_anilist:
                         updateAnilist(episode.numeric(), voto_anilist.result())
 
                 anime.curr_ep = episode.num
-                anime.progress[episode.num] = progress
-
-                addToCronologia(anime.curr_ep, progress)   
+                history.update(anime, episode) 
 
             # menù che si visualizza dopo aver finito la riproduzione
             lista_menu = ["esci", "indietro"]
@@ -767,10 +637,8 @@ def main():
                 safeExit()
         reload = True
 
-log = []
 scelta_anime = ""
 openPlayer = None
-notSelected = True
 completeLimit = 90
 provider = None
 

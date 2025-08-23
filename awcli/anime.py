@@ -16,9 +16,23 @@ class Anime:
         self.url = url
         self.curr_ep = curr_ep
         self.last_ep = last_ep if last_ep != "0" else curr_ep
-        self.progress = dict[str, int]() # da spostare in Episode
         self._episodes = list[Episode]()
         self._num_to_index = dict[str, int]()
+
+    def __eq__(self, other):
+        if not isinstance(other, Anime):
+            return NotImplemented
+        
+        if self.id_anilist:
+            return self.id_anilist == other.id_anilist
+        
+        return self.name == other.name
+
+    def __hash__(self):
+        if self.id_anilist:
+            return hash(self.id_anilist)
+        
+        return hash(self.name)
 
     def _set_episodes(self, episode: dict[str, str], specials: bool = True) -> None:
         """
@@ -105,6 +119,23 @@ class Anime:
         utilities.my_print("Trama: ", end="", color="azzurro")
         utilities.my_print(self.info["Trama"], end="\n\n", format=0)
 
+    def to_dict(self) -> dict:
+        """
+        Restituisce un dizionario con le informazioni dell'anime.
+
+        Returns:
+            dict: un dizionario con le informazioni dell'anime.
+        """
+        return {
+            "name": self.name,
+            "url": self.url,
+            "curr_ep": self.curr_ep,
+            "last_ep": self.last_ep,
+            "id_anilist": self.id_anilist,
+            "info": self.info,
+            "episodes": [ep.to_dict() for ep in self._episodes]
+        }
+
 class Episode:
     """
     Classe che rappresenta un episodio di un anime.
@@ -117,6 +148,8 @@ class Episode:
         self._anime = anime
         self.num = num
         self.ref = ref
+        self.progress = 0
+        self.completed = False
 
     def __str__(self) -> str:
         return f"{self._anime.name} Ep. {self.num}"
@@ -156,7 +189,39 @@ class Episode:
             int: il numero dell'episodio.
         """
         return numeric(self.num)
-    
+
+    def is_completed(self) -> bool:
+        """
+        Check if the episode is completed.
+        """
+        return self.progress == 0 and self.completed
+
+    def set_progress(self, progress: int) -> None:
+        """
+        Imposta il progresso dell'episodio.
+        """
+        self.progress = progress
+        if progress != 0:
+            self.completed = False
+
+    def mark_completed(self) -> None:
+        """
+        Segna l'episodio come completato.
+        """
+        self.progress = 0
+        self.completed = True
+
+    def to_dict(self) -> dict:
+        """
+        Restituisce un dizionario con le informazioni dell'episodio.
+        """
+        return {
+            "num": self.num,
+            "ref": self.ref,
+            "progress": self.progress,
+            "completed": self.completed
+        }
+
 
 def numeric(num) -> int:
     if '.' in num:
@@ -164,3 +229,9 @@ def numeric(num) -> int:
     if '-' in num:
         return int(num.split('-')[1])
     return int(num)
+
+if __name__ == "__main__":
+    anime = Anime("Test", "test", "1", "12")
+    anime._set_episodes({"1": "ref1", "2": "ref2"})
+    anime._set_info(12345, {"Episodi": "12", "Stato": "1"})
+    print(anime.to_dict())

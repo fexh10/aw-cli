@@ -1,0 +1,103 @@
+import json
+import os
+import awcli.utilities as ut
+from awcli.anime import Anime, Episode
+
+anime_log = list[Anime]()
+
+def read():
+    """
+    Legge la cronologia da un file json.
+
+    Returns:
+        list[Anime]: la lista degli anime trovati
+    """
+    global anime_log
+    try:
+        with open(f"{os.path.dirname(__file__)}/history.json", encoding='utf-8') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        save() # Crea il file se non lo trova
+        return []
+
+    for entry in data:
+        anime = Anime(
+            name=entry["name"],
+            url=entry["url"],
+            curr_ep=entry["curr_ep"],
+            last_ep=entry["last_ep"]
+        )
+        anime._set_episodes(
+            {ep["num"]: ep["ref"] for ep in entry["episodes"]}, 
+            specials=ut.configData["general"]["specials"]
+        )
+        for ep in entry["episodes"]:
+            anime.episode(ep["num"]).progress = ep["progress"]
+            anime.episode(ep["num"]).completed = ep["completed"]
+
+        anime._set_info(entry["id_anilist"], entry["info"])
+        anime_log.append(anime)
+
+def get() -> list[Anime]:
+    """
+    Prende i dati dalla cronologia.
+
+    Returns:
+        list[Anime]: la lista degli anime trovati 
+
+    """
+    if len(anime_log) == 0:
+        ut.my_print("Cronologia inesistente!", color='rosso')
+        exit()  
+    return anime_log
+
+def reload(last_releases: list[Anime]):
+    """
+    Aggiorna la cronologia degli anime con le ultime uscite disponibili.
+
+    Questa funzione esamina ciascun anime nella cronologia e verifica se sono disponibili nuove uscite.
+    Se trova nuove uscite per un anime, ne aggiorna lo stato.
+
+    Args:
+        last_releases (list[Anime]): La lista degli ultimi anime rilasciati.
+    """
+    if "0" not in [anime.info["Stato"] for anime in anime_log]:
+        return  # Nessun anime in corso, esco subito
+    
+    for i, anime in reversed(list(enumerate(anime_log))):
+        if anime.curr_ep != anime.last_ep or ((ep := anime.episode(anime.curr_ep)) and not ep.is_completed()):
+            continue
+        for anime_latest in last_releases:
+            if anime.name == anime_latest.name and anime.curr_ep != anime_latest.last_ep:
+                anime_log[i] = anime_latest
+                break
+
+def update(anime: Anime, episode: Episode):
+    """
+    Aggiorna la cronologia.
+
+    Args:
+        anime (Anime): l'anime da aggiornare.
+        episode (Episode): l'episodio da aggiornare.
+    """
+    anime_log.remove(anime) if anime in anime_log else None
+    last_completed = episode.is_completed() and episode.num == anime.last_ep
+    if anime.info["Stato"] == "1" and last_completed:
+        return
+
+    if last_completed:
+        anime_log.append(anime)
+    else:
+        anime_log.insert(0, anime)
+
+def save() -> None:
+    """
+    Salva la cronologia su un file JSON.
+    """
+    with open(f"{os.path.dirname(__file__)}/history.json", 'w', encoding='utf-8') as file:
+        json.dump(
+            [anime.to_dict() for anime in anime_log],
+            file,
+            ensure_ascii=False,
+            indent=4
+        )
