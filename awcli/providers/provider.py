@@ -1,5 +1,8 @@
+import requests
 from abc import ABC, abstractmethod
 from awcli.anime import Anime, Episode
+import awcli.utilities as ut
+
 
 class Provider(ABC):
     """
@@ -16,11 +19,36 @@ class Provider(ABC):
         Args:
             url (str): l'url del sito del provider.
         """
-        self._url = url
-        self._headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'}
+        self.BASE_URL = url
+        self._session = requests.Session()
+        self._session.headers = { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'}
+
+    def search(self, input: str) -> list[Anime]:
+        """
+        Ricerca un anime in base al titolo.
+        
+        Args:
+            input (str): il titolo dell'anime da ricercare.
+
+        Returns:
+            list[Anime]: la lista degli anime trovati.
+        """
+        ut.my_print("Ricerco...", color="giallo")
+        try:
+            res = self._search(input)
+            for anime in res:
+                if ut.nome_os == "Android":
+                    forbidden_char = '"*/:<>?\|'
+                    replace_char = '”⁎∕꞉‹›︖＼⏐'
+                    for a, b in zip(forbidden_char, replace_char):
+                        anime.name = anime.name.replace(a, b)
+            return res
+        except Exception as e:
+            ut.my_print(f"Errore nella ricerca: {e}", color="rosso")
+            return []
 
     @abstractmethod
-    def search(input: str) -> list[Anime]:
+    def _search(self, input: str) -> list[Anime]:
         """
         Ricerca un anime in base al titolo.
         
@@ -31,8 +59,7 @@ class Provider(ABC):
             list[Anime]: la lista degli anime trovati.
         """
 
-    @abstractmethod
-    def latest(filter = "all") -> list[Anime]:
+    def latest(self, filter: str = "all") -> list[Anime]:
         """
         Restituisce le ultime uscite degli anime.
 
@@ -42,9 +69,25 @@ class Provider(ABC):
         Returns:
             list[Anime]: la lista degli anime trovati.
         """
-    
+        try:
+            return self._latest(filter)
+        except Exception as e:
+            ut.my_print(f"Errore nel recupero delle ultime uscite: {e}", color="rosso")
+            return []
+
     @abstractmethod
-    def episodes(anime: Anime):
+    def _latest(self, filter: str) -> list[Anime]:
+        """
+        Restituisce le ultime uscite degli anime.
+
+        Args:
+            filter (str): il filtro da applicare.
+
+        Returns:
+            list[Anime]: la lista degli anime trovati.
+        """
+
+    def episodes(self, anime: Anime):
         """
         Ottiene i riferimenti agli episodi disponibili dell'anime,
         caricandole dentro `anime` che viene modificato di conseguenza.
@@ -52,9 +95,55 @@ class Provider(ABC):
         Args:
             anime (Anime): l'anime di riferimento.
         """
+        try:
+            anime._set_episodes(
+                self._episodes(anime), 
+                ut.configData["general"]["specials"]
+            )
+        except requests.exceptions.HTTPError:
+            ut.my_print("Il link è stato cambiato", color="rosso", end="\n")
+            anime.url = self._search(anime.name)[0].url
+            progress = {num: anime.episode(num).progress for num in anime.episodes()}
+            self.episodes(anime)
+            for num in progress:
+                if (ep := anime.episode(num)):
+                    ep.set_progress(progress[num])
+            return 
+        except Exception as e:
+            ut.my_print(f"Errore nel recupero degli episodi: {e}", color="rosso")
 
     @abstractmethod
-    def episode_link(episode: Episode) -> str:
+    def _episodes(self, anime: Anime) -> dict[str, str]:
+        """
+        Ottiene i riferimenti agli episodi disponibili dell'anime.
+
+        Args:
+            anime (Anime): l'anime di riferimento.
+
+        Returns:
+            dict[str, str]: dizionario dei riferimenti degli episodi dell'anime (numero->URL/ID).
+        """
+
+    def episode_link(self, episode: Episode) -> str:
+        """
+        Cerca il link del video dell'episodio. 
+
+        Args:
+            episode (Episode): l'episodio di riferimento.
+
+        Returns:
+            str: il link.
+        """
+        try:
+            return self._episode_link(episode)
+        except requests.exceptions.HTTPError:
+            self.episodes(episode._anime)
+            return self.episode_link(episode._anime.episode(episode.num))  # Retry with the new URL
+        except Exception as e:
+            ut.my_print(f"Errore nel recupero del link dell'episodio: {e}", color="rosso")
+
+    @abstractmethod
+    def _episode_link(self, episode: Episode) -> str:
         """
         Cerca il link del video dell'episodio. 
 
@@ -65,12 +154,28 @@ class Provider(ABC):
             str: il link.
         """
     
-    @abstractmethod
-    def info_anime(anime: Anime):
+    def info_anime(self, anime: Anime):
         """
         Prende le informazioni dell'anime selezionato,
         caricandole dentro `anime` che viene modificato di conseguenza.
         
         Args:
             anime (Anime): l'anime di riferimento.
+        """
+        try:
+            return self._info_anime(anime)
+        except Exception as e:
+            ut.my_print(f"Errore nel recupero delle informazioni dell'anime: {e}", color="rosso")
+            return {}
+
+    @abstractmethod
+    def _info_anime(self, anime: Anime) -> dict:
+        """
+        Prende le informazioni dell'anime selezionato.
+
+        Args:
+            anime (Anime): l'anime di riferimento.
+
+        Returns:
+            dict: le informazioni dell'anime.
         """

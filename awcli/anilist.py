@@ -10,8 +10,8 @@ def updateAnilist(token, id_anilist: int, ep: int, status_list: str, score: floa
     Args:
         id_anilist (int): l'id dell'anime su AniList.
         ep (int): il numero dell'episodio visualizzato.
-        voto (float): il voto dell'anime.
         status_list (str): lo stato dell'anime per l'utente. Se è in corso verrà impostato su "CURRENT", se completato su "COMPLETED".
+        score (float): il voto dell'anime.
         favourite (bool): se True, aggiunge l'anime ai preferiti.
     """
     query = """

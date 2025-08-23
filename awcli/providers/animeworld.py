@@ -1,8 +1,8 @@
+from functools import lru_cache
 import re
-import requests
 from html import unescape
 from awcli.providers.provider import Provider, Anime, Episode
-from awcli import utilities as ut
+from requests import exceptions
 
 class Animeworld(Provider):
     """
@@ -16,9 +16,9 @@ class Animeworld(Provider):
     """
     def __init__(self):
         super().__init__("https://www.animeworld.ac")
-        self._cookies = {}
         self._visited = {}
-    
+
+    @lru_cache
     def _get_html(self, url: str) -> str:
         """
         Ottiene l'html della pagina web `url`.
@@ -29,37 +29,28 @@ class Animeworld(Provider):
         Args:
             url (str): la pagina web da cui prendere l'html.
 
-ImportError: cannot import name 'Anime' from par
         Returns:
             str: l'html della pagina web selezionata.
         """
-        if url in self._visited:
-            return self._visited[url]
         try:
-            response = requests.get(url, headers=self._headers, cookies=self._cookies)
-        except requests.exceptions.ConnectionError:
-            ut.my_print("Errore di connessione", color="rosso")
-        except requests.exceptions.MissingSchema:
-            raise requests.exceptions.HTTPError("Errore 404: pagina non trovata")
+            response = self._session.get(url)
+        except exceptions.ConnectionError:
+            raise exceptions.ConnectionError("Errore di connessione")
+        except exceptions.MissingSchema:
+            raise exceptions.HTTPError("Errore 404: pagina non trovata")
 
         if response.status_code == 202: 
-            ut.my_print("Reindirizzamento...", color="giallo", end="\n") 
             match = re.search(r'(SecurityAW-\w+)=(.*) ;', response.text)
-            self._cookies = {match.group(1): match.group(2)}    
-            response = requests.get(url, headers=self._headers, cookies=self._cookies)
-        
-        if response.status_code != 200:
-            ut.my_print("Errore: pagina non trovata", color="rosso")
-            exit()
-        if "Errore 404" in response.text:
-            raise requests.exceptions.HTTPError("Errore 404: pagina non trovata")
+            self._session.cookies = {match.group(1): match.group(2)}
+            response = self._session.get(url)
 
-        self._visited[url] = response.text
+        if response.status_code != 200 or "Errore 404" in response.text:
+            raise exceptions.HTTPError("Errore 404: pagina non trovata")
+
         return response.text    
 
-    def search(self, input: str) -> list[Anime]:
-        ut.my_print("Ricerco...", color="giallo")
-        search_url = self._url + "/search?keyword=" + input.replace(" ", "+")
+    def _search(self, input: str) -> list[Anime]:
+        search_url = self.BASE_URL + "/search?keyword=" + input.replace(" ", "+")
         html = self._get_html(search_url)
         if re.search(r'<div class="alert alert-danger">', html):
             return []
@@ -67,21 +58,16 @@ ImportError: cannot import name 'Anime' from par
         animes = list[Anime]()
         # prendo i link degli anime relativi alla ricerca
         for url, name in re.findall(r'<div class="inner">(?:.|\n)+?<a href="([^"]+)"\s+data-jtitle="[^"]+"\s+class="name">([^<]+)', html):
-            if ut.nome_os == "Android":
-                forbidden_char = '"*/:<>?\|'
-                replace_char = '”⁎∕꞉‹›︖＼⏐'
-                for a, b in zip(forbidden_char, replace_char):
-                    name = name.replace(a, b)
-            animes.append(Anime(unescape(name), self._url+url))
+            animes.append(Anime(unescape(name), self.BASE_URL+url))
         
         return animes
     
-    def latest(self, filter = "all") -> list[Anime]:
-        html = self._get_html(self._url)
+    def _latest(self, filter = "all") -> list[Anime]:
+        html = self._get_html(self.BASE_URL)
         animes = list[Anime]()
 
         for url, name, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
-            animes.append(Anime(unescape(name), self._url + url, ep))
+            animes.append(Anime(unescape(name), self.BASE_URL + url, ep))
                 
         match filter[0]:
             case 's': return animes[45:90]
@@ -89,38 +75,24 @@ ImportError: cannot import name 'Anime' from par
             case 't': return animes[135:]
             case  _ : return animes[:45]
 
-    def _get_anime(self, anime):
-        """
-        Ottiene il riferimento dell'anime.
-        
-        Se il riferimento non è valido, cerca l'anime per nome e aggiorna il riferimento.
-        """
-        try:
-            html = self._get_html(anime.url)
-        except requests.exceptions.HTTPError:
-            ut.my_print("Il link è stato cambiato", color="rosso", end="\n")
-            anime.url = self.search(anime.name)[0].url
-            html = self._get_html(anime.url)
-        return html
-
-    def episodes(self, anime: Anime):
-        html = self._get_anime(anime)
+    def _episodes(self, anime: Anime):
+        html = self._get_html(anime.url)
         episodes_url = dict[str, str]()
         for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
-            episodes_url[num] = self._url + url
-        anime._set_episodes(episodes_url, ut.configData["general"]["specials"])
+            episodes_url[num] = self.BASE_URL + url
+        return episodes_url
 
 
-    def episode_link(self, episode: Episode) -> str:
+    def _episode_link(self, episode: Episode) -> str:
         pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
-        res = re.search(pattern, self._get_html(episode.ref)) 
-        if res:
-            return res.group(1)
-        exit()
+        html = self._get_html(episode.ref)
+        res = re.search(pattern, html)
+        if not res:
+            raise ValueError("Errore nel parsing della pagina dell'episodio")
+        return res.group(1)
     
-    
-    def info_anime(self, anime: Anime):
-        html = self._get_anime(anime)
+    def _info_anime(self, anime: Anime):
+        html = self._get_html(anime.url)
 
         res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
         anilist_id = int(res.group(1)) if res else 0
