@@ -103,11 +103,7 @@ class Provider(ABC):
         except requests.exceptions.HTTPError:
             ut.my_print("Il link è stato cambiato", color="rosso", end="\n")
             anime.url = self._search(anime.name)[0].url
-            progress = {num: anime.episode(num).progress for num in anime.episodes()}
             self.episodes(anime)
-            for num in progress:
-                if (ep := anime.episode(num)):
-                    ep.set_progress(progress[num])
             return 
         except Exception as e:
             ut.my_print(f"Errore nel recupero degli episodi: {e}", color="rosso")
