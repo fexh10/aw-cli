@@ -66,8 +66,6 @@ def reload(last_releases: list[Anime]):
         return  # Nessun anime in corso, esco subito
     
     for i, anime in reversed(list(enumerate(anime_log))):
-        if anime.curr_ep != anime.last_ep or ((ep := anime.episode(anime.curr_ep)) and not ep.is_completed()):
-            continue
         for anime_latest in last_releases:
             if anime.name == anime_latest.name and anime.curr_ep != anime_latest.last_ep:
                 anime_log[i] = anime_latest
@@ -134,7 +132,7 @@ def legacy() -> list[Anime]:
             anime.episode(anime.curr_ep).mark_completed()
         else:
             anime.episode(anime.curr_ep).set_progress(progress)
-        anime._set_info(riga[6], {"Episodi": riga[3], "Stato": riga[4]})
+        anime._set_info(int(riga[6]), {"Episodi": riga[3], "Stato": riga[4]})
         animes.append(anime)
 
     return animes

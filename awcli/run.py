@@ -532,8 +532,13 @@ def main():
             removeFromCrono(scelta)
             continue
 
+        if not (privato or offline):
+            # Recupero informazioni anime in un Thread
+            info_thread = Thread(target=provider.info_anime, args=[anime])
+            info_thread.start()
+
         if info:
-            provider.info_anime(anime)
+            info_thread.join()
             anime.print_info()
             #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
             if fzf(["indietro","guardare"]) == "indietro":
@@ -550,12 +555,14 @@ def main():
             reload = False
             continue      
 
-
         if cronologia and anime.episode(anime.curr_ep).is_completed():
-            episode = anime.episode(anime.curr_ep)
-            next = episode.next()
-            if next is None:
-                ut.my_print(f"L'episodio {episode.numeric() + 1} di {anime.name} non è ancora stato rilasciato!", color='rosso')
+            if anime.episode(anime.curr_ep).next() is None:
+                info_thread.join()
+                provider.episodes(anime)
+
+            if (next := anime.episode(anime.curr_ep).next()) is None:
+                provider.episodes(anime)
+                ut.my_print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                 ut.sleep(1)
                 if len(animelist) == 1:
                     safeExit()
@@ -568,11 +575,6 @@ def main():
             listaEpisodi = scegliEpisodi()
             
         episode = listaEpisodi[0]
-
-        if not (privato or offline):
-            # Recupero informazioni anime in un Thread
-            info_thread = Thread(target=provider.info_anime, args=[anime])
-            info_thread.start()
 
         if downl:
             path = f"{downloadPath()}/{anime.name}"
