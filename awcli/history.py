@@ -28,7 +28,7 @@ def read():
             curr_ep=entry["curr_ep"],
             last_ep=entry["last_ep"]
         )
-        anime._set_episodes(
+        anime._update_episodes(
             {ep["num"]: ep["ref"] for ep in entry["episodes"]}, 
             specials=ut.configData["general"]["specials"]
         )
@@ -62,13 +62,14 @@ def reload(last_releases: list[Anime]):
     Args:
         last_releases (list[Anime]): La lista degli ultimi anime rilasciati.
     """
+    global anime_log
     if "0" not in [anime.info["Stato"] for anime in anime_log]:
         return  # Nessun anime in corso, esco subito
     
     for i, anime in reversed(list(enumerate(anime_log))):
         for anime_latest in last_releases:
             if anime.name == anime_latest.name and anime.curr_ep != anime_latest.last_ep:
-                anime_log[i] = anime_latest
+                anime._update_episodes({num: anime_latest.episode(num).ref for num in anime_latest.episodes()})
                 break
 
 def update(anime: Anime, episode: Episode):
@@ -79,6 +80,7 @@ def update(anime: Anime, episode: Episode):
         anime (Anime): l'anime da aggiornare.
         episode (Episode): l'episodio da aggiornare.
     """
+    global anime_log
     anime_log.remove(anime) if anime in anime_log else None
     last_completed = episode.is_completed() and episode.num == anime.last_ep
     if anime.info["Stato"] == "1" and last_completed:
@@ -127,7 +129,7 @@ def legacy() -> list[Anime]:
         if len(riga) < 8:
             riga.append(0)
         anime = Anime(name=riga[0], url=riga[2], curr_ep=riga[1], last_ep=riga[5])
-        anime._set_episodes({anime.curr_ep: "Not available"}, ut.configData["general"]["specials"])
+        anime._update_episodes({anime.curr_ep: "Not available"}, ut.configData["general"]["specials"])
         if (progress := int(riga[7])) == 0:
             anime.episode(anime.curr_ep).mark_completed()
         else:

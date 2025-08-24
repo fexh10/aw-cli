@@ -70,13 +70,13 @@ class Provider(ABC):
             list[Anime]: la lista degli anime trovati.
         """
         try:
-            return self._latest(filter)
+            return self._latest(filter, ut.configData["general"]["specials"])
         except Exception as e:
             ut.my_print(f"Errore nel recupero delle ultime uscite: {e}", color="rosso")
             return []
 
     @abstractmethod
-    def _latest(self, filter: str) -> list[Anime]:
+    def _latest(self, filter: str, specials: bool) -> list[Anime]:
         """
         Restituisce le ultime uscite degli anime.
 
@@ -96,18 +96,14 @@ class Provider(ABC):
             anime (Anime): l'anime di riferimento.
         """
         try:
-            anime._set_episodes(
+            anime._update_episodes(
                 self._episodes(anime), 
                 ut.configData["general"]["specials"]
             )
         except requests.exceptions.HTTPError:
             ut.my_print("Il link è stato cambiato", color="rosso", end="\n")
             anime.url = self._search(anime.name)[0].url
-            progress = {num: anime.episode(num).progress for num in anime.episodes()}
             self.episodes(anime)
-            for num in progress:
-                if (ep := anime.episode(num)):
-                    ep.set_progress(progress[num])
         except Exception as e:
             ut.my_print(f"Errore nel recupero degli episodi: {e}", color="rosso")
 

@@ -34,16 +34,18 @@ class Anime:
         
         return hash(self.name)
 
-    def _set_episodes(self, episode: dict[str, str], specials: bool = True) -> None:
+    def _update_episodes(self, episodes: dict[str, str], specials: bool = True) -> None:
         """
         Imposta i riferimenti degli episodi dell'anime.
         Args:
             episodi (dict[str, str]): dizionario dei riferimenti degli episodi dell'anime (numero->URL/ID).
         """
-        
+        old = self._episodes
+        episodes.update({num: self.episode(num).ref for num in self.episodes()})
+
         self._episodes = []
         self._num_to_index = dict[str, int]()
-        for num, ref in episode.items():
+        for num, ref in episodes.items():
             if not specials and ("." in num or num == "0"):
                 continue
             self._episodes.append(Episode(self, num, ref))
@@ -51,6 +53,12 @@ class Anime:
 
         if len(self._episodes) > 0 and self._episodes[-1].numeric() > numeric(self.last_ep):
             self.last_ep = self._episodes[-1].num
+
+        for ep in old:
+            if ep.is_completed():
+                self.episode(ep.num).mark_completed()
+            else:
+                self.episode(ep.num).set_progress(ep.progress)
 
     def episodes(self) -> list[str]:
         """
@@ -232,6 +240,6 @@ def numeric(num) -> int:
 
 if __name__ == "__main__":
     anime = Anime("Test", "test", "1", "12")
-    anime._set_episodes({"1": "ref1", "2": "ref2"})
+    anime._update_episodes({"1": "ref1", "2": "ref2"})
     anime._set_info(12345, {"Episodi": "12", "Stato": "1"})
     print(anime.to_dict())

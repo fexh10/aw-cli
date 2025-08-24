@@ -561,7 +561,6 @@ def main():
                 provider.episodes(anime)
 
             if (next := anime.episode(anime.curr_ep).next()) is None:
-                provider.episodes(anime)
                 ut.my_print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                 ut.sleep(1)
                 if len(animelist) == 1:

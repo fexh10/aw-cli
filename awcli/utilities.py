@@ -80,7 +80,7 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
         for nomi in nomi_episodi:
             num = nomi.split("Ep. ")[1].split(".mp4")[0]
             episodes_url[num] = f"{path}/{nomi}"
-        anime._set_episodes(episodes_url, configData["general"]["specials"])
+        anime._update_episodes(episodes_url, configData["general"]["specials"])
                 
 def getConfig() -> None:
     """

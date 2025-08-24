@@ -61,8 +61,8 @@ class Animeworld(Provider):
             animes.append(Anime(unescape(name), self.BASE_URL+url))
         
         return animes
-    
-    def _latest(self, filter = "all") -> list[Anime]:
+
+    def _latest(self, filter: str, specials: bool) -> list[Anime]:
         html = self._get_html(self.BASE_URL)
         animes = list[Anime]()
 
