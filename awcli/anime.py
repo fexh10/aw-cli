@@ -40,25 +40,16 @@ class Anime:
         Args:
             episodi (dict[str, str]): dizionario dei riferimenti degli episodi dell'anime (numero->URL/ID).
         """
-        old = self._episodes
-        episodes.update({num: self.episode(num).ref for num in self.episodes()})
-
-        self._episodes = []
-        self._num_to_index = dict[str, int]()
         for num, ref in episodes.items():
-            if not specials and ("." in num or num == "0"):
+            if self.episode(num) or (not specials and ("." in num or num == "0")):
                 continue
             self._episodes.append(Episode(self, num, ref))
-            self._num_to_index[num] = len(self._episodes) - 1
+
+        self._episodes.sort(key=lambda ep: ep.numeric())
+        self._num_to_index = {ep.num: i for i, ep in enumerate(self._episodes)}
 
         if len(self._episodes) > 0 and self._episodes[-1].numeric() > numeric(self.last_ep):
             self.last_ep = self._episodes[-1].num
-
-        for ep in old:
-            if ep.is_completed():
-                self.episode(ep.num).mark_completed()
-            else:
-                self.episode(ep.num).set_progress(ep.progress)
 
     def episodes(self) -> list[str]:
         """

@@ -68,7 +68,7 @@ def reload(last_releases: list[Anime]):
     
     for i, anime in reversed(list(enumerate(anime_log))):
         for anime_latest in last_releases:
-            if anime.name == anime_latest.name and anime.curr_ep != anime_latest.last_ep:
+            if anime.name == anime_latest.name and anime.last_ep != anime_latest.last_ep:
                 anime._update_episodes({num: anime_latest.episode(num).ref for num in anime_latest.episodes()})
                 break
 
