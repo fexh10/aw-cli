@@ -14,6 +14,7 @@ class Anime:
     def __init__(self, name, url, curr_ep="0", last_ep="0") -> None:
         self.name = name
         self.url = url
+        self.id_anilist = None
         self.curr_ep = curr_ep
         self.last_ep = last_ep if last_ep != "0" else curr_ep
         self._episodes = list[Episode]()
@@ -23,7 +24,7 @@ class Anime:
         if not isinstance(other, Anime):
             return NotImplemented
         
-        if self.id_anilist:
+        if self.id_anilist and other.id_anilist:
             return self.id_anilist == other.id_anilist
         
         return self.name == other.name

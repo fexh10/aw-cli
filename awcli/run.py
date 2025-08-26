@@ -67,27 +67,6 @@ def RicercaAnime() -> list[Anime]:
     ut.my_print("", end="", cls=True)
     return ut.my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
 
-def animeScaricati(path: str) -> list[Anime]:
-    """
-    Prende i nomi degli anime scaricati nella cartella Video/Anime.
-
-    Args:
-        path (str): il path relativo alla cartella Video/Anime
-
-    Returns:
-        list[Anime]: la lista degli anime trovati
-    """
-    nomi = os.listdir(path)
-
-    if len(nomi) == 0:
-        ut.my_print("Nessun anime scaricato", color='rosso')
-        safeExit()
-
-    animes = list[Anime]()
-    for name in nomi:
-        animes.append(Anime(name, f"{path}/{name}"))
-    return animes
-
 def scegliEpisodi() -> list[Episode]:
     """
     Fa scegliere all'utente gli episodi dell'anime da guardare.
@@ -314,10 +293,7 @@ def openVideos(episode: Episode):
     path = f"{downloadPath(create=False)}/{anime.name}/{episode}.mp4"
 
     if os.path.exists(path):
-        url_ep = "file://" + path if ut.nome_os == "Android" else path
-    elif offline:
-        ut.my_print(f"Episodio {episode} non scaricato, skippo...", color='giallo')
-        return
+        url_ep = path if ut.nome_os == "Android" else "file://" + path
     else:
         url_ep = provider.episode_link(anime, episode)
 
@@ -491,13 +467,17 @@ def main():
     ut.getConfig()
     history.read()
 
-    match ut.configData["provider"]["source"]:
-        case "animeunity":
-            from awcli.providers.animeunity import Animeunity
-            provider = Animeunity()
-        case _:
-            from awcli.providers.animeworld import Animeworld
-            provider = Animeworld()
+    if offline:
+        from awcli.providers.local import LocalProvider
+        provider = LocalProvider(downloadPath(), history.get())
+    else:
+        match ut.configData["provider"]["source"]:
+            case "animeunity":
+                from awcli.providers.animeunity import Animeunity
+                provider = Animeunity()
+            case _:
+                from awcli.providers.animeworld import Animeworld
+                provider = Animeworld()
 
     openPlayer = openMPV if ut.configData["player"]["type"] == "mpv" else openVLC
 
@@ -507,14 +487,14 @@ def main():
     reload = True
     while True:
         if reload:
-            if cronologia:
+            if offline:
+                animelist = provider.search("") # Uses offline provider
+            elif cronologia:
                 animelist = history.get()
             elif lista:
                 animelist = provider.latest(args.lista)
             else:
                 animelist = RicercaAnime()
-            if offline:
-                animelist = [anime for anime in animelist if anime.name in [a.name for a in animeScaricati(downloadPath())]]
 
         ut.my_print("", end="", cls=True)
         esci = True
@@ -532,10 +512,10 @@ def main():
             removeFromCrono(scelta)
             continue
 
-        if not (privato or offline):
-            # Recupero informazioni anime in un Thread
-            info_thread = Thread(target=provider.info_anime, args=[anime])
-            info_thread.start()
+        # Recupero informazioni anime in un Thread
+        # TODO: controllare se non ci siano già aggiornate in cronologia
+        info_thread = Thread(target=provider.info_anime, args=[anime])
+        info_thread.start()
 
         if info:
             info_thread.join()
@@ -544,9 +524,7 @@ def main():
             if fzf(["indietro","guardare"]) == "indietro":
                 continue
 
-        if offline:
-            ut.downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
-        elif len(anime.episodes()) < 1:
+        if len(anime.episodes()) < 1:
             provider.episodes(anime)
 
         if anime.last_ep == '0':
@@ -612,10 +590,10 @@ def main():
 
             if anime.last_ep != 1:
                 lista_menu.append("seleziona")
-            if episode.prev() or episode.numeric() > 1:
+            if episode.prev() or (not offline and episode.numeric() > 1):
                 lista_menu.append("antecedente")
             lista_menu.append("riguarda")
-            if episode.next() or episode.num != anime.last_ep:
+            if episode.next() or (not offline and episode.num != anime.last_ep):
                 lista_menu.append("prossimo")
     
             scelta_menu = fzf(lista_menu)
@@ -629,7 +607,7 @@ def main():
                     provider.episodes(anime)
                 episode = episode.prev()
             elif scelta_menu == "seleziona":
-                if len(anime.episodes()) == 1:
+                if not offline and len(anime.episodes()) == 1:
                     provider.episodes(anime)
                 episode = scegliEpisodi()[0]
             elif scelta_menu == "indietro":

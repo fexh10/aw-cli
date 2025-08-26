@@ -63,24 +63,6 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             sleep(1)
             my_print("",end="", cls=True)
     return i
-        
-def downloaded_episodes(anime: Anime, path: str) -> None:
-        """
-        Prende i nomi degli episodi scaricati in base all'anime scelto e
-        ne ricava il primo e l'ultimo episodio riproducibili.
-
-        Args:
-            path (str): il path dell'anime scelto dall'utente.
-        """
-        nomi_episodi = os.listdir(path)
-        if len(nomi_episodi) == 0:
-            return
-        
-        episodes_url = dict[str, str]()
-        for nomi in nomi_episodi:
-            num = nomi.split("Ep. ")[1].split(".mp4")[0]
-            episodes_url[num] = f"{path}/{nomi}"
-        anime._update_episodes(episodes_url, configData["general"]["specials"])
                 
 
 def sanitize_filename(filename: str) -> str:
