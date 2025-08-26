@@ -82,6 +82,26 @@ def downloaded_episodes(anime: Anime, path: str) -> None:
             episodes_url[num] = f"{path}/{nomi}"
         anime._set_episodes(episodes_url, configData["general"]["specials"])
                 
+
+def sanitize_filename(filename: str) -> str:
+    """
+    Sanitizza il nome del file rimuovendo i caratteri non validi.
+
+    Args:
+        filename (str): il nome del file da sanitizzare.
+
+    Returns:
+        str: il nome del file sanitizzato.
+    """
+    if nome_os != "Android":
+        return filename
+    
+    forbidden_char = '"*/:<>?\|'
+    replace_char = '”⁎∕꞉‹›︖＼⏐'
+    for a, b in zip(forbidden_char, replace_char):
+        filename = filename.replace(a, b)
+    return filename
+
 def getConfig() -> None:
     """
     Prende le impostazioni scelte dall'utente

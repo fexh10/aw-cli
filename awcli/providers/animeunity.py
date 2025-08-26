@@ -71,8 +71,8 @@ class Animeunity(Provider):
             anime._set_info(anilist_id, info)
             animes.append(anime)
         return animes
-        
-    def _episodes(self, anime: Anime):
+
+    def _episodes(self, anime: Anime) -> dict[str, str]:
         episodi = {}
         start_range = 1
         episode_count = int(anime.last_ep) # potenzialmente non numerico
@@ -89,11 +89,11 @@ class Animeunity(Provider):
                 timeout=10
             )
             response.raise_for_status()
-            episodi.update({episode['number']: episode['id'] for episode in response.json()['episodes']})
+            episodi.update({str(episode['number']): str(episode['id']) for episode in response.json()['episodes']})
             start_range = end_range + 1
         return episodi
 
-    def _episode_link(self, episode: Episode) -> str:
+    def _episode_link(self, anime: Anime, episode: Episode) -> str:
         embed_url = f"{self.BASE_URL}/embed-url/{episode.ref}"
         response = self._session.get(embed_url, timeout=10)
         response.raise_for_status()

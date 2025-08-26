@@ -83,7 +83,7 @@ class Animeworld(Provider):
         return episodes_url
 
 
-    def _episode_link(self, episode: Episode) -> str:
+    def _episode_link(self, anime: Anime, episode: Episode) -> str:
         pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
         html = self._get_html(episode.ref)
         res = re.search(pattern, html)
