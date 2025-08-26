@@ -349,7 +349,7 @@ def openVideos(episodio: Episode):
         ut.my_print(f"Episodio {episodio} non scaricato, skippo...", color='giallo')
         return
     else:
-        url_ep = provider.episode_link(episodio)
+        url_ep = provider.episode_link(anime, episodio)
 
     ut.my_print(f"Riproduco {episodio}...", color="giallo", cls=True)
     return openPlayer(url_ep, str(episodio), anime.progress.get(episodio.num, 0))
