@@ -121,5 +121,6 @@ def getConfig() -> None:
         configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''
         if "syncplay" in configData:
             configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'"
-
-    configData["general"]["specials"] = False
+    
+    if "specials" not in configData["general"]:
+        configData["general"]["specials"] = False

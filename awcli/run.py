@@ -718,6 +718,7 @@ def main():
                 continue
 
         while True:
+            voto_anilist = None
             if not (offline or privato) and "anilist" in ut.configData:
                 executor = ThreadPoolExecutor(max_workers=1)
                 voto_anilist = executor.submit(anilist.getAnimePrivateRating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
