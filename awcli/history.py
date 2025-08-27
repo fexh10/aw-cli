@@ -71,6 +71,7 @@ def reload(last_releases: list[Anime]):
             if anime.name == anime_latest.name and anime.last_ep != anime_latest.last_ep:
                 anime._update_episodes({num: anime_latest.episode(num).ref for num in anime_latest.episodes()})
                 break
+    save()
 
 def update(anime: Anime, episode: Episode):
     """
@@ -90,6 +91,8 @@ def update(anime: Anime, episode: Episode):
         anime_log.append(anime)
     else:
         anime_log.insert(0, anime)
+
+    save()
 
 def save() -> None:
     """

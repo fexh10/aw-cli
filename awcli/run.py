@@ -13,11 +13,7 @@ from awcli import (
 from awcli.anime import Anime, Episode
 from awcli.arg_parser import *
 
-def safeExit():
-    history.save()
-    exit()
-
-signal(SIGINT, lambda signum, frame: safeExit())
+signal(SIGINT, lambda signum, frame: exit())
 
 def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool = False, esci: bool = True) -> str:
     """
@@ -44,7 +40,7 @@ def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool 
     output = os.popen(f"""printf "{string}" | {comando}""").read().strip()
 
     if esci and output == "":
-        safeExit()
+        exit()
 
     return output
 
@@ -59,7 +55,7 @@ def RicercaAnime() -> list[Anime]:
 
     def check_search(s: str):
         if s == "exit":
-            safeExit() 
+            exit() 
         result = provider.search(s)
         if len(result) != 0:
             return result
@@ -140,7 +136,7 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
 
     if "syncplay" not in ut.configData:
         ut.my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
-        safeExit()
+        exit()
     
     
     args = f'''--force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
@@ -429,7 +425,7 @@ def removeFromCrono(number: int):
     history.anime_log.pop(number)
 
     if fzf(["esci","continua"], cls=True) == "esci":
-        safeExit()
+        exit()
 
 def updateScript():
     """
@@ -542,7 +538,7 @@ def main():
                 ut.my_print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                 ut.sleep(1)
                 if len(animelist) == 1:
-                    safeExit()
+                    exit()
                 reload = False
                 continue
             listaEpisodi = [next]
@@ -563,7 +559,7 @@ def main():
                 
             risp = fzf(["esci","indietro","guarda"])
             if risp == "esci":
-                safeExit()
+                exit()
             if risp == "indietro":
                 continue
 
@@ -613,7 +609,7 @@ def main():
             elif scelta_menu == "indietro":
                 break
             elif scelta_menu == "esci":
-                safeExit()
+                exit()
         reload = True
 
 scelta_anime = ""
