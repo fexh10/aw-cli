@@ -138,7 +138,7 @@ def scaricaEpisodio(ep: Episode, path: str):
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
     ut.my_print(ep, color="blu", end=":\n")
     if not os.path.exists(f"{path}/{ep}.mp4"):
-        SDL = SmartDL(provider.episode_link(ep), f"{path}/{ep}.mp4")
+        SDL = SmartDL(provider.episode_link(anime, ep), f"{path}/{ep}.mp4")
         SDL.start()
     else:
         ut.my_print("già scaricato, skippo...", color="giallo")
