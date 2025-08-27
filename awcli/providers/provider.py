@@ -24,7 +24,9 @@ def relink_anime(self, callback, anime: Anime, episode: Episode | None = None):
     """
     Gestisce il caso in cui il riferimento dell'anime non è più valido
     """
-    anime.url = self.search(anime.name)[0].url
+    if len(res := self.search(anime.name)) == 0:
+        raise LookupError(f"Nessun risultato trovato per {anime.name} su {self.__class__.__name__}")
+    anime.url = res[0].url
     if episode:
         self.episodes(anime)
         callback(self, anime,anime.episode(episode.num))

@@ -660,12 +660,19 @@ def main():
             removeFromCrono(scelta)
             continue
 
-        if info:
-            provider.info_anime(anime)
-            anime.print_info()
-            #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
-            if fzf(["indietro","guardare"]) == "indietro":
-                continue
+        if not offline:
+            try:
+                provider.info_anime(anime)
+            except LookupError as e:
+                ut.my_print(e, color="rosso")
+                ut.my_print("Cercarlo manualmente", color="magenta")
+                safeExit()
+
+            if info:
+                anime.print_info()
+                #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
+                if fzf(["indietro","guardare"]) == "indietro":
+                    continue
 
         if offline:
             ut.downloaded_episodes(anime,f"{downloadPath()}/{anime.name}")
@@ -696,11 +703,6 @@ def main():
             listaEpisodi = scegliEpisodi()
             
         episode = listaEpisodi[0]
-
-        if not (privato or offline):
-            # Recupero informazioni anime in un Thread
-            info_thread = Thread(target=provider.info_anime, args=[anime])
-            info_thread.start()
 
         if downl:
             path = f"{downloadPath()}/{anime.name}"
