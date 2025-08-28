@@ -51,7 +51,7 @@ class Animeunity(Provider):
         return animes
 
 
-    def _latest(self, filter="all", specials=False) -> list[Anime]:
+    def _latest(self, filter, specials) -> list[Anime]:
         regex = re.search(r'<layout-items[^>]*items-json="([^"]*)"', self.html)
         if not regex:
             raise ValueError("Errore nel parsing della pagina principale")
@@ -61,13 +61,13 @@ class Animeunity(Provider):
         animes = list[Anime]()
         for data in json_data:
             result = data['anime']
-            title, last_ep, anilist_id, info = self._parse_info(result)
+            title, _, anilist_id, info = self._parse_info(result)
             if filter == "d" and info["Audio"] != "Italiano":
                 continue
             if filter == "s" and info["Audio"] == "Italiano":
                 continue
-            anime = Anime(title, result['id'], curr_ep=str(data['number']), last_ep=last_ep)
-            anime._set_episodes({data['number']: data['id']}, specials=specials)
+            anime = Anime(title, result['id'], curr_ep=str(data['number']))
+            anime._update_episodes({data['number']: data['id']}, specials=specials)
             anime._set_info(anilist_id, info)
             animes.append(anime)
         return animes
@@ -75,7 +75,7 @@ class Animeunity(Provider):
     def _episodes(self, anime: Anime) -> dict[str, str]:
         episodi = {}
         start_range = 1
-        episode_count = int(anime.last_ep) # potenzialmente non numerico
+        episode_count = max(int(anime.last_ep), int(anime.info["Episodi"]) if anime.info["Episodi"].isdigit() else 0) # potenzialmente non numerico
         # Fetch episodes in chunks
         while start_range <= episode_count:
             end_range = min(start_range + 119, episode_count)
@@ -122,7 +122,7 @@ class Animeunity(Provider):
 
     def _parse_info(self, data: dict) -> tuple[str, str, dict[str, str]]:
         title = data['title_eng'] or data['title'] or data['title_it']
-        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else str(data['episodes_count'])
+        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else None
         anilist_id = data['anilist_id']
         info = {
             "Categoria": data['type'],

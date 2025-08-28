@@ -90,7 +90,7 @@ class Provider(ABC):
         return self._latest(filter, ut.configData["general"]["specials"])
 
     @abstractmethod
-    def _latest(self, filter: str) -> list[Anime]:
+    def _latest(self, filter: str, specials: bool) -> list[Anime]:
         """
         Implementazione della latest
         """
@@ -104,7 +104,7 @@ class Provider(ABC):
         Args:   
             anime (Anime): l'anime di riferimento.
         """
-        anime._set_episodes(
+        anime._update_episodes(
             self._episodes(anime), 
             ut.configData["general"]["specials"]
         )
