@@ -1,6 +1,6 @@
 import requests
 from abc import ABC, abstractmethod
-from awcli.anime import Anime, Episode
+from awcli.anime import Anime
 import awcli.utilities as ut
 
 def error_handler(relink=False):
@@ -20,7 +20,7 @@ def error_handler(relink=False):
         return wrapper
     return decorator
 
-def relink_anime(self, callback, anime: Anime, episode: Episode | None = None):
+def relink_anime(self, callback, anime: Anime, episode: Anime.Episode | None = None):
     """
     Gestisce il caso in cui il riferimento dell'anime non è più valido
     """
@@ -122,12 +122,12 @@ class Provider(ABC):
         """
 
     @error_handler(relink=True)
-    def episode_link(self, anime: Anime, episode: Episode) -> str:
+    def episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         """
         Cerca il link del video dell'episodio. 
 
         Args:
-            episode (Episode): l'episodio di riferimento.
+            episode (Anime.Episode): l'episodio di riferimento.
 
         Returns:
             str: il link.
@@ -135,7 +135,7 @@ class Provider(ABC):
         return self._episode_link(anime, episode)
 
     @abstractmethod
-    def _episode_link(self, anime: Anime, episode: Episode) -> str:
+    def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         """
         Implementazione della episode_link.
         """

@@ -1,7 +1,7 @@
 import json
 import os
 import awcli.utilities as ut
-from awcli.anime import Anime, Episode
+from awcli.anime import Anime
 
 anime_log = list[Anime]()
 
@@ -73,13 +73,13 @@ def reload(last_releases: list[Anime]):
                 break
     save()
 
-def update(anime: Anime, episode: Episode):
+def update(anime: Anime, episode: Anime.Episode):
     """
     Aggiorna la cronologia.
 
     Args:
         anime (Anime): l'anime da aggiornare.
-        episode (Episode): l'episodio da aggiornare.
+        episode (Anime.Episode): l'episodio da aggiornare.
     """
     global anime_log
     anime_log.remove(anime) if anime in anime_log else None

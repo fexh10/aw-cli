@@ -1,7 +1,7 @@
 import re
 import json
 from html import unescape
-from awcli.providers.provider import Provider, Anime, Episode
+from awcli.providers.provider import Provider, Anime
 
 class Animeunity(Provider):
     """
@@ -28,7 +28,7 @@ class Animeunity(Provider):
             raise ValueError("CSRF token not found in the HTML")
         csrf_token = csrf_match.group(1)
         self._session.headers['x-csrf-token'] = csrf_token
-        self._session.cookies['animeunity_session'] = response.cookies.get('animeunity_session')
+        self._session.cookies['animeunity_session'] = response.cookies.get('animeunity_session') or ""
 
 
     def _search(self, input: str) -> list[Anime]:
@@ -93,7 +93,7 @@ class Animeunity(Provider):
             start_range = end_range + 1
         return episodi
 
-    def _episode_link(self, anime: Anime, episode: Episode) -> str:
+    def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         embed_url = f"{self.BASE_URL}/embed-url/{episode.ref}"
         response = self._session.get(embed_url, timeout=10)
         response.raise_for_status()
@@ -120,9 +120,9 @@ class Animeunity(Provider):
         anime.info["Correlati"] = data['related']
         
 
-    def _parse_info(self, data: dict) -> tuple[str, str, dict[str, str]]:
+    def _parse_info(self, data: dict) -> tuple[str, str, int, dict[str, str]]:
         title = data['title_eng'] or data['title'] or data['title_it']
-        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else None
+        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else "0"
         anilist_id = data['anilist_id']
         info = {
             "Categoria": data['type'],

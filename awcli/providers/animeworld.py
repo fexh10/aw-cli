@@ -1,7 +1,7 @@
 from functools import lru_cache
 import re
 from html import unescape
-from awcli.providers.provider import Provider, Anime, Episode
+from awcli.providers.provider import Provider, Anime
 from requests import exceptions
 
 class Animeworld(Provider):
@@ -83,7 +83,7 @@ class Animeworld(Provider):
         return episodes_url
 
 
-    def _episode_link(self, anime: Anime, episode: Episode) -> str:
+    def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
         html = self._get_html(episode.ref)
         res = re.search(pattern, html)

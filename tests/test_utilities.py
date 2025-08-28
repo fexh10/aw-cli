@@ -14,7 +14,7 @@ def mock_get():
         yield mock
 
 @pytest.mark.parametrize("input,expected", [
-    ("search_onepiece", ['One Piece','One Piece (ITA)','One Piece: Episode of Skypiea','One Piece 3D2Y: Superare la Morte di Ace! Rufy e il Giuramento Fatto ai Compagni','One Piece Movie 14: Stampede', 'One Piece: Barto no Himitsu no Heya!','One Piece Movie 15: Red']),
+    ("search_onepiece", ['One Piece','One Piece (ITA)','One Piece: Anime.Episode of Skypiea','One Piece 3D2Y: Superare la Morte di Ace! Rufy e il Giuramento Fatto ai Compagni','One Piece Movie 14: Stampede', 'One Piece: Barto no Himitsu no Heya!','One Piece Movie 15: Red']),
     ("search_dragonball", ["Dragon Ball Super","Dragon Ball Kai","Dragon Ball GT (ITA)","Dragon Ball Z (ITA)","Dragon Ball (ITA)","Dragon Ball Super (ITA)","Super Dragon Ball Heroes","Dragon Ball Z: Il Super Saiyan della leggenda","Dragon Ball Super Movie: Broly","Dragon Ball Super Movie: Broly (ITA)","Dragon Ball Super: Super Hero","Dragon Ball Super: Super Hero (ITA)",]),
     ("empty", []),
 ])

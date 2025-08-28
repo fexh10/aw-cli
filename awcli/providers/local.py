@@ -1,5 +1,5 @@
 import os
-from awcli.providers.provider import Provider, Anime, Episode
+from awcli.providers.provider import Provider, Anime
 
 class LocalProvider(Provider):
     """
@@ -27,7 +27,7 @@ class LocalProvider(Provider):
                 animes.append(anime)
         return animes
 
-    def _latest(self, filter="all", special: bool = False):
+    def _latest(self, filter: str, specials: bool) -> list[Anime]:
         for anime in (res :=self.search("")):
             anime.curr_ep = anime.episodes()[-1]
         return res
@@ -35,7 +35,7 @@ class LocalProvider(Provider):
     def _episodes(self, anime: Anime) -> dict[str, str]:
         filenames = os.listdir(f"{self.BASE_URL}/{anime.name}")
         if len(filenames) == 0:
-            return
+            return {}
         
         episodes = dict[str, str]()
         for filename in filenames:
@@ -43,10 +43,11 @@ class LocalProvider(Provider):
             episodes[num] = filename
         return episodes
 
-    def _episode_link(self, anime: Anime, episode: Episode) -> str:
+    def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         return f"{self.BASE_URL}/{anime.name}/{episode.ref}"
 
     def _info_anime(self, anime: Anime) -> dict:
-        other = self.history.get()[self.history.get().index(anime)]
+        other = self.history[self.history.index(anime)]
         anime.url = other.url
         anime._set_info(other.id_anilist, other.info)
+        return anime.to_dict()

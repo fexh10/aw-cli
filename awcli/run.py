@@ -10,7 +10,7 @@ from awcli import (
     history,
     utilities as ut,
 )
-from awcli.anime import Anime, Episode
+from awcli.anime import Anime
 from awcli.arg_parser import *
 
 signal(SIGINT, lambda signum, frame: exit())
@@ -63,7 +63,7 @@ def RicercaAnime() -> list[Anime]:
     ut.my_print("", end="", cls=True)
     return ut.my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
 
-def scegliEpisodi() -> list[Episode]:
+def scegliEpisodi() -> list[Anime.Episode]:
     """
     Fa scegliere all'utente gli episodi dell'anime da guardare.
 
@@ -103,17 +103,17 @@ def downloadPath(create: bool = True) -> str:
         os.makedirs(path)
     return path
 
-def scaricaEpisodio(ep: Episode, path: str):
+def scaricaEpisodio(ep: Anime.Episode, path: str):
     """
     Scarica l'episodio dell'anime e lo salva nella cartella specificata.
     Se l'episodio è già presente nella cartella, non viene riscaricato.
 
     Args:
-        ep (Episode): L'episodio da scaricare.
+        ep (Anime.Episode): L'episodio da scaricare.
         path (str): il percorso dove salvare l'episodio.
     """
     # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
-    ut.my_print(ep, color="blu", end=":\n")
+    ut.my_print(str(ep), color="blu", end=":\n")
     if not os.path.exists(f"{path}/{ep}.mp4"):
         SDL = SmartDL(provider.episode_link(anime, ep), f"{path}/{ep}.mp4")
         SDL.start()
@@ -275,14 +275,14 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     
     Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, ep, status_list, voto, preferiti)).start()
 
-def openVideos(episode: Episode):
+def openVideos(episode: Anime.Episode):
     """
     Riproduce l'episodio dell'anime.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
     Altrimenti, viene riprodotto in streaming.
 
     Args:
-        episode (Episode): l'episodio da riprodurre.
+        episode (Anime.Episode): l'episodio da riprodurre.
     """
 
     #se il video è già stato scaricato lo riproduco invece di farlo in streaming
