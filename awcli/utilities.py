@@ -2,7 +2,6 @@ import os
 import toml
 from time import sleep
 from collections import defaultdict
-from awcli.anime import Anime
 
 configData = defaultdict(dict)
 

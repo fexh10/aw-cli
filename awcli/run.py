@@ -2,12 +2,11 @@ import os
 import re
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
-from pySmartDL import SmartDL
-from pathlib import Path
 from threading import Thread
 from awcli import (
     anilist, 
     history,
+    download,
     utilities as ut,
 )
 from awcli.anime import Anime
@@ -82,43 +81,6 @@ def scegliEpisodi() -> list[Anime.Episode]:
 
     res = fzf(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
     return list(map(lambda num: anime.episode(num), sorted(res)))
-
-def downloadPath(create: bool = True) -> str:
-    """
-    Restituisce il percorso di download dell'anime, a seconda del sistema operativo in uso.
-    Se create è True (valore predefinito) e il percorso non esiste, viene creato.
-
-    Args:
-        create (bool, optional): se impostato a True, crea il percorso se non esiste. Valore predefinito: True.
-
-    Returns:
-        str: il percorso di download dell'anime.
-    """
-
-    if (ut.nome_os == "Android"):
-        path = f"/sdcard/Movies/Anime"
-    else:
-        path = f"{Path.home()}/Videos/Anime"
-    if create and not os.path.exists(path):
-        os.makedirs(path)
-    return path
-
-def scaricaEpisodio(ep: Anime.Episode, path: str):
-    """
-    Scarica l'episodio dell'anime e lo salva nella cartella specificata.
-    Se l'episodio è già presente nella cartella, non viene riscaricato.
-
-    Args:
-        ep (Anime.Episode): L'episodio da scaricare.
-        path (str): il percorso dove salvare l'episodio.
-    """
-    # se l'episodio non è ancora stato scaricato lo scarico, altrimenti skippo
-    ut.my_print(str(ep), color="blu", end=":\n")
-    if not os.path.exists(f"{path}/{ep}.mp4"):
-        SDL = SmartDL(provider.episode_link(anime, ep), f"{path}/{ep}.mp4")
-        SDL.start()
-    else:
-        ut.my_print("già scaricato, skippo...", color="giallo")
 
 def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
@@ -286,7 +248,7 @@ def openVideos(episode: Anime.Episode):
     """
 
     #se il video è già stato scaricato lo riproduco invece di farlo in streaming
-    path = f"{downloadPath(create=False)}/{anime.name}/{episode}.mp4"
+    path = f"{download.path(create=False)}/{anime.name}/{episode}.mp4"
 
     if os.path.exists(path):
         url_ep = path if ut.nome_os == "Android" else "file://" + path
@@ -423,6 +385,7 @@ def removeFromCrono(number: int):
             updateAnilist(anime.curr_ep, rating, drop=True)
 
     history.anime_log.pop(number)
+    history.save()
 
     if fzf(["esci","continua"], cls=True) == "esci":
         exit()
@@ -464,7 +427,7 @@ def main():
 
     if offline:
         from awcli.providers.local import LocalProvider
-        provider = LocalProvider(downloadPath(), history.get())
+        provider = LocalProvider(download.path(), history.get())
     else:
         match ut.configData["provider"]["source"]:
             case "animeunity":
@@ -549,13 +512,15 @@ def main():
         episode = listaEpisodi[0]
 
         if downl:
-            path = f"{downloadPath()}/{anime.name}"
+            path = f"{download.path()}/{anime.name}"
             for ep in listaEpisodi:
-                scaricaEpisodio(ep, path)
+                download.episode(anime, ep, provider, path)
             ut.my_print(f"\nVideo scaricato correttamente!\nLo puoi trovare nella cartella {path}\n", color="verde")
+            
+            anime.curr_ep = episode.num
+            if not any(anime == a for a in history.get()):
+                history.update(anime, episode)
 
-            history.update(anime, episode)
-                
             risp = fzf(["esci","indietro","guarda"])
             if risp == "esci":
                 exit()
