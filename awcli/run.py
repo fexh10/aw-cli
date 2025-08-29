@@ -80,7 +80,7 @@ def scegliEpisodi() -> list[Anime.Episode]:
         return anime._episodes
 
     res = fzf(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
-    return list(map(lambda num: anime.episode(num), sorted(res)))
+    return [anime.episode(num) for num in res]
 
 def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
@@ -284,6 +284,7 @@ def setupConfig() -> None:
         ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
     ut.configData["general"]["specials"] = fzf(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
+    
 
     #provider preferito
     ut.configData["provider"]["source"] = fzf(["animeunity", "animeworld"], "Scegli il provider: ")
@@ -512,11 +513,8 @@ def main():
         episode = listaEpisodi[0]
 
         if downl:
-            path = f"{download.path()}/{anime.name}"
-            for ep in listaEpisodi:
-                download.episode(anime, ep, provider, path)
-            ut.my_print(f"\nVideo scaricato correttamente!\nLo puoi trovare nella cartella {path}\n", color="verde")
-            
+            download.episodes(anime, listaEpisodi, provider)
+
             anime.curr_ep = episode.num
             if not any(anime == a for a in history.get()):
                 history.update(anime, episode)

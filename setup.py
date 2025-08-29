@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 installRequires = [
         "requests",
-        "pySmartDL",
+        "httpx",
         "wheel",
         "regex",
         "toml",
