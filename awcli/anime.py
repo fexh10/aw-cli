@@ -43,7 +43,10 @@ class Anime:
             episodi (dict[str, str]): dizionario dei riferimenti degli episodi dell'anime (numero->URL/ID).
         """
         for num, ref in episodes.items():
-            if self.episode(num) or (not specials and ("." in num or num == "0")):
+            if not specials and ("." in num or num == "0"):
+                continue
+            if (ep := self.episode(num)):
+                ep.ref = ref
                 continue
             self._episodes.append(Anime.Episode(self, num, ref))
 

@@ -1,7 +1,7 @@
 import re
 import json
 from html import unescape
-from awcli.providers.provider import Provider, Anime
+from awcli.providers.provider import Provider, Anime, requests
 
 class Animeunity(Provider):
     """
@@ -44,7 +44,7 @@ class Animeunity(Provider):
         animes = list[Anime]()
         for result in results:
             title, last_ep, anilist_id, info = self._parse_info(result)
-            anime = Anime(title, result['id'], last_ep=last_ep)
+            anime = Anime(title, str(result['id']), last_ep=last_ep)
             anime._set_info(anilist_id, info)
             animes.append(anime)
 
@@ -66,8 +66,8 @@ class Animeunity(Provider):
                 continue
             if filter == "s" and info["Audio"] == "Italiano":
                 continue
-            anime = Anime(title, result['id'], curr_ep=str(data['number']))
-            anime._update_episodes({data['number']: data['id']}, specials=specials)
+            anime = Anime(title, str(result['id']), curr_ep=str(data['number']))
+            anime._update_episodes({data['number']: str(data['id'])}, specials=specials)
             anime._set_info(anilist_id, info)
             animes.append(anime)
         return animes
@@ -111,6 +111,8 @@ class Animeunity(Provider):
         return src_mp4
 
     def _info_anime(self, anime: Anime):
+        if not anime.url.isdigit():
+            raise requests.HTTPError("Errore 404: pagina non trovata")
         search_url = f"{self.BASE_URL}/info_api/{anime.url}/"
         response = self._session.get(search_url, timeout=10)
         response.raise_for_status()

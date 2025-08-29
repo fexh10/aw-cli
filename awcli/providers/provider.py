@@ -12,10 +12,10 @@ def error_handler(relink=False):
             try:
                 return func(self, *args, **kwargs)
             except Exception as e:
-                if relink and isinstance(e, requests.exceptions.HTTPError):
+                if relink and isinstance(e, requests.HTTPError):
                     ut.my_print("Il link è stato cambiato", color="rosso", end="\n")
                     return relink_anime(self, func, *args, **kwargs)
-                ut.my_print(f"Errore durante {func.__name__}: {e}", color="rosso")
+                ut.my_print(f"Errore {e.__class__.__name__} durante {func.__name__}: {e}", color="rosso")
                 return None
         return wrapper
     return decorator
@@ -24,14 +24,14 @@ def relink_anime(self, callback, anime: Anime, episode: Anime.Episode | None = N
     """
     Gestisce il caso in cui il riferimento dell'anime non è più valido
     """
+    if episode:
+        self.episodes(anime)
+        return callback(self, anime, anime.episode(episode.num))
+
     if len(res := self.search(anime.name)) == 0:
         raise LookupError(f"Nessun risultato trovato per {anime.name} su {self.__class__.__name__}")
     anime.url = res[0].url
-    if episode:
-        self.episodes(anime)
-        callback(self, anime,anime.episode(episode.num))
-    else:
-        callback(self,anime)
+    callback(self,anime)
 
 
 class Provider(ABC):
