@@ -1,8 +1,7 @@
 from functools import lru_cache
 import re
 from html import unescape
-from awcli.providers.provider import Provider, Anime
-from requests import exceptions
+from awcli.providers.provider import Provider, Anime, HTTPError
 
 class Animeworld(Provider):
     """
@@ -32,20 +31,20 @@ class Animeworld(Provider):
         Returns:
             str: l'html della pagina web selezionata.
         """
-        try:
-            response = self._session.get(url)
-        except exceptions.ConnectionError:
-            raise exceptions.ConnectionError("Errore di connessione")
-        except exceptions.MissingSchema:
-            raise exceptions.HTTPError("Errore 404: pagina non trovata")
+        #potresti controllare a priori l'url
+        if not re.match(r'^https?://', url):
+            raise HTTPError("Errore 404: pagina non trovata")
+
+        response = self.Client.get(url)
+        response.raise_for_status()
 
         if response.status_code == 202: 
             match = re.search(r'(SecurityAW-\w+)=(.*) ;', response.text)
-            self._session.cookies = {match.group(1): match.group(2)}
-            response = self._session.get(url)
+            self.Client.cookies = {match.group(1): match.group(2)}
+            response = self.Client.get(url)
 
         if response.status_code != 200 or "Errore 404" in response.text:
-            raise exceptions.HTTPError("Errore 404: pagina non trovata")
+            raise HTTPError("Errore 404: pagina non trovata")
 
         return response.text    
 

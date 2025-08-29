@@ -1,4 +1,4 @@
-import requests
+import httpx
 
 class TokenError(Exception):
     pass
@@ -61,7 +61,7 @@ def getAnilistUserId(token) -> int:
     """
 
     header_anilist = {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query})
+    risposta = httpx.post('https://graphql.anilist.co', headers=header_anilist, json={'query': query})
     if risposta.status_code != 200:
         raise TokenError("Errore: Token AniList sbagliato")
 
@@ -98,8 +98,8 @@ def getAnimePrivateRating(token, user_id, id_anime: int) -> (float | None):
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/json', 'Accept': 'application/json'
     }
-    
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist, json={'query': query, 'variables': var})
+
+    risposta = httpx.post('https://graphql.anilist.co', headers=header_anilist, json={'query': query, 'variables': var})
     if risposta.status_code != 200:
         return None
     
@@ -117,7 +117,7 @@ def requestModifyAnilist(token, query: str, var: dict):
     """
 
     header_anilist = {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'application/json'}
-    risposta = requests.post('https://graphql.anilist.co',headers=header_anilist,json={'query' : query, 'variables' : var})
-    
+    risposta = httpx.post('https://graphql.anilist.co', headers=header_anilist, json={'query': query, 'variables': var})
+
     if risposta.status_code != 200:
         print("Impossibile aggiornare AniList!")

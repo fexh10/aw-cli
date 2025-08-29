@@ -97,7 +97,7 @@ async def episode(anime: Anime, ep: Anime.Episode, provider: Provider, path: str
 
     url = provider.episode_link(anime, ep)
     async with AsyncClient() as client:
-        async with client.stream("GET", url, headers=provider._session.headers) as response:
+        async with client.stream("GET", url, headers=provider.Client.headers) as response:
             total = int(response.headers.get('content-length', 0))
             downloaded = 0
             with open(filename + ".temp", "wb") as f:

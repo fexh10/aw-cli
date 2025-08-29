@@ -1,7 +1,7 @@
 import re
 import json
 from html import unescape
-from awcli.providers.provider import Provider, Anime, requests
+from awcli.providers.provider import Provider, Anime, HTTPError
 
 class Animeunity(Provider):
     """
@@ -20,23 +20,22 @@ class Animeunity(Provider):
     
     def _get_token(self) -> None:
         # Send a GET request to the specified URL
-        response = self._session.get(self.BASE_URL)
+        response = self.Client.get(self.BASE_URL)
         self.html = response.text
         # Regex to find the meta tag with csrf-token and extract the content
         csrf_match = re.search(r'<meta.*?name="csrf-token".*?content="([^"]*)".*?>', self.html)
         if not csrf_match:
             raise ValueError("CSRF token not found in the HTML")
         csrf_token = csrf_match.group(1)
-        self._session.headers['x-csrf-token'] = csrf_token
-        self._session.cookies['animeunity_session'] = response.cookies.get('animeunity_session') or ""
+        self.Client.headers['x-csrf-token'] = csrf_token
+        self.Client.cookies['animeunity_session'] = response.cookies.get('animeunity_session') or ""
 
 
     def _search(self, input: str) -> list[Anime]:
         search_url = f"{self.BASE_URL}/livesearch"
-        response = self._session.post(
+        response = self.Client.post(
             url=search_url,
-            data={"title": input},
-            timeout=10
+            data={"title": input}
         )
         response.raise_for_status()
 
@@ -80,13 +79,12 @@ class Animeunity(Provider):
         while start_range <= episode_count:
             end_range = min(start_range + 119, episode_count)
             search_url = f"{self.BASE_URL}/info_api/{anime.url}/1"
-            response = self._session.get(
+            response = self.Client.get(
                 url=search_url,
                 params={
                     "start_range": start_range,
                     "end_range": end_range
-                },
-                timeout=10
+                }
             )
             response.raise_for_status()
             episodi.update({str(episode['number']): str(episode['id']) for episode in response.json()['episodes']})
@@ -95,12 +93,12 @@ class Animeunity(Provider):
 
     def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         embed_url = f"{self.BASE_URL}/embed-url/{episode.ref}"
-        response = self._session.get(embed_url, timeout=10)
+        response = self.Client.get(embed_url)
         response.raise_for_status()
         iframe_src = response.text.strip()
 
         # Fetch the video page
-        video_response = self._session.get(iframe_src, timeout=10)
+        video_response = self.Client.get(iframe_src)
         video_response.raise_for_status()
 
         # Usa una regex per estrarre il link video MP4 dallo script
@@ -112,9 +110,9 @@ class Animeunity(Provider):
 
     def _info_anime(self, anime: Anime):
         if not anime.url.isdigit():
-            raise requests.HTTPError("Errore 404: pagina non trovata")
+            raise HTTPError("Errore 404: pagina non trovata")
         search_url = f"{self.BASE_URL}/info_api/{anime.url}/"
-        response = self._session.get(search_url, timeout=10)
+        response = self.Client.get(search_url)
         response.raise_for_status()
         data = response.json()
         anime.last_ep = str(data['episodes_count'])
