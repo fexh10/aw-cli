@@ -24,7 +24,7 @@ def read():
     for entry in data:
         anime = Anime(
             name=entry["name"],
-            url=entry["url"],
+            ref=entry["ref"],
             curr_ep=entry["curr_ep"],
             last_ep=entry["last_ep"]
         )
@@ -131,7 +131,7 @@ def legacy() -> list[Anime]:
             riga.append(0)
         if len(riga) < 8:
             riga.append(0)
-        anime = Anime(name=riga[0], url=riga[2], curr_ep=riga[1], last_ep=riga[5])
+        anime = Anime(name=riga[0], ref=riga[2], curr_ep=riga[1], last_ep=riga[5])
         anime._update_episodes({anime.curr_ep: "Not available"}, ut.configData["general"]["specials"])
         if (progress := int(riga[7])) == 0:
             anime.episode(anime.curr_ep).mark_completed()

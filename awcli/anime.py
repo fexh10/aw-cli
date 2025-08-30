@@ -11,9 +11,9 @@ class Anime:
         ep (str, optional):.
     """ 
 
-    def __init__(self, name: str, url: str, curr_ep: str = "0", last_ep: str = "0") -> None:
+    def __init__(self, name: str, ref: str, curr_ep: str = "0", last_ep: str = "0") -> None:
         self.name: str = name
-        self.url: str = url
+        self.ref: str = ref
         self.id_anilist: int = 0
         self.curr_ep: str = curr_ep
         self.last_ep: str = last_ep if last_ep != "0" else curr_ep
@@ -100,8 +100,6 @@ class Anime:
             case "2": tmp_info["Stato"] = "Non rilasciato"
             case _: tmp_info["Stato"] = "Sconosciuto"
 
-        tmp_info.pop("Correlati")
-
         tmp_info["Trama"] = tmp_info.pop("Trama")
 
         for key, value in tmp_info.items():
@@ -117,7 +115,7 @@ class Anime:
         """
         return {
             "name": self.name,
-            "url": self.url,
+            "ref": self.ref,
             "curr_ep": self.curr_ep,
             "last_ep": self.last_ep,
             "id_anilist": self.id_anilist,

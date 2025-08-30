@@ -48,6 +48,6 @@ class LocalProvider(Provider):
 
     def _info_anime(self, anime: Anime) -> dict:
         other = self.history[self.history.index(anime)]
-        anime.url = other.url
+        anime.ref = other.ref
         anime._set_info(other.id_anilist, other.info)
         return anime.to_dict()

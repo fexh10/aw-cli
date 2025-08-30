@@ -66,7 +66,7 @@ class Animeunity(Provider):
             if filter == "s" and info["Audio"] == "Italiano":
                 continue
             anime = Anime(title, str(result['id']), curr_ep=str(data['number']))
-            anime._update_episodes({data['number']: str(data['id'])}, specials=specials)
+            anime._update_episodes({str(data['number']): str(data['id'])}, specials=specials)
             anime._set_info(anilist_id, info)
             animes.append(anime)
         return animes
@@ -78,7 +78,7 @@ class Animeunity(Provider):
         # Fetch episodes in chunks
         while start_range <= episode_count:
             end_range = min(start_range + 119, episode_count)
-            search_url = f"{self.BASE_URL}/info_api/{anime.url}/1"
+            search_url = f"{self.BASE_URL}/info_api/{anime.ref}/1"
             response = self.Client.get(
                 url=search_url,
                 params={
@@ -109,16 +109,15 @@ class Animeunity(Provider):
         return src_mp4
 
     def _info_anime(self, anime: Anime):
-        if not anime.url.isdigit():
+        if not anime.ref.isdigit():
             raise HTTPError("Errore 404: pagina non trovata")
-        search_url = f"{self.BASE_URL}/info_api/{anime.url}/"
+        search_url = f"{self.BASE_URL}/info_api/{anime.ref}/"
         response = self.Client.get(search_url)
         response.raise_for_status()
         data = response.json()
         anime.last_ep = str(data['episodes_count'])
         anime.info["Genere"] = ', '.join(data['genres'])
-        anime.info["Correlati"] = data['related']
-        
+        # anime.info["Correlati"] = data['related']
 
     def _parse_info(self, data: dict) -> tuple[str, str, int, dict[str, str]]:
         title = data['title_eng'] or data['title'] or data['title_it']

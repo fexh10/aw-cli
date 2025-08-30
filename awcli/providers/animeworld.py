@@ -31,7 +31,6 @@ class Animeworld(Provider):
         Returns:
             str: l'html della pagina web selezionata.
         """
-        #potresti controllare a priori l'url
         if not re.match(r'^https?://', url):
             raise HTTPError("Errore 404: pagina non trovata")
 
@@ -75,7 +74,7 @@ class Animeworld(Provider):
             case  _ : return animes[:45]
 
     def _episodes(self, anime: Anime):
-        html = self._get_html(anime.url)
+        html = self._get_html(anime.ref)
         episodes_url = dict[str, str]()
         for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
             episodes_url[num] = self.BASE_URL + url
@@ -91,7 +90,7 @@ class Animeworld(Provider):
         return res.group(1)
     
     def _info_anime(self, anime: Anime):
-        html = self._get_html(anime.url)
+        html = self._get_html(anime.ref)
 
         res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
         anilist_id = int(res.group(1)) if res else 0
