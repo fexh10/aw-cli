@@ -85,6 +85,7 @@ def update(anime: Anime, episode: Anime.Episode):
     anime_log.remove(anime) if anime in anime_log else None
     last_completed = episode.is_completed() and episode.num == anime.last_ep
     if anime.info["Stato"] == "1" and last_completed:
+        save()
         return
 
     if last_completed:
