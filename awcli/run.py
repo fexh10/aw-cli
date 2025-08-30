@@ -76,7 +76,7 @@ def scegliEpisodi() -> list[Anime.Episode]:
     
     ut.my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
-    if anime.last_ep == 1:
+    if int(anime.last_ep) == 1:
         return anime._episodes
 
     res = fzf(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
@@ -200,7 +200,7 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     
     return progress*100//duration >= completeLimit, progress
 
-def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
+def update_anilist(ep: Anime.Episode, anilist_rating: float, drop: bool = False):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -208,7 +208,8 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
     verrà chiesto il voto da dare.
 
     Args:
-        ep (int): il numero dell'episodio visualizzato.
+        ep (Anime.Episode): l'episodio da aggiornare.
+        anilist_rating (float): il voto che l'utente ha assegnato all'anime.
         drop (bool, optional): True se l'utente decide di droppare l'anime, altrimenti False.
     """
     
@@ -216,26 +217,25 @@ def updateAnilist(ep: int, voto_anilist: float, drop: bool = False):
         ut.my_print("Impossibile aggiornare AniList: id anime non trovato!", color="rosso")
         return
     
-    voto = 0
-    preferiti = False
+    rating = 0
+    favorite = False
     status_list = 'CURRENT' if not drop else 'DROPPED'
-
     #se ho finito di vedere l'anime o lo stato è dropped    
-    if (ep == anime.last_ep and anime.info["Stato"] == "1") or status_list == 'DROPPED':
+    if (ep.numeric() == int(anime.last_ep) and anime.info["Stato"] == "1") or status_list == 'DROPPED':
         if status_list == 'CURRENT':
             status_list = 'COMPLETED'
     
         #chiedo di votare
         if ut.configData["anilist"]["rating"]:
             is_number = lambda n: float(n) if n.replace('.', '', 1).isdigit() else None
-            voto = ut.my_input("Inserisci un voto per l'anime" + (f" (voto corrente: {voto_anilist})" if voto_anilist else ""), is_number)
+            rating = ut.my_input("Inserisci un voto per l'anime" + (f" (voto corrente: {anilist_rating})" if anilist_rating else ""), is_number)
     
         #chiedo di mettere tra i preferiti
         if ut.configData["anilist"]["favorite"] and status_list == 'COMPLETED':
             ut.my_print(f"Riproduco {anime.name} Ep. {anime.last_ep}", color="giallo", cls=True)
-            preferiti = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
+            favorite = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
     
-    Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, ep, status_list, voto, preferiti)).start()
+    Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, ep.numeric(), status_list, rating, favorite)).start()
 
 def openVideos(episode: Anime.Episode):
     """
@@ -383,7 +383,7 @@ def removeFromCrono(number: int):
             ut.sleep(1)
         else:
             rating = anilist.getAnimePrivateRating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
-            updateAnilist(anime.curr_ep, rating, drop=True)
+            update_anilist(anime.episode(anime.curr_ep), rating, drop=True)
 
     history.anime_log.pop(number)
     history.save()
@@ -539,7 +539,7 @@ def main():
                     episode.mark_completed()
                     #update watchlist anilist se ho fatto l'accesso
                     if voto_anilist:
-                        updateAnilist(episode.numeric(), voto_anilist.result())
+                        update_anilist(episode, voto_anilist.result())
 
                 anime.curr_ep = episode.num
                 history.update(anime, episode) 
@@ -547,7 +547,7 @@ def main():
             # menù che si visualizza dopo aver finito la riproduzione
             lista_menu = ["esci", "indietro"]
 
-            if anime.last_ep != 1:
+            if anime.last_ep != '1':
                 lista_menu.append("seleziona")
             if episode.prev() or (not offline and episode.numeric() > 1):
                 lista_menu.append("antecedente")
