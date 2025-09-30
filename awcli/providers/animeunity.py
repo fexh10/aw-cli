@@ -115,6 +115,7 @@ class Animeunity(Provider):
         response = self.Client.get(search_url)
         response.raise_for_status()
         data = response.json()
+        anime.info["Stato"] = "0" if data['status'] == "In Corso" else "1" if data['status'] == "Terminato" else "2"
         anime.last_ep = str(data['episodes_count'])
         anime.info["Genere"] = ', '.join(data['genres'])
         # anime.info["Correlati"] = data['related']
