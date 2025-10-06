@@ -76,7 +76,7 @@ def scegliEpisodi() -> list[Anime.Episode]:
     
     ut.my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
-    if int(anime.last_ep) == 1:
+    if len(anime.episodes()) == 1:
         return anime._episodes
 
     res = fzf(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
@@ -484,14 +484,14 @@ def main():
             if fzf(["indietro","guardare"]) == "indietro":
                 continue
 
-        if len(anime.episodes()) < 1:
+        if len(anime.episodes()) == 0:
             provider.episodes(anime)
 
-        if anime.last_ep == '0':
+        if len(anime.episodes()) == 0:
             ut.my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
             ut.sleep(1)
             reload = False
-            continue      
+            continue
 
         if cronologia and anime.episode(anime.curr_ep).is_completed():
             if anime.episode(anime.curr_ep).next() is None:
