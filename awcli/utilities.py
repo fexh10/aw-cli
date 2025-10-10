@@ -2,23 +2,40 @@ import os
 import re
 import toml
 import requests
+import warnings
+import subprocess
 from time import sleep
 from html import unescape
 from collections import defaultdict
 from awcli.anime import Anime
+from urllib3.exceptions import InsecureRequestWarning
 
-_url = "https://www.animeworld.so"
+_url = "https://www.animeworld.ac"
 configData = defaultdict(dict)
+_ssl_warning_shown = False
+
+# Inizializza la sessione di requests
+session = requests.Session()
+session.headers.update({
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+})
 
 # controllo il tipo del dispositivo
 def get_os() -> str:
-    out = os.popen("uname -a").read().strip().split()
+    # Rilevamento specifico per iSH
+    if os.path.exists("/proc/ish"):
+        return "iOS"
+
+    result = subprocess.run(["uname", "-a"], capture_output=True, text=True, check=False)
+    out = result.stdout.strip().split()
     nome_os = out[0]
     if nome_os == "Linux":
         if "Android" == out[-1]:
             nome_os = "Android"
         elif "WSL" in out[2]:
             nome_os = "WSL"
+        elif len(out) > 1 and any(x in out[1].lower() for x in ["iphone", "ipad", "ipod"]):
+            nome_os = "iOS"
     return nome_os
 
 nome_os = get_os()
@@ -78,23 +95,33 @@ def getHtml(url: str) -> str:
     Returns:
         str: l'html della pagina web selezionata.
     """
-    global cookies
+    global _ssl_warning_shown
     try:
-        result = requests.get(url, headers=headers, cookies=cookies)
-    except requests.exceptions.ConnectionError:
-        my_print("Errore di connessione", color="rosso")
-        exit()
+        # Sopprime l'avviso di richiesta non sicura per evitare output duplicati
+        warnings.filterwarnings('ignore', category=InsecureRequestWarning)
 
-    if result.status_code == 202: 
-        my_print("Reindirizzamento...", color="giallo", end="\n") 
-        match = re.search(r'(SecurityAW-\w+)=(.*) ;', result.text)
-        key = match.group(1) 
-        value = match.group(2) 
-        cookies = {key: value} 
-        result = requests.get(url, headers=headers, cookies=cookies)
-    
+        if not _ssl_warning_shown:
+            my_print("ATTENZIONE: La verifica del certificato SSL è disabilitata. Questo potrebbe esporre a rischi di sicurezza.", color="giallo")
+            _ssl_warning_shown = True
+
+        result = session.get(url, timeout=10, verify=False)
+        result.raise_for_status()  # Lancia un'eccezione per status code non 2xx
+
+        # Gestione del reindirizzamento di Cloudflare
+        if result.status_code == 202 and "SecurityAW" in result.text:
+            my_print("Reindirizzamento...", color="giallo", end="\n")
+            result = session.get(url, timeout=10, verify=False)
+            result.raise_for_status()
+
+    except requests.exceptions.RequestException as e:
+        my_print(f"Errore di connessione: {e}", color="rosso")
+        exit()
+    finally:
+        # Ripristina il comportamento predefinito degli avvisi
+        warnings.resetwarnings()
+
     if result.status_code != 200:
-        my_print("Errore: pagina non trovata", color="rosso")
+        my_print(f"Errore: pagina non trovata (status code: {result.status_code})", color="rosso")
         exit()
     
     return result.text
@@ -121,7 +148,7 @@ def search(input: str) -> list[Anime]:
     # prendo i link degli anime relativi alla ricerca
     for url, name in re.findall(r'<div class="inner">(?:.|\n)+?<a href="([^"]+)"\s+data-jtitle="[^"]+"\s+class="name">([^<]+)', html):
         if nome_os == "Android":
-            caratteri_proibiti = '"*/:<>?\|'
+            caratteri_proibiti = r'"*/:<>?\|'
             caratteri_rimpiazzo = '”⁎∕꞉‹›︖＼⏐'
             for a, b in zip(caratteri_proibiti, caratteri_rimpiazzo):
                 name = name.replace(a, b)
@@ -262,10 +289,4 @@ def getConfig() -> None:
     if nome_os == "WSL": 
         configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''
         if "syncplay" in configData:
-            configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'"
-
-headers = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
-}
-
-cookies = {}
+            configData["syncplay"]["path"] = f'''/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}' '''

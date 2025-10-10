@@ -9,7 +9,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 # Definisce la fixture mock_get
 @pytest.fixture
 def mock_get():
-    with patch('requests.get') as mock:
+    with patch('awcli.utilities.session.get') as mock:
         mock.return_value.status_code = 200
         yield mock
 
@@ -19,28 +19,28 @@ def mock_get():
     ("empty", []),
 ])
 def test_search(mock_get, input, expected):
-    input = TEST_DIR + "/" + input
-    with open(input, 'r') as html:
+    input_file = TEST_DIR + "/" + input
+    with open(input_file, 'r') as html:
         mock_get.return_value.text = html.read()
 
-    results = [anime.name for anime in utilities.search(input)]
+    results = [anime.name for anime in utilities.search("dummy_search")]
     assert results == expected
 
 def test_download(mock_get):
-    input = TEST_DIR + "/" + "theeminenceinshadowep13"
-    with open(input) as html:
+    input_file = TEST_DIR + "/" + "theeminenceinshadowep13"
+    with open(input_file) as html:
         mock_get.return_value.text = html.read()
     
-    results = utilities.download(input)
-    expected = "https://server18.streamingaw.online/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
-    ##assert results == expected
+    results = utilities.download("https://www.animeworld.ac/play/the-eminence-in-shadow/Dcqo-Q")
+    expected = "https://srv13-hana.sweetpixel.org/DDL/ANIME/KageNoJitsuryokushaNiNaritakute/KageNoJitsuryokushaNiNaritakute_Ep_13_SUB_ITA.mp4"
+    assert results == expected
     
 def test_get_info_anime(mock_get):
-    input = TEST_DIR + "/" + "theeminenceinshadowep13"
-    with open(input) as html:
+    input_file = TEST_DIR + "/" + "theeminenceinshadowep13"
+    with open(input_file) as html:
         mock_get.return_value.text = html.read()
     
-    results = utilities.get_info_anime(input)
+    results = utilities.get_info_anime("https://www.animeworld.ac/play/the-eminence-in-shadow/pzm5jA")
     expected = [
         "Anime",
         "Giapponese",
@@ -72,4 +72,3 @@ def test_my_input(input_mock, input_str, format_func, input_values, expected_out
     result = utilities.my_input(input_str, format_func)
     # Verifica che il risultato sia corretto
     assert result == expected_output
-
