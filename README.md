@@ -1,7 +1,9 @@
 # aw-cli
 <h3 align="center">
 
-Guarda anime dal terminale e molto altro!<br /> Gli anime vengono presi da <a href="https://www.animeworld.tv/">AnimeWorld</a>
+Guarda anime dal terminale e molto altro!
+
+ Gli anime vengono presi da [Animeworld](https://www.animeworld.ac/) e [Animeunity](https://www.animeunity.so/)
 
 </h3>
 
@@ -22,9 +24,9 @@ https://github.com/fexh10/aw-cli/assets/90156014/88e1c2e2-bb7f-4002-8784-26f7086
 
 ## Installazione
 
-Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html). <br /> 
+Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html).
 
-È richiesta l'installazione di [fzf](https://github.com/junegunn/fzf?tab=readme-ov-file#installation).<br /> 
+È richiesta l'installazione di [fzf](https://github.com/junegunn/fzf?tab=readme-ov-file#installation).
 
 <details><summary><b>Linux, MacOS</b></summary>
 È possibile installare aw-cli da pip:
@@ -40,7 +42,8 @@ Attualmente, Windows presenta due versioni: la più recente, progettata per funz
 <br>
 
 <details><summary><b>Ultima Versione</b></summary>
-L'ultima versione per Windows richiede installare <a href="https://learn.microsoft.com/it-it/windows/wsl/install">WSL</a>:
+
+L'ultima versione per Windows richiede installare [WSL](https://learn.microsoft.com/it-it/windows/wsl/install):
 
 ```
 wsl --install
@@ -54,7 +57,8 @@ python3 -m pip install aw-cli
 
 </details>
 <details><summary><b>Versione Legacy</b></summary>
-Per installare la versione Legacy, è necessario avere <a href="https://www.git-scm.com/download/win">git</a>.
+
+Per installare la versione Legacy, è necessario avere [git](https://www.git-scm.com/download/win).
 
 
 ```
@@ -65,7 +69,8 @@ python3 -m pip install git+https://github.com/fexh10/aw-cli.git@winLegacy
 </details>
 
 <details><summary><b>Android</b></summary>
-Android richiede l'installazione di <a href="https://github.com/termux/termux-app/releases/tag/v0.118.0">termux</a>. <br>
+
+Android richiede l'installazione di [Termux](https://github.com/termux/termux-app/releases).
 
 ```
 pkg update && pkg upgrade
@@ -83,6 +88,7 @@ apk upgrade
 apk add python3 python3-dev py3-pip gcc musl-dev git
 python3 -m pip install git+https://github.com/fexh10/aw-cli.git@iosCompatibility
 ```
+
 Nota che la velocità di download e caricamento molto bassa è un problema di iSH e non di aw-cli. 
 </details>
 
@@ -160,6 +166,7 @@ Configurazione:
 ```
 
 ## Crediti
-Progetto ispirato a <a href="https://github.com/pystardust/ani-cli">ani-cli</a>.
 
-Un ringraziamento speciale a <a href="https://github.com/axtrat">axtrat</a> per l'aiuto nella realizzazione del progetto.
+Progetto ispirato a [ani-cli](https://github.com/pystardust/ani-cli).
+
+Un ringraziamento speciale a [axtrat](https://github.com/axtrat) per l'aiuto nella realizzazione del progetto.
