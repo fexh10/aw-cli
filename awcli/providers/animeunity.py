@@ -1,7 +1,7 @@
 import re
 import json
 from html import unescape
-from awcli.providers.provider import Provider, Anime, HTTPError
+from awcli.providers.provider import Provider, Anime, AnimeStatus, HTTPError
 
 class Animeunity(Provider):
     """
@@ -42,9 +42,9 @@ class Animeunity(Provider):
         results = response.json()['records']
         animes = list[Anime]()
         for result in results:
-            title, last_ep, anilist_id, info = self._parse_info(result)
+            title, last_ep, anilist_id, status, info = self._parse_info(result)
             anime = Anime(title, str(result['id']), last_ep=last_ep)
-            anime._set_info(anilist_id, info)
+            anime.set_info(anilist_id, status, info)
             animes.append(anime)
 
         return animes
@@ -60,14 +60,14 @@ class Animeunity(Provider):
         animes = list[Anime]()
         for data in json_data:
             result = data['anime']
-            title, _, anilist_id, info = self._parse_info(result)
+            title, _, anilist_id, status, info = self._parse_info(result)
             if filter == "d" and info["Audio"] != "Italiano":
                 continue
             if filter == "s" and info["Audio"] == "Italiano":
                 continue
             anime = Anime(title, str(result['id']), curr_ep=str(data['number']))
             anime._update_episodes({str(data['number']): str(data['id'])}, specials=specials)
-            anime._set_info(anilist_id, info)
+            anime.set_info(anilist_id, status, info)
             animes.append(anime)
         return animes
 
@@ -115,15 +115,32 @@ class Animeunity(Provider):
         response = self.Client.get(search_url)
         response.raise_for_status()
         data = response.json()
-        anime.info["Stato"] = "0" if data['status'] == "In Corso" else "1" if data['status'] == "Terminato" else "2"
+        match data['status']:
+            case "In Corso":
+                anime.status = AnimeStatus.ONGOING
+            case "Terminato":
+                anime.status = AnimeStatus.FINISHED
+            case "Non Rilasciato":
+                anime.status = AnimeStatus.NOT_RELEASED
+            case _:
+                anime.status = AnimeStatus.UNKNOWN
         anime.last_ep = str(data['episodes_count'])
         anime.info["Genere"] = ', '.join(data['genres'])
         # anime.info["Correlati"] = data['related']
 
-    def _parse_info(self, data: dict) -> tuple[str, str, int, dict[str, str]]:
+    def _parse_info(self, data: dict) -> tuple[str, str, int, AnimeStatus, dict[str, str]]:
         title = data['title_eng'] or data['title'] or data['title_it']
-        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else "0"
+        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else "0" 
         anilist_id = data['anilist_id']
+        match data['status']:
+            case "In Corso":
+                status = AnimeStatus.ONGOING
+            case "Terminato":
+                status = AnimeStatus.FINISHED
+            case "Non Rilasciato":
+                status = AnimeStatus.NOT_RELEASED
+            case _:
+                status = AnimeStatus.UNKNOWN
         info = {
             "Categoria": data['type'],
             "Audio": "Italiano" if data['dub'] else "??",
@@ -131,10 +148,9 @@ class Animeunity(Provider):
             "Stagione": data['season'],
             "Studio": data['studio'],
             "Voto": data['score'],
-            "Durata": f"{data['episodes_length']} min",
+            "Durata": f"{data['episodes_length']} min", # potrebbe non essere in minuti"
             "Episodi": str(data['episodes_count']) if data['episodes_count'] != 0 else "??",
-            "Stato": "0" if data['status'] == "In Corso" else "1" if data['status'] == "Terminato" else "2",
             "Visualizzazioni": data['visite'],
             "Trama": data['plot'],
         }
-        return title, last_ep, anilist_id, info
+        return title, last_ep, anilist_id, status, info

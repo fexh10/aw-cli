@@ -28,7 +28,7 @@ def read():
             curr_ep=entry["curr_ep"],
             last_ep=entry["last_ep"]
         )
-        anime._update_episodes(
+        anime.update_episodes(
             {ep["num"]: ep["ref"] for ep in entry["episodes"]}, 
             specials=ut.configData["general"]["specials"]
         )
@@ -69,7 +69,7 @@ def reload(last_releases: list[Anime]):
     for i, anime in reversed(list(enumerate(anime_log))):
         for anime_latest in last_releases:
             if anime.name == anime_latest.name and anime.last_ep != anime_latest.last_ep:
-                anime._update_episodes({num: anime_latest.episode(num).ref for num in anime_latest.episodes()})
+                anime.update_episodes({num: anime_latest.episode(num).ref for num in anime_latest.episodes()})
                 break
     save()
 
@@ -133,7 +133,7 @@ def legacy() -> list[Anime]:
         if len(riga) < 8:
             riga.append(0)
         anime = Anime(name=riga[0], ref=riga[2], curr_ep=riga[1], last_ep=riga[5])
-        anime._update_episodes({anime.curr_ep: "Not available"}, ut.configData["general"]["specials"])
+        anime.update_episodes({anime.curr_ep: "Not available"}, ut.configData["general"]["specials"])
         if (progress := int(riga[7])) == 0:
             anime.episode(anime.curr_ep).mark_completed()
         else:

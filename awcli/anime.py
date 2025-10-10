@@ -1,5 +1,19 @@
 from __future__ import annotations
+from enum import Enum
+from functools import total_ordering
 import awcli.utilities as ut
+
+
+class AnimeStatus(Enum):
+    """Enum for anime status, maintaining the original order."""
+    ONGOING = (0, "In corso")
+    FINISHED = (1, "Finito") 
+    NOT_RELEASED = (2, "Non rilasciato")
+    UNKNOWN = (-1, "Sconosciuto")
+    
+    def __init__(self, code: int, display_name: str):
+        self.code = code
+        self.display_name = display_name
 
 class Anime:
     """
@@ -7,16 +21,20 @@ class Anime:
 
     Attributes:
         name (str): il nome dell'anime.
-        url (str): l'URL della pagina dell'anime su AnimeWorld.  
-        ep (str, optional):.
+        ref (str): il riferimento dell'anime.
+        curr_ep (str): l'episodio corrente.
+        last_ep (str): l'ultimo episodio disponibile.
+        id_anilist (int): l'ID dell'anime su Anilist.
+        info (dict[str, str]): dizionario con le informazioni dell'anime.
     """ 
 
-    def __init__(self, name: str, ref: str, curr_ep: str = "0", last_ep: str = "0") -> None:
+    def __init__(self, name: str, ref: str, curr_ep: str = "0", last_ep: str = "0", status: AnimeStatus = AnimeStatus.UNKNOWN) -> None:
         self.name: str = name
         self.ref: str = ref
         self.id_anilist: int = 0
         self.curr_ep: str = curr_ep
         self.last_ep: str = last_ep if last_ep != "0" else curr_ep
+        self.status: AnimeStatus = status
         self._episodes: list[Anime.Episode] = []
         self._num_to_index: dict[str, int] = {}
         self.info: dict[str, str] = {}
@@ -28,7 +46,7 @@ class Anime:
         if self.id_anilist and other.id_anilist:
             return self.id_anilist == other.id_anilist
         
-        return self.name == other.name
+        return self.name == other.name # idealmente andrebbe tolto
 
     def __hash__(self) -> int:
         if self.id_anilist:
@@ -36,7 +54,7 @@ class Anime:
         
         return hash(self.name)
 
-    def _update_episodes(self, episodes: dict[str, str], specials: bool = True) -> None:
+    def update_episodes(self, episodes: dict[str, str], specials: bool = True) -> None:
         """
         Imposta i riferimenti degli episodi dell'anime.
         Args:
@@ -50,10 +68,10 @@ class Anime:
                 continue
             self._episodes.append(Anime.Episode(self, num, ref))
 
-        self._episodes.sort(key=lambda ep: ep.numeric())
+        self._episodes.sort()
         self._num_to_index = {ep.num: i for i, ep in enumerate(self._episodes)}
 
-        if len(self._episodes) > 0 and self._episodes[-1].numeric() > numeric(self.last_ep):
+        if len(self._episodes) > 0 and self._episodes[-1] > self.episode(self.last_ep):
             self.last_ep = self._episodes[-1].num
 
     def episodes(self) -> list[str]:
@@ -77,7 +95,7 @@ class Anime:
 
         return self._episodes[self._num_to_index[ep_num]]
 
-    def _set_info(self, anilist_id: int, info: dict[str, str]) -> None:
+    def set_info(self, anilist_id: int, status: AnimeStatus, info: dict[str, str]) -> None:
         """
         Imposta le informazioni dell'anime.
         Args:
@@ -86,6 +104,7 @@ class Anime:
         """ 
         self.id_anilist = anilist_id
         self.info = info
+        self.status = status
     
     def print_info(self):
         """
@@ -94,11 +113,8 @@ class Anime:
         ut.my_print(self.name, cls=True)
         tmp_info = dict(self.info)
 
-        match tmp_info["Stato"]:
-            case "0": tmp_info["Stato"] = "In corso"
-            case "1": tmp_info["Stato"] = "Finito"
-            case "2": tmp_info["Stato"] = "Non rilasciato"
-            case _: tmp_info["Stato"] = "Sconosciuto"
+        # Usa l'enum per lo stato
+        tmp_info["Stato"] = self.status.display_name
 
         tmp_info["Trama"] = tmp_info.pop("Trama")
 
@@ -119,10 +135,12 @@ class Anime:
             "curr_ep": self.curr_ep,
             "last_ep": self.last_ep,
             "id_anilist": self.id_anilist,
+            "status": self.status.code,
             "info": self.info,
             "episodes": [ep.to_dict() for ep in self._episodes]
         }
-
+    
+    @total_ordering
     class Episode:
         """
         Classe che rappresenta un episodio di un anime.
@@ -130,7 +148,12 @@ class Anime:
         Attributes:
             num (str): il numero dell'episodio.
             ref (str): il riferimento dell'episodio.
+            progress (int): il progresso di visualizzazione dell'episodio.
+            completed (bool): indica se l'episodio è stato completato.
         """
+
+        ## TODO: fare un comparatore in base a num (considerando i casi x, x.5, x-y)
+
         def __init__(self, anime: Anime, num: str, ref: str) -> None:
             self._anime = anime
             self.num = num
@@ -140,6 +163,24 @@ class Anime:
 
         def __str__(self) -> str:
             return f"{self._anime.name} Ep. {self.num}"
+
+        def __repr__(self) -> str:
+            return f"Episode(num={self.num}, ref={self.ref}, progress={self.progress}, completed={self.completed})"
+
+        def __eq__(self, other: object) -> bool:
+            if not isinstance(other, Anime.Episode):
+                return False
+            return self._anime == other._anime and self.num == other.num
+
+        def __hash__(self) -> int:
+            return hash((self._anime, self.num))
+
+        def __lt__(self, other: object) -> bool:
+            if not isinstance(other, Anime.Episode) or self._anime != other._anime:
+                return False
+            self_num = self.numeric() if '-' in self.num else float(self.num)
+            other_num = other.numeric() if '-' in other.num else float(other.num)
+            return self_num < other_num
 
         def next(self) -> Anime.Episode | None:
             """

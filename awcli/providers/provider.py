@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from httpx import Client, AsyncClient, HTTPError
-from awcli.anime import Anime
+from awcli.anime import Anime, AnimeStatus
 import awcli.utilities as ut
 
 def error_handler(relink=False):
@@ -111,7 +111,7 @@ class Provider(ABC):
         Args:   
             anime (Anime): l'anime di riferimento.
         """
-        anime._update_episodes(
+        anime.update_episodes(
             self._episodes(anime), 
             ut.configData["general"]["specials"]
         )
@@ -156,16 +156,13 @@ class Provider(ABC):
         Args:
             anime (Anime): l'anime di riferimento.
         """
-        return self._info_anime(anime)
+        self._info_anime(anime)
 
     @abstractmethod
-    def _info_anime(self, anime: Anime) -> dict:
+    def _info_anime(self, anime: Anime) -> None:
         """
-        Prende le informazioni dell'anime selezionato.
+        Prende le informazioni dell'anime selezionato e le imposta dentro l'anime.
 
         Args:
             anime (Anime): l'anime di riferimento.
-
-        Returns:
-            dict: le informazioni dell'anime.
         """

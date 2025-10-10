@@ -1,7 +1,7 @@
 from functools import lru_cache
 import re
 from html import unescape
-from awcli.providers.provider import Provider, Anime, HTTPError
+from awcli.providers.provider import Provider, Anime, AnimeStatus, HTTPError
 
 class Animeworld(Provider):
     """
@@ -39,6 +39,8 @@ class Animeworld(Provider):
 
         if response.status_code == 202: 
             match = re.search(r'(SecurityAW-\w+)=(.*) ;', response.text)
+            if not match:
+                raise HTTPError("Errore: Cookies non trovati")
             self.Client.cookies = {match.group(1): match.group(2)}
             response = self.Client.get(url)
 
@@ -96,15 +98,25 @@ class Animeworld(Provider):
         anilist_id = int(res.group(1)) if res else 0
         
         temp = re.findall(r'<dt>(.*?):</dt>[\n\s]*<dd(?: class="[^"]*")?>((?:.|\n)+?)</dd>', html)
-        temp.append(("Trama", re.search(r'<div class="desc">((?:.|\n)+?)</div>', html).group(1)))
+        trama_match = re.search(r'<div class="desc">((?:.|\n)+?)</div>', html)
+        if trama_match:
+            temp.append(("Trama", trama_match.group(1)))
 
         info = dict[str, str]()
+        status = AnimeStatus.UNKNOWN
         for key, value in temp:
             key, value = key.strip(), value.strip()
             if key == "Stato":
-                value = re.search(r'<a.*href="[^"]*status=(\d+)"', value).group(1)
-            else:
-                value = re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', value)).strip()
+                match value:
+                    case "In Corso":
+                        status = AnimeStatus.ONGOING
+                    case "Terminato":
+                        status = AnimeStatus.FINISHED
+                    case "Non Rilasciato":
+                        status = AnimeStatus.NOT_RELEASED
+                    case _:
+                        status = AnimeStatus.UNKNOWN
+            value = re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', value)).strip()
             info[key] = unescape(value)
 
-        anime._set_info(anilist_id, info)
+        anime.set_info(anilist_id, status, info)
