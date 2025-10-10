@@ -9,7 +9,7 @@ from awcli import (
     download,
     utilities as ut,
 )
-from awcli.anime import Anime
+from awcli.anime import Anime, AnimeStatus
 from awcli.arg_parser import *
 
 signal(SIGINT, lambda signum, frame: exit())
@@ -220,8 +220,8 @@ def update_anilist(ep: Anime.Episode, anilist_rating: float, drop: bool = False)
     rating = 0
     favorite = False
     status_list = 'CURRENT' if not drop else 'DROPPED'
-    #se ho finito di vedere l'anime o lo stato è dropped    
-    if (ep.numeric() == int(anime.last_ep) and anime.info["Stato"] == "1") or status_list == 'DROPPED':
+    #se ho finito di vedere l'anime o lo stato è dropped
+    if (ep.numeric() == int(anime.last_ep) and anime.status == AnimeStatus.FINISHED) or status_list == 'DROPPED':
         if status_list == 'CURRENT':
             status_list = 'COMPLETED'
     

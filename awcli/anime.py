@@ -6,14 +6,10 @@ import awcli.utilities as ut
 
 class AnimeStatus(Enum):
     """Enum for anime status, maintaining the original order."""
-    ONGOING = (0, "In corso")
-    FINISHED = (1, "Finito") 
-    NOT_RELEASED = (2, "Non rilasciato")
-    UNKNOWN = (-1, "Sconosciuto")
-    
-    def __init__(self, code: int, display_name: str):
-        self.code = code
-        self.display_name = display_name
+    ONGOING = "In corso"
+    FINISHED = "Finito"
+    NOT_RELEASED = "Non rilasciato"
+    UNKNOWN = "Sconosciuto"
 
 class Anime:
     """
@@ -114,7 +110,7 @@ class Anime:
         tmp_info = dict(self.info)
 
         # Usa l'enum per lo stato
-        tmp_info["Stato"] = self.status.display_name
+        tmp_info["Stato"] = self.status.value
 
         tmp_info["Trama"] = tmp_info.pop("Trama")
 
@@ -135,7 +131,7 @@ class Anime:
             "curr_ep": self.curr_ep,
             "last_ep": self.last_ep,
             "id_anilist": self.id_anilist,
-            "status": self.status.code,
+            "status": self.status.value,
             "info": self.info,
             "episodes": [ep.to_dict() for ep in self._episodes]
         }

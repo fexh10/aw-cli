@@ -66,7 +66,7 @@ class Animeunity(Provider):
             if filter == "s" and info["Audio"] == "Italiano":
                 continue
             anime = Anime(title, str(result['id']), curr_ep=str(data['number']))
-            anime._update_episodes({str(data['number']): str(data['id'])}, specials=specials)
+            anime.update_episodes({str(data['number']): str(data['id'])}, specials=specials)
             anime.set_info(anilist_id, status, info)
             animes.append(anime)
         return animes

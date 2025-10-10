@@ -1,7 +1,7 @@
 import json
 import os
 import awcli.utilities as ut
-from awcli.anime import Anime
+from awcli.anime import Anime, AnimeStatus
 
 anime_log = list[Anime]()
 
@@ -33,10 +33,23 @@ def read():
             specials=ut.configData["general"]["specials"]
         )
         for ep in entry["episodes"]:
-            anime.episode(ep["num"]).progress = ep["progress"]
-            anime.episode(ep["num"]).completed = ep["completed"]
+            episode = anime.episode(ep["num"])
+            if episode:
+                episode.progress = ep["progress"]
+                episode.completed = ep["completed"]
 
-        anime._set_info(entry["id_anilist"], entry["info"])
+        
+        match entry["info"].get("Stato", "").lower():
+            case "in corso":
+                status = AnimeStatus.ONGOING
+            case "finito":
+                status = AnimeStatus.FINISHED
+            case "non rilasciato":
+                status = AnimeStatus.NOT_RELEASED
+            case _:
+                status = AnimeStatus.UNKNOWN
+
+        anime.set_info(entry["id_anilist"], status, entry["info"])
         anime_log.append(anime)
 
 def get() -> list[Anime]:
@@ -63,13 +76,17 @@ def reload(last_releases: list[Anime]):
         last_releases (list[Anime]): La lista degli ultimi anime rilasciati.
     """
     global anime_log
-    if "0" not in [anime.info["Stato"] for anime in anime_log]:
-        return  # Nessun anime in corso, esco subito
+    if AnimeStatus.ONGOING not in [anime.status for anime in anime_log]:
+        return 
     
     for i, anime in reversed(list(enumerate(anime_log))):
         for anime_latest in last_releases:
             if anime.name == anime_latest.name and anime.last_ep != anime_latest.last_ep:
-                anime.update_episodes({num: anime_latest.episode(num).ref for num in anime_latest.episodes()})
+                anime.update_episodes({
+                    num: ep.ref 
+                    for num in anime_latest.episodes() 
+                    if (ep := anime_latest.episode(num)) is not None
+                })
                 break
     save()
 
@@ -84,7 +101,7 @@ def update(anime: Anime, episode: Anime.Episode):
     global anime_log
     anime_log.remove(anime) if anime in anime_log else None
     last_completed = episode.is_completed() and episode.num == anime.last_ep
-    if anime.info["Stato"] == "1" and last_completed:
+    if anime.status == AnimeStatus.FINISHED and last_completed:
         save()
         return
 
@@ -112,6 +129,7 @@ def legacy() -> list[Anime]:
     Legge i dati dalla vecchia cronologia in csv
     """
     import csv
+    legacy = []
     try:
         with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", encoding='utf-8') as file:
             legacy = [riga for riga in csv.reader(file)]
@@ -125,20 +143,22 @@ def legacy() -> list[Anime]:
         if len(riga) < 4:
             riga.append("??")
         if len(riga) < 5:
-            riga.append(0)
+            riga.append("0")
         if len(riga) < 6:
             riga.append(riga[1])    
         if len(riga) < 7:
-            riga.append(0)
+            riga.append("0")
         if len(riga) < 8:
-            riga.append(0)
+            riga.append("0")
         anime = Anime(name=riga[0], ref=riga[2], curr_ep=riga[1], last_ep=riga[5])
         anime.update_episodes({anime.curr_ep: "Not available"}, ut.configData["general"]["specials"])
-        if (progress := int(riga[7])) == 0:
-            anime.episode(anime.curr_ep).mark_completed()
-        else:
-            anime.episode(anime.curr_ep).set_progress(progress)
-        anime._set_info(int(riga[6]), {"Episodi": riga[3], "Stato": riga[4]})
+        episode = anime.episode(anime.curr_ep)
+        if episode:
+            if (progress := int(riga[7])) == 0:
+                episode.mark_completed()
+            else:
+                episode.set_progress(progress)
+        anime.set_info(int(riga[6]), list(AnimeStatus)[int(riga[4])], {"Episodi": riga[3]})
         animes.append(anime)
 
     return animes

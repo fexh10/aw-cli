@@ -107,15 +107,10 @@ class Animeworld(Provider):
         for key, value in temp:
             key, value = key.strip(), value.strip()
             if key == "Stato":
-                match value:
-                    case "In Corso":
-                        status = AnimeStatus.ONGOING
-                    case "Terminato":
-                        status = AnimeStatus.FINISHED
-                    case "Non Rilasciato":
-                        status = AnimeStatus.NOT_RELEASED
-                    case _:
-                        status = AnimeStatus.UNKNOWN
+                if match := re.search(r'status=(\d+)"', value):
+                    status_val = int(match.group(1))
+                    if status_val < len(AnimeStatus):
+                        status = list(AnimeStatus)[status_val]
             value = re.sub(r'[\s\n]+', ' ', re.sub(r'<.*?>', '', value)).strip()
             info[key] = unescape(value)
 
