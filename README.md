@@ -91,7 +91,8 @@ Oppure, in alternativa:
 ```sh
 apk update
 apk upgrade
-apk add python3 python3-dev py3-pip gcc musl-dev git pipx
+apk add python3 python3-dev py3-pip gcc musl-dev git bash
+pip install pipx
 pipx install git+https://github.com/fexh10/aw-cli.git@iosCompatibility
 ```
 
