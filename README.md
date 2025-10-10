@@ -1,6 +1,7 @@
 # aw-cli
 
 **Guarda anime dal terminale e molto altro.**
+
 **Gli anime vengono presi da [AnimeWorld](https://www.animeworld.tv/)**
 
 ## Anteprima
