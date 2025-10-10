@@ -667,7 +667,7 @@ def main():
             ut.my_print("Player non configurato. Eseguire `aw-cli --config`.", color="rosso")
             safeExit()
 
-    if ut.nome_os not in ["Android", "iOS"] and args.syncpl:
+    if ut.nome_os not in ["Android", "iOS"] and getattr(args, "syncpl", False):
         openPlayer = openSyncplay
 
     reload = True
