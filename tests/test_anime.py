@@ -13,6 +13,11 @@ def mock_download():
         yield mock_download
 
 @pytest.fixture
+def mock_search():
+    with patch("awcli.utilities.search") as mock_search:
+        yield mock_search
+
+@pytest.fixture
 def mock_get_info_anime():
     with patch("awcli.utilities.get_info_anime") as mock_get_info_anime:
         mock_get_info_anime.return_value = (
@@ -51,11 +56,13 @@ def test_load_info(anime, mock_get_info_anime):
     assert anime.views == 232023
     assert anime.plot == "trama"
     
-def test_load_info_error(anime, mock_get_info_anime):
+def test_load_info_error(anime, mock_get_info_anime, mock_search):
     mock_get_info_anime.side_effect = IndexError
+    mock_search.return_value = []
     with pytest.raises(IndexError):
         anime.load_info()
-    assert mock_get_info_anime.call_count == 2
+    assert mock_get_info_anime.call_count == 1
+    assert mock_search.call_count == 1
 
 
 def test_get_episodio(anime, mock_get_info_anime, mock_download):

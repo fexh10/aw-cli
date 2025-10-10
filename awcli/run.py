@@ -1,6 +1,8 @@
 import os
 import re
 import csv
+import shutil
+import subprocess
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from pySmartDL import SmartDL
@@ -36,10 +38,16 @@ def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool 
     if cls:
         ut.my_print("", end="", cls=True)
     string = "\n".join(elementi)
-    comando = f"""fzf --tac --height={len(elementi) + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
+    comando_fzf = f"""fzf --tac --height={len(elementi) + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
     if multi:
-        comando += "--multi --bind 'ctrl-a:toggle-all'"
-    output = os.popen(f"""printf "{string}" | {comando}""").read().strip()
+        comando_fzf += "--multi --bind 'ctrl-a:toggle-all'"
+
+    comando_completo = f"""printf "{string}" | {comando_fzf}"""
+
+    # Esegue fzf, catturando solo lo stdout per ottenere la selezione,
+    # ma permettendo a fzf di usare stderr per disegnare l'interfaccia utente.
+    process = subprocess.run(comando_completo, shell=True, stdout=subprocess.PIPE, text=True, check=False)
+    output = process.stdout.strip()
 
     if esci and output == "":
         safeExit()
@@ -172,11 +180,13 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
     
     
     args = f'''--force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
-    if ut.configData["player"]["type"] == "vlc":
+    if ut.configData.get("player", {}).get("type") == "vlc":
         args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
     
-    try :
-        out = os.popen(f'''{ut.configData["syncplay"]["path"]} -d --language it "{url_ep}" -- {args} 2>&1''').read()
+    try:
+        command = f'''{ut.configData["syncplay"]["path"]} -d --language it "{url_ep}" -- {args}'''
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)
+        out = result.stdout
     except UnicodeDecodeError:
         out = ""
 
@@ -212,9 +222,11 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
         os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
         return True, 0
 
-    out = os.popen(f'''{ut.configData["player"]["path"]} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open 2>&1''')
+    command = f'''{ut.configData["player"]["path"]} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)
+    out = result.stdout
 
-    res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
+    res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out)[-1]
     progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
     
     return int(res[3]) >= completeLimit, progress
@@ -439,7 +451,18 @@ def setupConfig() -> None:
     ut.my_print("", end="", cls=True)
     ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
 
-    player = "vlc"
+    if ut.nome_os not in ["Android", "iOS"]:
+        player = fzf(["vlc", "mpv"], "Scegli il player che vuoi utilizzare")
+        ut.configData["player"]["type"] = player
+
+        player_type = ut.configData["player"]["type"]
+        path = shutil.which(player_type)
+
+        if not path:
+            ut.my_print(f"Percorso di {player_type} non trovato, inseriscilo manualmente.", color="giallo")
+            ut.configData["player"]["path"] = ut.my_input(f"Path di {player_type}")
+        else:
+            ut.configData["player"]["path"] = path
 
     #anilist
     if fzf(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
@@ -510,7 +533,8 @@ def reloadCrono(cronologia: list[Anime]):
         testo.append(f"\033[0;3{colore}m{i + 1}  \033[0;37m{a.name} [Ep {a.ep_corrente}/{a.ep_totali}]")
     
     if notSelected:
-        pid = os.popen("pgrep fzf").read().strip().split("\n")
+        process = subprocess.run(["pgrep", "fzf"], capture_output=True, text=True, check=False)
+        pid = process.stdout.strip().split("\n")
         os.system(f"kill {pid[-1]}")
         scelta_anime = fzf(testo, "Scegli un anime: ")
 
@@ -610,6 +634,10 @@ def main():
     if update:
         updateScript()
 
+    if not shutil.which("fzf"):
+        ut.my_print("Errore: fzf non è installato. Per favore installalo per continuare.", color="rosso")
+        exit(1)
+
     try:
         with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", encoding='utf-8') as file:
             log = [riga for riga in csv.reader(file)]
@@ -622,9 +650,24 @@ def main():
 
     ut.getConfig()
    
-    openPlayer = lambda url_ep, nome_video, progress: os.system(f"printf \"\e]8;;vlc://%s\a~~~~~~~~~~~~~~~~~~~~\n~ Premi per aprire VLC ~\n~~~~~~~~~~~~~~~~~~~~\e]8;;\a\n\" \"{url_ep}\"")
+    if ut.nome_os == "iOS":
+        def openPlayer_iOS(url_ep, nome_video, progress):
+            os.system(f"printf \"\e]8;;vlc://%s\a~~~~~~~~~~~~~~~~~~~~\n~ Premi per aprire VLC ~\n~~~~~~~~~~~~~~~~~~~~\e]8;;\a\n\" \"{url_ep}\"")
+            ut.my_input("Premi invio per continuare...", format=lambda _: True)
+        openPlayer = openPlayer_iOS
+    else:
+        player_type = ut.configData.get("player", {}).get("type")
+        if player_type == "vlc":
+            openPlayer = openVLC
+        elif player_type == "mpv":
+            openPlayer = openMPV
+        elif ut.nome_os == "Android":
+            openPlayer = openVLC
+        else:
+            ut.my_print("Player non configurato. Eseguire `aw-cli --config`.", color="rosso")
+            safeExit()
 
-    if nome_os != "Android" and args.syncpl:
+    if ut.nome_os not in ["Android", "iOS"] and args.syncpl:
         openPlayer = openSyncplay
 
     reload = True
