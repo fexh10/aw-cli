@@ -22,6 +22,10 @@ session.headers.update({
 
 # controllo il tipo del dispositivo
 def get_os() -> str:
+    # Rilevamento specifico per iSH
+    if os.path.exists("/proc/ish"):
+        return "iOS"
+
     result = subprocess.run(["uname", "-a"], capture_output=True, text=True, check=False)
     out = result.stdout.strip().split()
     nome_os = out[0]
@@ -92,29 +96,33 @@ def getHtml(url: str) -> str:
         str: l'html della pagina web selezionata.
     """
     global _ssl_warning_shown
+    verify_ssl = nome_os != "iOS"
+
     try:
-        # Sopprime l'avviso di richiesta non sicura per evitare output duplicati
-        warnings.filterwarnings('ignore', category=InsecureRequestWarning)
+        if not verify_ssl:
+            # Sopprime l'avviso di richiesta non sicura per evitare output duplicati
+            warnings.filterwarnings('ignore', category=InsecureRequestWarning)
 
-        if not _ssl_warning_shown:
-            my_print("ATTENZIONE: La verifica del certificato SSL è disabilitata. Questo potrebbe esporre a rischi di sicurezza.", color="giallo")
-            _ssl_warning_shown = True
+            if not _ssl_warning_shown:
+                my_print("ATTENZIONE: La verifica del certificato SSL è disabilitata. Questo potrebbe esporre a rischi di sicurezza.", color="giallo")
+                _ssl_warning_shown = True
 
-        result = session.get(url, timeout=10, verify=False)
+        result = session.get(url, timeout=10, verify=verify_ssl)
         result.raise_for_status()  # Lancia un'eccezione per status code non 2xx
 
         # Gestione del reindirizzamento di Cloudflare
         if result.status_code == 202 and "SecurityAW" in result.text:
             my_print("Reindirizzamento...", color="giallo", end="\n")
-            result = session.get(url, timeout=10, verify=False)
+            result = session.get(url, timeout=10, verify=verify_ssl)
             result.raise_for_status()
 
     except requests.exceptions.RequestException as e:
         my_print(f"Errore di connessione: {e}", color="rosso")
         exit()
     finally:
-        # Ripristina il comportamento predefinito degli avvisi
-        warnings.resetwarnings()
+        if not verify_ssl:
+            # Ripristina il comportamento predefinito degli avvisi
+            warnings.resetwarnings()
 
     if result.status_code != 200:
         my_print(f"Errore: pagina non trovata (status code: {result.status_code})", color="rosso")
