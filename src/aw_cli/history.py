@@ -79,11 +79,11 @@ def reload(last_releases: list[Anime]):
     if AnimeStatus.ONGOING not in [anime.status for anime in anime_log]:
         return 
     
-    for i, anime in reversed(list(enumerate(anime_log))):
+    for _, anime in reversed(list(enumerate(anime_log))):
         for anime_latest in last_releases:
-            if anime.name == anime_latest.name and anime.last_ep != anime_latest.last_ep:
+            if anime == anime_latest and anime.last_ep != anime_latest.last_ep:
                 anime.update_episodes({
-                    num: ep.ref 
+                    num: ep.ref
                     for num in anime_latest.episodes() 
                     if (ep := anime_latest.episode(num)) is not None
                 })

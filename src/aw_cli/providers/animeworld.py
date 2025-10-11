@@ -69,8 +69,10 @@ class Animeworld(Provider):
         animes = list[Anime]()
 
         for url, name, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
-            animes.append(Anime(unescape(name), self.BASE_URL + url, ep))
-                
+            anime = Anime(unescape(name), self.BASE_URL + url, ep)
+            anime.update_episodes({ep: self.BASE_URL + url}, specials=specials)
+            animes.append(anime)
+
         match filter[0]:
             case 's': return animes[45:90]
             case 'd': return animes[90:135]
@@ -83,7 +85,6 @@ class Animeworld(Provider):
         for num, url in re.findall(r'<a.+data-num="([^"]+)".+href="([^"]+)"', html):
             episodes_url[num] = self.BASE_URL + url
         return episodes_url
-
 
     def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         pattern = r'<a\s+href="([^"]+)"\s+id="alternativeDownloadLink"'
