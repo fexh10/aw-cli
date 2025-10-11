@@ -3,14 +3,14 @@ import re
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
-from awcli import (
+from . import (
     anilist, 
     history,
     download,
     utilities as ut,
 )
-from awcli.anime import Anime, AnimeStatus
-from awcli.arg_parser import *
+from .anime import Anime, AnimeStatus
+from .arg_parser import *
 
 signal(SIGINT, lambda signum, frame: exit())
 
@@ -427,15 +427,15 @@ def main():
     history.read()
 
     if offline:
-        from awcli.providers.local import LocalProvider
+        from .providers.local import LocalProvider
         provider = LocalProvider(download.path(), history.get())
     else:
         match ut.configData["provider"]["source"]:
             case "animeunity":
-                from awcli.providers.animeunity import Animeunity
+                from .providers.animeunity import Animeunity
                 provider = Animeunity()
             case _:
-                from awcli.providers.animeworld import Animeworld
+                from .providers.animeworld import Animeworld
                 provider = Animeworld()
 
     openPlayer = openMPV if ut.configData["player"]["type"] == "mpv" else openVLC

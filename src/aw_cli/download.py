@@ -2,8 +2,9 @@ import os
 import asyncio
 from pathlib import Path
 from httpx import AsyncClient
-from awcli import utilities as ut
-from awcli.providers.provider import Provider, Anime
+from . import utilities as ut
+from .anime import Anime
+from .providers import Provider
 
 def path(create: bool = True) -> str:
     """

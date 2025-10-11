@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from httpx import Client, AsyncClient, HTTPError
-from awcli.anime import Anime, AnimeStatus
-import awcli.utilities as ut
+from httpx import Client, HTTPError #, AsyncClient
+from ..anime import Anime
+from .. import utilities as ut
 
 def error_handler(relink=False):
     """

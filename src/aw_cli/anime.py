@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 from functools import total_ordering
-import awcli.utilities as ut
+from . import utilities as ut
 
 
 class AnimeStatus(Enum):
@@ -212,7 +212,11 @@ class Anime:
             Returns:
                 int: il numero dell'episodio.
             """
-            return numeric(self.num)
+            if '.' in self.num:
+                return int(self.num.split('.')[0])
+            if '-' in self.num:
+                return int(self.num.split('-')[1])
+            return int(self.num)
 
         def is_completed(self) -> bool:
             """
@@ -245,11 +249,3 @@ class Anime:
                 "progress": self.progress,
                 "completed": self.completed
         }
-
-
-def numeric(num: str) -> int:
-    if '.' in num:
-        return int(num.split('.')[0])
-    if '-' in num:
-        return int(num.split('-')[1])
-    return int(num)

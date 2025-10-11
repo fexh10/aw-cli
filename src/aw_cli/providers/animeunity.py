@@ -1,7 +1,8 @@
 import re
 import json
 from html import unescape
-from awcli.providers.provider import Provider, Anime, AnimeStatus, HTTPError
+from ..anime import Anime, AnimeStatus
+from .provider import Provider, HTTPError
 
 class Animeunity(Provider):
     """

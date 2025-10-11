@@ -1,7 +1,7 @@
 import sys
 import argparse
-from awcli.version import versione
-from awcli.utilities import nome_os 
+from .version import versione
+from .utilities import nome_os 
 
 # args
 downl = False

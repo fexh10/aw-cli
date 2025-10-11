@@ -1,7 +1,7 @@
 import json
 import os
-import awcli.utilities as ut
-from awcli.anime import Anime, AnimeStatus
+from . import utilities as ut
+from .anime import Anime, AnimeStatus
 
 anime_log = list[Anime]()
 

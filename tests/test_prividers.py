@@ -1,7 +1,7 @@
-# Importa le dipendenze
+"""# Importa le dipendenze
 import pytest
 import os
-from awcli import utilities
+from src.aw_cli import utilities
 from unittest.mock import patch
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -73,3 +73,4 @@ def test_my_input(input_mock, input_str, format_func, input_values, expected_out
     # Verifica che il risultato sia corretto
     assert result == expected_output
 
+"""

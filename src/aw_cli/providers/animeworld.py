@@ -1,7 +1,9 @@
 from functools import lru_cache
 import re
 from html import unescape
-from awcli.providers.provider import Provider, Anime, AnimeStatus, HTTPError
+from httpx import HTTPError
+from ..anime import Anime, AnimeStatus
+from .provider import Provider, HTTPError
 
 class Animeworld(Provider):
     """

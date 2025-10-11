@@ -1,5 +1,5 @@
 import os
-from awcli.providers.provider import Provider, Anime
+from .provider import Provider, Anime
 
 class LocalProvider(Provider):
     """
@@ -46,8 +46,7 @@ class LocalProvider(Provider):
     def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         return f"{self.BASE_URL}/{anime.name}/{episode.ref}"
 
-    def _info_anime(self, anime: Anime) -> dict:
+    def _info_anime(self, anime: Anime):
         other = self.history[self.history.index(anime)]
         anime.ref = other.ref
-        anime._set_info(other.id_anilist, other.info)
-        return anime.to_dict()
+        anime.set_info(other.id_anilist, anime.status, other.info)
