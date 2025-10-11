@@ -1,6 +1,6 @@
 [project]
 name = "aw-cli"
-version = "2.2.0b1"
+dynamic = ["version"]
 description = "Guarda anime dal terminale e molto altro!"
 readme = "README.md"
 license = "GPL-3.0"
@@ -17,10 +17,14 @@ dependencies = [
 aw-cli = "aw_cli.run:main"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [dependency-groups]
 dev = [
+    "hatch>=1.14.2",
     "pytest>=8.4.2",
 ]

@@ -1,7 +1,7 @@
 import sys
 import argparse
-from .version import versione
 from .utilities import nome_os 
+from importlib.metadata import version
 
 # args
 downl = False
@@ -34,7 +34,7 @@ info_group.add_argument(
     '-v',
     '--versione',
     action='version',
-    version=versione, help="stampa la versione del programma"
+    version=version("aw-cli"), help="stampa la versione del programma"
 )
 
 options_group.add_argument(
