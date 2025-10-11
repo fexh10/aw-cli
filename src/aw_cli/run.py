@@ -5,10 +5,10 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from . import (
     anilist, 
-    history,
     download,
     utilities as ut,
 )
+from .history import History
 from .anime import Anime, AnimeStatus
 from .arg_parser import *
 
@@ -80,7 +80,7 @@ def scegliEpisodi() -> list[Anime.Episode]:
         return anime._episodes
 
     res = fzf(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
-    return [anime.episode(num) for num in res]
+    return [ep for num in res if (ep := anime.episode(num)) is not None]
 
 def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
@@ -362,7 +362,7 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
         
     return nomi
 
-def removeFromCrono(number: int):
+def removeFromCrono(anime: Anime) -> None:
     """
     Rimuove l'anime selezionato dalla cronologia
     e stampa un menu di scelta per l'utente.
@@ -385,8 +385,7 @@ def removeFromCrono(number: int):
             rating = anilist.getAnimePrivateRating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
             update_anilist(anime.episode(anime.curr_ep), rating, drop=True)
 
-    history.anime_log.pop(number)
-    history.save()
+    history.remove(anime)
 
     if fzf(["esci","continua"], cls=True) == "esci":
         exit()
@@ -415,6 +414,7 @@ def main():
     global anime
     global provider
     global openPlayer
+    global history
 
     if update:
         updateScript()
@@ -424,7 +424,7 @@ def main():
         setupConfig()
 
     ut.getConfig()
-    history.read()
+    history = History()
 
     if offline:
         from .providers.local import LocalProvider
@@ -444,6 +444,7 @@ def main():
         openPlayer = openSyncplay
 
     reload = True
+    animelist = []
     while True:
         if reload:
             if offline:
@@ -468,7 +469,7 @@ def main():
         anime = animelist[scelta]
 
         if args.cronologia == 'r':
-            removeFromCrono(scelta)
+            removeFromCrono(anime)
             continue
 
         try:
@@ -575,6 +576,7 @@ def main():
                 exit()
         reload = True
 
+history = None
 openPlayer = None
 completeLimit = 90
 provider = None
