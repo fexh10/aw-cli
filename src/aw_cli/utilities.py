@@ -77,7 +77,7 @@ def sanitize_filename(filename: str) -> str:
     if nome_os != "Android":
         return filename
     
-    forbidden_char = '"*/:<>?\|'
+    forbidden_char = '"*/:<>?\\|'
     replace_char = '”⁎∕꞉‹›︖＼⏐'
     for a, b in zip(forbidden_char, replace_char):
         filename = filename.replace(a, b)

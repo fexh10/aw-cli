@@ -2,6 +2,12 @@ import sys
 import argparse
 from .utilities import nome_os 
 from importlib.metadata import version
+from .update import update
+
+class Update(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        update(str(values) if values else "")
+        parser.exit()
 
 # args
 downl = False
@@ -10,7 +16,6 @@ offline = False
 cronologia = False
 info = False
 privato = False
-update = False
 
 # args
 parser = argparse.ArgumentParser(
@@ -98,8 +103,9 @@ options_group.add_argument(
     '-u',
     '--update',
     nargs='?',
-    dest='update',
-    help='aggiorna il programma'
+    action=Update,
+    type=str,
+    help='aggiorna il programma', 
 )
 
 config_group.add_argument(
@@ -117,10 +123,6 @@ if args.offline:
     cronologia = True
 elif args.cronologia == 'r':
         cronologia = True
-elif args.update or '-u' in sys.argv:
-    update = True
-    if len(sys.argv) == 3:
-        args.update = sys.argv[2]
 else: 
     if args.info:
         info = True

@@ -390,34 +390,11 @@ def removeFromCrono(anime: Anime) -> None:
     if fzf(["esci","continua"], cls=True) == "esci":
         exit()
 
-def updateScript():
-    """
-    Aggiorna di default il programma in base 
-    all'ultima versione stabile.
-    Se viene specificato il branch,
-    verrà installato que#se il file di configurazione non esiste viene chiesto all'utente di fare il setup
-    if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/config.toml"):
-        setupConfig()st'ultimo.
-    """
-
-    if args.update == None:
-        comando = "echo y | python3 -m pip uninstall aw-cli > /dev/null 2>&1 && python3 -m pip install aw-cli > /dev/null 2>&1"
-    else: 
-        comando = f"echo y | python3 -m pip uninstall aw-cli > /dev/null 2>&1 && python3 -m pip install git+https://github.com/fexh10/aw-cli.git@{args.update} > /dev/null 2>&1"
-
-    os.system(comando)
-    
-    ut.my_print("aw-cli aggiornato con successo!", color="bianco")
-    exit()
-
 def main():
     global anime
     global provider
     global openPlayer
     global history
-
-    if update:
-        updateScript()
     
     #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
     if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/config.toml"):
