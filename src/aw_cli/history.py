@@ -44,12 +44,12 @@ class History:
                     anime.episode(ep["num"]).set_progress(ep["progress"], ep["completed"])
 
             
-            match entry["info"].get("Stato", "").lower():
-                case "in corso":
+            match entry["status"]:
+                case "In corso":
                     status = AnimeStatus.ONGOING
-                case "finito":
+                case "Finito":
                     status = AnimeStatus.FINISHED
-                case "non rilasciato":
+                case "Non rilasciato":
                     status = AnimeStatus.NOT_RELEASED
                 case _:
                     status = AnimeStatus.UNKNOWN
@@ -90,7 +90,7 @@ class History:
         if AnimeStatus.ONGOING not in [anime.status for anime in self._anime_log]:
             return
 
-        for _, anime in reversed(list(enumerate(self._anime_log))):
+        for anime in reversed(self._anime_log):
             for anime_latest in last_releases:
                 if anime == anime_latest and anime.last_ep != anime_latest.last_ep:
                     anime.update_episodes({

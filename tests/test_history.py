@@ -148,6 +148,22 @@ def test_remove_nonexistent_anime(history_with_data):
 # - rimozione in caso di anime finito
 
 # TODO test reload
+def test_reload(history_with_data):
+    history = history_with_data
+
+    kaiju = MagicMock(spec=Anime)
+    kaiju.id_anilist = 178754
+    kaiju.last_ep = "7"
+    kaiju.episodes.return_value = ["7"]
+    
+    episode = MagicMock(spec=Anime.Episode)
+    episode.num, episode.ref = "7", "ref7"
+    kaiju.episode.return_value = episode
+
+    history.reload([kaiju])
+
+    assert history.get()[1].last_ep == "7"
+
 
 legacy_data  = """Ore wo Suki nano wa Omae dake ka yo,1,1627,12,1,12,104464,1
 Kaiju No. 8 2,6,6726,12,0,6,178754,3
