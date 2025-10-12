@@ -8,8 +8,8 @@ class History:
     """
     Classe che gestisce la cronologia degli anime.
     """
-    def __init__(self):
-        self._path = f"{os.path.dirname(__file__)}/history.json"
+    def __init__(self, path: str):
+        self._path = f"{path}/history.json"
         self._anime_log = list[Anime]()
         try:
             self.read()
@@ -38,11 +38,10 @@ class History:
                 {ep["num"]: ep["ref"] for ep in entry["episodes"]}, 
                 specials=ut.configData["general"]["specials"]
             )
+
             for ep in entry["episodes"]:
-                episode = anime.episode(ep["num"])
-                if episode:
-                    episode.progress = ep["progress"]
-                    episode.completed = ep["completed"]
+                if anime.has_episode(ep["num"]):
+                    anime.episode(ep["num"]).set_progress(ep["progress"], ep["completed"])
 
             
             match entry["info"].get("Stato", "").lower():
@@ -95,9 +94,8 @@ class History:
             for anime_latest in last_releases:
                 if anime == anime_latest and anime.last_ep != anime_latest.last_ep:
                     anime.update_episodes({
-                        num: ep.ref
-                        for num in anime_latest.episodes() 
-                        if (ep := anime_latest.episode(num)) is not None
+                        num: anime_latest.episode(num).ref
+                        for num in anime_latest.episodes()
                     })
                     break
         self.save()

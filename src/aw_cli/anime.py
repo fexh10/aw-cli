@@ -59,15 +59,15 @@ class Anime:
         for num, ref in episodes.items():
             if not specials and ("." in num or num == "0"):
                 continue
-            if (ep := self.episode(num)):
-                ep.ref = ref
+            if self.has_episode(num):
+                self.episode(num).ref = ref
                 continue
             self._episodes.append(Anime.Episode(self, num, ref))
 
         self._episodes.sort()
         self._num_to_index = {ep.num: i for i, ep in enumerate(self._episodes)}
 
-        if len(self._episodes) > 0 and self._episodes[-1] > self.episode(self.last_ep):
+        if self.has_episode(self.last_ep) and self._episodes[-1] > self.episode(self.last_ep):
             self.last_ep = self._episodes[-1].num
 
     def episodes(self) -> list[str]:
@@ -75,19 +75,25 @@ class Anime:
         Restituisce una lista dei numeri degli episodi disponibili.
         """
         return list(self._num_to_index.keys())
+    
+    def has_episode(self, ep_num: str) -> bool:
+        """
+        Controlla se l'anime ha l'episodio specificato.
+        Args:
+            ep (str): Il numero dell'episodio.
+        Returns:
+            (bool): True se l'anime ha l'episodio, False altrimenti.
+        """
+        return ep_num in self._num_to_index
 
-    def episode(self, ep_num: str) -> Anime.Episode | None:
+    def episode(self, ep_num: str) -> Anime.Episode:
         """
         Restituisce il riferimento dell'episodio corrispondente al numero specificato.
         Args:
             ep (str): Il numero dell'episodio.
         Returns:
-            (Anime.Episode | None): l'episodio corrispondente al numero,
-                 oppure None se non è presente.
+            Anime.Episode : l'episodio corrispondente al numero
         """
-
-        if ep_num not in self._num_to_index:
-            return None
 
         return self._episodes[self._num_to_index[ep_num]]
 
@@ -178,28 +184,44 @@ class Anime:
             other_num = other.numeric() if '-' in other.num else float(other.num)
             return self_num < other_num
 
-        def next(self) -> Anime.Episode | None:
+        def has_next(self) -> bool:
+            """
+            Controlla se esiste un episodio successivo.
+
+            Returns:
+            bool: True se esiste un episodio successivo, False altrimenti.
+            """
+            index = self._anime._num_to_index[self.num] + 1
+            return index < len(self._anime._episodes)
+
+        def has_prev(self) -> bool:
+            """
+            Controlla se esiste un episodio precedente.
+
+            Returns:
+            bool: True se esiste un episodio precedente, False altrimenti.
+            """
+            index = self._anime._num_to_index[self.num] - 1
+            return index >= 0
+
+        def next(self) -> Anime.Episode:
             """
             Restituisce l'episodio successivo.
 
             Returns:
-                (Anime.Episode | None): l'episodio successivo, oppure None se non esiste.
+            Anime.Episode: l'episodio successivo.
             """
-            index = self._anime._num_to_index[self.num]+1
-            if index >= len(self._anime._episodes):
-                return None
+            index = self._anime._num_to_index[self.num] + 1
             return self._anime._episodes[index]
 
-        def prev(self) -> Anime.Episode | None:
+        def prev(self) -> Anime.Episode:
             """
             Restituisce l'episodio precedente.
 
             Returns:
-                (Anime.Episode | None): l'episodio precedente, oppure None se non esiste.
+            Anime.Episode: l'episodio precedente.
             """
-            index = self._anime._num_to_index[self.num]-1
-            if index < 0:
-                return None
+            index = self._anime._num_to_index[self.num] - 1
             return self._anime._episodes[index]
         
         def numeric(self) -> int:
@@ -224,12 +246,13 @@ class Anime:
             """
             return self.progress == 0 and self.completed
 
-        def set_progress(self, progress: int) -> None:
+        def set_progress(self, progress: int, completed: bool = False) -> None:
             """
             Imposta il progresso dell'episodio.
             """
             self.progress = progress
-            if progress != 0:
+            self.completed = completed
+            if progress != 0 and not completed:
                 self.completed = False
 
         def mark_completed(self) -> None:

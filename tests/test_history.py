@@ -54,7 +54,7 @@ def test_no_file_found(monkeypatch):
     mock_sequencer = MockSequencer(sequenza)
     monkeypatch.setattr('builtins.open', mock_sequencer)
     
-    history = History()
+    history = History("ProvaPath")
 
     assert history._anime_log == []
     assert mock_sequencer.call_count == 3
@@ -77,7 +77,7 @@ def test_legacy(monkeypatch):
     mock_sequencer = MockSequencer(sequenza)
     monkeypatch.setattr('builtins.open', mock_sequencer)
 
-    history = History()
+    history = History("ProvaPath")
 
     lista_pezzi_scritti = [call.args[0] for call in mock_handle_scrivibile.write.call_args_list]
     output_completo = "".join(lista_pezzi_scritti)
@@ -96,7 +96,7 @@ def test_load_existing(monkeypatch):
     mock_sequencer = MockSequencer(sequenza)
     monkeypatch.setattr('builtins.open', mock_sequencer)
 
-    history = History()
+    history = History("ProvaPath")
     data = history.get()
     
     assert len(history._anime_log) == 7
@@ -118,7 +118,7 @@ def history_with_data(monkeypatch):
     mock_sequencer = MockSequencer(sequenza)
     monkeypatch.setattr('builtins.open', mock_sequencer)
 
-    return History()
+    return History("ProvaPath")
 
 def test_remove_anime(history_with_data):
     history = history_with_data
@@ -163,7 +163,7 @@ json_data = """[
         "name": "Ore wo Suki nano wa Omae dake ka yo",
         "ref": "1627",
         "curr_ep": "1",
-        "last_ep": "1",
+        "last_ep": "12",
         "id_anilist": 104464,
         "status": "Finito",
         "info": {
@@ -201,7 +201,7 @@ json_data = """[
         "name": "Fire Force 3",
         "ref": "https://www.animeworld.so/play/fire-force-3.dGBJF/tEVpcY",
         "curr_ep": "6",
-        "last_ep": "6",
+        "last_ep": "12",
         "id_anilist": 149118,
         "status": "Finito",
         "info": {
@@ -239,7 +239,7 @@ json_data = """[
         "name": "One Piece",
         "ref": "https://www.animeworld.so/play/one-piece-subita.qzG-LE",
         "curr_ep": "1140",
-        "last_ep": "1140",
+        "last_ep": "1141",
         "id_anilist": 21,
         "status": "In corso",
         "info": {

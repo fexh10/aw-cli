@@ -80,7 +80,7 @@ def scegliEpisodi() -> list[Anime.Episode]:
         return anime._episodes
 
     res = fzf(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
-    return [ep for num in res if (ep := anime.episode(num)) is not None]
+    return [anime.episode(num) for num in res]
 
 def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
@@ -347,7 +347,7 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
     nomi = []
     for i, a in reversed(list(enumerate(animelist))):
         colore = 2 #2 verde, 1 rosso
-        if cronologia and a.curr_ep == a.last_ep and ((ep := a.episode(a.curr_ep)) is None or ep.is_completed()):
+        if cronologia and a.curr_ep == a.last_ep and (not a.has_episode(a.curr_ep) or a.episode(a.curr_ep).is_completed()):
             colore = 1
 
         nome = f"\033[0;3{colore}m{i + 1}  \033[0;37m"
@@ -424,7 +424,7 @@ def main():
         setupConfig()
 
     ut.getConfig()
-    history = History()
+    history = History(os.path.dirname(__file__))
 
     if offline:
         from .providers.local import LocalProvider
@@ -501,17 +501,17 @@ def main():
             continue
 
         if cronologia and anime.episode(anime.curr_ep).is_completed():
-            if anime.episode(anime.curr_ep).next() is None:
+            if not anime.episode(anime.curr_ep).has_next():
                 provider.episodes(anime)
 
-            if (next := anime.episode(anime.curr_ep).next()) is None:
+            if not anime.episode(anime.curr_ep).has_next():
                 ut.my_print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", color='rosso')
                 ut.sleep(1)
                 if len(animelist) == 1:
                     exit()
                 reload = False
                 continue
-            listaEpisodi = [next]
+            listaEpisodi = [anime.episode(anime.curr_ep).next()]
         elif lista or cronologia:
             listaEpisodi = [anime.episode(anime.curr_ep)]
         else:
@@ -554,28 +554,26 @@ def main():
             # menù che si visualizza dopo aver finito la riproduzione
             lista_menu = ["esci", "indietro"]
 
+            check = lambda: False
+            get = lambda: None
             if anime.last_ep != '1':
                 lista_menu.append("seleziona")
-            if episode.prev() or (not offline and episode.numeric() > 1):
+                check = lambda: offline or len(anime.episodes()) != 1
+                get = lambda: scegliEpisodi()[0]
+            if episode.has_prev() or (not offline and episode.numeric() > 1):
                 lista_menu.append("antecedente")
+                check, get = episode.has_prev, episode.prev
             lista_menu.append("riguarda")
-            if episode.next() or (not offline and episode.num != anime.last_ep):
+            if episode.has_next() or (not offline and episode.num != anime.last_ep):
                 lista_menu.append("prossimo")
+                check, get = episode.has_next, episode.next
     
             scelta_menu = fzf(lista_menu)
 
-            if scelta_menu == "prossimo":
-                if not episode.next():
+            if scelta_menu in ["prossimo", "antecedente", "seleziona"]:
+                if not check():
                     provider.episodes(anime)
-                episode = episode.next()    
-            elif scelta_menu == "antecedente":
-                if not episode.prev():
-                    provider.episodes(anime)
-                episode = episode.prev()
-            elif scelta_menu == "seleziona":
-                if not offline and len(anime.episodes()) == 1:
-                    provider.episodes(anime)
-                episode = scegliEpisodi()[0]
+                episode = get()
             elif scelta_menu == "indietro":
                 break
             elif scelta_menu == "esci":
