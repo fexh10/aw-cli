@@ -17,7 +17,6 @@ https://github.com/fexh10/aw-cli/assets/90156014/88e1c2e2-bb7f-4002-8784-26f7086
   - [Indice](#indice)
   - [Installazione](#installazione)
   - [Problemi noti](#problemi-noti)
-  - [Disinstallazione](#disinstallazione)
   - [Utilizzo](#utilizzo)
   - [Crediti](#crediti)
 
@@ -28,41 +27,34 @@ Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](htt
 
 È richiesta l'installazione di [fzf](https://github.com/junegunn/fzf?tab=readme-ov-file#installation).
 
-<details><summary><b>Linux, MacOS</b></summary>
-È possibile installare aw-cli da pip:
+<details><summary><b>Linux, MacOS, Windows WSL</b></summary>
+
+È consigliato installare `aw-cli` tramite [uv](https://github.com/astral-sh/uv):
 
 ```
-python3 -m pip install aw-cli
+uv tool install aw-cli
 ```
+
+In alternativa, è possibile usare [pipx](https://pipx.pypa.io/latest/installation/):
+
+```
+pipx install aw-cli
+```
+
 </details>
 
 <details><summary><b>Windows</b></summary>
-Attualmente, Windows presenta due versioni: la più recente, progettata per funzionare su WSL (Windows Subsystem for Linux), e una versione Legacy compatibile con PowerShell. La versione Legacy non riceverà ulteriori aggiornamenti, mentre l'altra sarà mantenuta costantemente. 
 
-<br>
-
-<details><summary><b>Ultima Versione</b></summary>
-
-L'ultima versione per Windows richiede installare [WSL](https://learn.microsoft.com/it-it/windows/wsl/install):
+Il supporto per Windows è mantenuto solamente tramite WSL. Nel caso si voglia usare Powershell, è possibile installare la versione Legacy, che non riceverà più aggiornamenti. È necessario avere [git](https://www.git-scm.com/download/win) e [uv](https://github.com/astral-sh/uv):
 
 ```
-wsl --install
+uv tool install git+https://github.com/fexh10/aw-cli.git@winLegacy
 ```
 
-Il programma dovrà essere installato e avviato da WSL:
+In alternativa è possibile usare [pipx](https://pipx.pypa.io/latest/installation/):
 
 ```
-python3 -m pip install aw-cli
-```
-
-</details>
-<details><summary><b>Versione Legacy</b></summary>
-
-Per installare la versione Legacy, è necessario avere [git](https://www.git-scm.com/download/win).
-
-
-```
-python3 -m pip install git+https://github.com/fexh10/aw-cli.git@winLegacy
+pipx install git+https://github.com/fexh10/aw-cli.git@winLegacy
 ```
 
 </details>
@@ -74,9 +66,10 @@ Android richiede l'installazione di [Termux](https://github.com/termux/termux-ap
 
 ```
 pkg update && pkg upgrade
-pkg install python python-pip fzf
-python3 -m pip install aw-cli
+pkg install python3 fzf uv
+uv tool install aw-cli
 ```
+
 </details>
 
 <details><summary><b>iOS</b></summary>
@@ -131,12 +124,6 @@ Nota che la velocità di download e caricamento molto bassa è un problema di iS
   ```bash
   trust anchor SSL.com-TLS-T-ECC-R2.pem
   ```
-
-## Disinstallazione 
-
-```
-python3 -m pip uninstall aw-cli
-```
 
 ## Utilizzo
 ```
