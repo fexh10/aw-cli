@@ -428,6 +428,9 @@ def main():
 
     if offline:
         from .providers.local import LocalProvider
+        if len(history.get()) == 0:
+            ut.my_print("Nessun anime scaricato!", color="rosso")
+            exit()
         provider = LocalProvider(download.path(), history.get())
     else:
         match ut.configData["provider"]["source"]:
@@ -450,6 +453,9 @@ def main():
             if offline:
                 animelist = provider.search("") # Uses offline provider
             elif cronologia:
+                if len(history.get()) == 0:
+                    ut.my_print("Cronologia vuota!", color="rosso")
+                    exit()
                 animelist = history.get()
             elif lista:
                 animelist = provider.latest(args.lista)

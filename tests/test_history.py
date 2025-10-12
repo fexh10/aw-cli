@@ -56,7 +56,7 @@ def test_no_file_found(monkeypatch):
     
     history = History()
 
-    assert history.anime_log == []
+    assert history._anime_log == []
     assert mock_sequencer.call_count == 3
 
 # non trovo il file history.json ma esiste aw-cronologia.csv
@@ -99,7 +99,7 @@ def test_load_existing(monkeypatch):
     history = History()
     data = history.get()
     
-    assert len(history.anime_log) == 7
+    assert len(history._anime_log) == 7
     assert data[0].name == "Ore wo Suki nano wa Omae dake ka yo"
     assert data[1].name == "Kaiju No. 8 2"
     assert data[2].name == "Fire Force 3"
@@ -122,17 +122,17 @@ def history_with_data(monkeypatch):
 
 def test_remove_anime(history_with_data):
     history = history_with_data
-    initial_length = len(history.anime_log)
+    initial_length = len(history._anime_log)
     
-    anime_to_remove = history.anime_log[3]  # Rimuovo "Dan Da Dan 2"
+    anime_to_remove = history._anime_log[3]  # Rimuovo "Dan Da Dan 2"
     history.remove(anime_to_remove)
     
-    assert len(history.anime_log) == initial_length - 1
-    assert all(anime.name != "Dan Da Dan 2" for anime in history.anime_log)
+    assert len(history._anime_log) == initial_length - 1
+    assert all(anime.name != "Dan Da Dan 2" for anime in history._anime_log)
 
 def test_remove_nonexistent_anime(history_with_data):
     history = history_with_data
-    initial_length = len(history.anime_log)
+    initial_length = len(history._anime_log)
     
     fake_anime = MagicMock()
     fake_anime.name = "Nonexistent Anime"
@@ -140,7 +140,7 @@ def test_remove_nonexistent_anime(history_with_data):
     with pytest.raises(ValueError):
         history.remove(fake_anime)
     
-    assert len(history.anime_log) == initial_length  # La lunghezza non deve cambiare
+    assert len(history._anime_log) == initial_length  # La lunghezza non deve cambiare
 
 # TODO test update con vari casi
 # - aggiunta in testa

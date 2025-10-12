@@ -6,14 +6,15 @@ from .anime import Anime, AnimeStatus
 class History:
 
     """
-    Modulo per gestire la cronologia degli anime.
+    Classe che gestisce la cronologia degli anime.
     """
     def __init__(self):
-        self.anime_log = list[Anime]()
+        self._path = f"{os.path.dirname(__file__)}/history.json"
+        self._anime_log = list[Anime]()
         try:
             self.read()
         except FileNotFoundError:
-            self.anime_log = legacy()
+            self._anime_log = legacy()
             self.save() # Crea il file se non lo trova
 
     def read(self):
@@ -23,7 +24,7 @@ class History:
         Returns:
             list[Anime]: la lista degli anime trovati
         """
-        with open(f"{os.path.dirname(__file__)}/history.json", encoding='utf-8') as file:
+        with open(self._path, encoding='utf-8') as file:
             data = json.load(file)
 
         for entry in data:
@@ -55,7 +56,7 @@ class History:
                     status = AnimeStatus.UNKNOWN
 
             anime.set_info(entry["id_anilist"], status, entry["info"])
-            self.anime_log.append(anime)
+            self._anime_log.append(anime)
 
     def get(self) -> list[Anime]:
         """
@@ -65,10 +66,7 @@ class History:
             list[Anime]: la lista degli anime trovati 
 
         """
-        if len(self.anime_log) == 0:
-            ut.my_print("Cronologia inesistente!", color='rosso')
-            exit()  
-        return self.anime_log
+        return self._anime_log
     
     def remove(self, Anime: Anime) -> None:
         """
@@ -77,7 +75,7 @@ class History:
         Args:
             Anime (Anime): l'anime da rimuovere.
         """
-        self.anime_log.remove(Anime)
+        self._anime_log.remove(Anime)
         self.save()
 
     def reload(self, last_releases: list[Anime]):
@@ -90,11 +88,10 @@ class History:
         Args:
             last_releases (list[Anime]): La lista degli ultimi anime rilasciati.
         """
-        global anime_log
-        if AnimeStatus.ONGOING not in [anime.status for anime in self.anime_log]:
+        if AnimeStatus.ONGOING not in [anime.status for anime in self._anime_log]:
             return
 
-        for _, anime in reversed(list(enumerate(self.anime_log))):
+        for _, anime in reversed(list(enumerate(self._anime_log))):
             for anime_latest in last_releases:
                 if anime == anime_latest and anime.last_ep != anime_latest.last_ep:
                     anime.update_episodes({
@@ -113,16 +110,16 @@ class History:
             anime (Anime): l'anime da aggiornare.
             episode (Anime.Episode): l'episodio da aggiornare.
         """
-        self.anime_log.remove(anime) if anime in self.anime_log else None
+        self._anime_log.remove(anime) if anime in self._anime_log else None
         last_completed = episode.is_completed() and episode.num == anime.last_ep
         if anime.status == AnimeStatus.FINISHED and last_completed:
             self.save()
             return
 
         if last_completed:
-            self.anime_log.append(anime)
+            self._anime_log.append(anime)
         else:
-            self.anime_log.insert(0, anime)
+            self._anime_log.insert(0, anime)
 
         self.save()
 
@@ -130,9 +127,9 @@ class History:
         """
         Salva la cronologia su un file JSON.
         """
-        with open(f"{os.path.dirname(__file__)}/history.json", 'w', encoding='utf-8') as file:
+        with open(self._path, 'w', encoding='utf-8') as file:
             json.dump(
-                [anime.to_dict() for anime in self.anime_log],
+                [anime.to_dict() for anime in self._anime_log],
                 file,
                 ensure_ascii=False,
                 indent=4
