@@ -8,54 +8,27 @@ class History:
     """
     Classe che gestisce la cronologia degli anime.
     """
-    def __init__(self, path: str):
-        self._path = f"{path}/history.json"
-        self._anime_log = list[Anime]()
-        try:
-            self.read()
-        except FileNotFoundError:
-            self._anime_log = legacy()
-            self.save() # Crea il file se non lo trova
+    def __init__(self, path: str = "", anime_log: list[Anime] = []):
+        self._path = path
+        self._anime_log = anime_log
 
-    def read(self):
+    @classmethod
+    def read(cls, path: str):
         """
         Legge la cronologia da un file json.
 
         Returns:
-            list[Anime]: la lista degli anime trovati
+            History: l'oggetto History con i dati letti dal file.
         """
-        with open(self._path, encoding='utf-8') as file:
-            data = json.load(file)
+        anime_log = []
+        history_path = os.path.join(path, "history.json")
+        try:
+            with open(history_path, encoding='utf-8') as file:
+                anime_log = [Anime.from_dict(entry) for entry in json.load(file)]
+        except FileNotFoundError:
+            anime_log = legacy()
 
-        for entry in data:
-            anime = Anime(
-                name=entry["name"],
-                ref=entry["ref"],
-                curr_ep=entry["curr_ep"],
-                last_ep=entry["last_ep"]
-            )
-            anime.update_episodes(
-                {ep["num"]: ep["ref"] for ep in entry["episodes"]}, 
-                specials=ut.configData["general"]["specials"]
-            )
-
-            for ep in entry["episodes"]:
-                if anime.has_episode(ep["num"]):
-                    anime.episode(ep["num"]).set_progress(ep["progress"], ep["completed"])
-
-            
-            match entry["status"]:
-                case "In corso":
-                    status = AnimeStatus.ONGOING
-                case "Finito":
-                    status = AnimeStatus.FINISHED
-                case "Non rilasciato":
-                    status = AnimeStatus.NOT_RELEASED
-                case _:
-                    status = AnimeStatus.UNKNOWN
-
-            anime.set_info(entry["id_anilist"], status, entry["info"])
-            self._anime_log.append(anime)
+        return cls(history_path, anime_log)
 
     def get(self) -> list[Anime]:
         """

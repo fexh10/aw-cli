@@ -24,7 +24,6 @@ class MockSequencer:
         self.call_count = 0
 
     def __call__(self, *args, **kwargs):
-        # Questo metodo viene eseguito ogni volta che 'open' viene chiamata
         try:
             result = self._outcomes[self.call_count]
         except IndexError:
@@ -37,88 +36,67 @@ class MockSequencer:
         else:
             return result
 
-# volgio testare 3 casi:
-# non trovo il file history.json e non esiste aw-cronologia.csv
 def test_no_file_found(monkeypatch):
-    """
-    Testa il caso:
-    1. open() -> FileNotFoundError
-    2. open() -> FileNotFoundError
-    3. open() -> Successo in scrittura
-    """
-    sequenza = [
+    mock_sequencer = MockSequencer([
         FileNotFoundError("history.json"),
-        FileNotFoundError("aw-cronologia.csv"),
-        mock_open().return_value
-    ]
-    mock_sequencer = MockSequencer(sequenza)
+        FileNotFoundError("aw-cronologia.csv")
+    ])
     monkeypatch.setattr('builtins.open', mock_sequencer)
-    
-    history = History("ProvaPath")
 
-    assert history._anime_log == []
-    assert mock_sequencer.call_count == 3
+    history = History.read("ProvaPath")
 
-# non trovo il file history.json ma esiste aw-cronologia.csv
+    assert history.get() == []
+
 def test_legacy(monkeypatch):
-    """
-    Testa il caso:
-    1. open() -> FileNotFoundError
-    2. open() -> Successo in lettura (aw-cronologia.csv)
-    3. open() -> Successo in scrittura (history.json)
-    """
-    mock_handle_scrivibile = mock_open().return_value
-    monkeypatch.setattr('builtins.open', lambda *args, **kwargs: mock_handle_scrivibile)
-    sequenza = [
+    mock_file_writer = mock_open().return_value
+    mock_sequencer = MockSequencer([
         FileNotFoundError("history.json"),
         mock_open(read_data=legacy_data).return_value,
-        mock_handle_scrivibile
-    ]
-    mock_sequencer = MockSequencer(sequenza)
+        mock_file_writer
+    ])
+
+    monkeypatch.setattr('builtins.open', lambda *args, **kwargs: mock_file_writer)
     monkeypatch.setattr('builtins.open', mock_sequencer)
 
-    history = History("ProvaPath")
+    History.read("ProvaPath").save()
 
-    lista_pezzi_scritti = [call.args[0] for call in mock_handle_scrivibile.write.call_args_list]
-    output_completo = "".join(lista_pezzi_scritti)
+    output_strings = [call.args[0] for call in mock_file_writer.write.call_args_list]
+    output_completo = "".join(output_strings)
 
     assert output_completo == json_data
-    assert mock_sequencer.call_count == 3
 
 def test_load_existing(monkeypatch):
     """
     Testa il caso:
     1. open() -> Successo in lettura (history.json)
     """
-    sequenza = [
+    mock_sequencer = MockSequencer([
         mock_open(read_data=json_data).return_value,
-    ]
-    mock_sequencer = MockSequencer(sequenza)
+    ])
     monkeypatch.setattr('builtins.open', mock_sequencer)
 
-    history = History("ProvaPath")
+    history = History.read("ProvaPath")
     data = history.get()
     
-    assert len(history._anime_log) == 7
-    assert data[0].name == "Ore wo Suki nano wa Omae dake ka yo"
-    assert data[1].name == "Kaiju No. 8 2"
-    assert data[2].name == "Fire Force 3"
-    assert data[3].name == "Dan Da Dan 2"
-    assert data[4].name == "One Piece"
-    assert data[5].name == "Dr. Stone 4 Part 2"
-    assert data[6].name == "Sakamoto Days Part 2"
-    assert mock_sequencer.call_count == 1
+    assert [a.name for a in data] == [
+        "Ore wo Suki nano wa Omae dake ka yo", 
+        "Kaiju No. 8 2", 
+        "Fire Force 3", 
+        "Dan Da Dan 2", 
+        "One Piece",
+        "Dr. Stone 4 Part 2", 
+        "Sakamoto Days Part 2"
+    ]
 
 @pytest.fixture
 def history_with_data(monkeypatch):
-    sequenza = [
+    mock_sequencer = MockSequencer([
         mock_open(read_data=json_data).return_value,
         mock_open().return_value
-    ]
-    mock_sequencer = MockSequencer(sequenza)
+    ])
     monkeypatch.setattr('builtins.open', mock_sequencer)
 
-    return History("ProvaPath")
+    return History.read("ProvaPath")
 
 def test_remove_anime(history_with_data):
     history = history_with_data

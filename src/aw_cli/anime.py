@@ -11,6 +11,18 @@ class AnimeStatus(Enum):
     NOT_RELEASED = "Non rilasciato"
     UNKNOWN = "Sconosciuto"
 
+    @classmethod
+    def from_string(cls, status_str: str) -> AnimeStatus:
+        match status_str:
+            case "In corso":
+                return cls.ONGOING
+            case "Finito":
+                return cls.FINISHED
+            case "Non rilasciato":
+                return cls.NOT_RELEASED
+            case _:
+                return cls.UNKNOWN
+
 class Anime:
     """
     Classe che rappresenta un anime.
@@ -50,7 +62,7 @@ class Anime:
         
         return hash(self.name)
 
-    def update_episodes(self, episodes: dict[str, str], specials: bool = True) -> None:
+    def update_episodes(self, episodes: dict[str, str] = {}, specials: bool = True) -> None:
         """
         Imposta i riferimenti degli episodi dell'anime.
         Args:
@@ -123,6 +135,35 @@ class Anime:
         for key, value in tmp_info.items():
             ut.my_print(f"{key}: ", end="", color="azzurro")
             ut.my_print(value, format=0)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, object]) -> Anime:
+        """
+        Crea un oggetto Anime a partire da un dizionario.
+
+        Args:
+            data (dict): il dizionario con le informazioni dell'anime.
+
+        Returns:
+            Anime: l'oggetto Anime creato.
+        """
+        anime = Anime(
+            name=str(data["name"]),
+            ref=str(data["ref"]),
+            curr_ep=str(data["curr_ep"]),
+            last_ep=str(data["last_ep"])
+        )
+        id_anilist = data["id_anilist"]
+        anime.id_anilist = int(id_anilist) if isinstance(id_anilist, int) else 0
+        anime.status = AnimeStatus.from_string(str(data["status"]))
+        anime.info = dict(data["info"]) if isinstance(data["info"], dict) else {}
+
+        episodes_data = data["episodes"] if isinstance(data["episodes"], list) else []
+        for ep_data in episodes_data:
+            anime._episodes = [Anime.Episode.from_dict(anime, ep_data) for ep_data in episodes_data]
+            anime.update_episodes()
+
+        return anime
 
     def to_dict(self) -> dict[str, object]:
         """
@@ -261,6 +302,28 @@ class Anime:
             """
             self.progress = 0
             self.completed = True
+
+        @classmethod
+        def from_dict(cls, anime: Anime, data: dict[str, object]) -> Anime.Episode:
+            """
+            Crea un oggetto Episode a partire da un dizionario.
+
+            Args:
+                anime (Anime): l'anime a cui appartiene l'episodio.
+                data (dict): il dizionario con le informazioni dell'episodio.
+
+            Returns:
+                Anime.Episode: l'oggetto Episode creato.
+            """
+            episode = cls(
+                anime,
+                num=str(data["num"]),
+                ref=str(data["ref"])
+            )
+            episode.progress = int(data["progress"]) if isinstance(data["progress"], int) else 0
+            episode.completed = bool(data["completed"]) 
+           
+            return episode
 
         def to_dict(self) -> dict[str, object]:
             """

@@ -401,7 +401,7 @@ def main():
         setupConfig()
 
     ut.getConfig()
-    history = History(os.path.dirname(__file__))
+    history = History.read(os.path.dirname(__file__))
 
     if offline:
         from .providers.local import LocalProvider
@@ -557,7 +557,7 @@ def main():
                 exit()
         reload = True
 
-history = None
+history = History()
 openPlayer = None
 completeLimit = 90
 provider = None
