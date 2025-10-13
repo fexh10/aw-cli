@@ -56,7 +56,7 @@ options_group.add_argument(
     nargs='?',
     choices=['a', 's', 'd', 't'],
     dest='lista',
-    help="lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub, t = tendenze. Default 'a'"
+    help="lista degli ultimi anime usciti. Filtri: a = all, s = sub, d = dub, t = tendenze. Default 'a'"
 )
 
 options_group.add_argument(

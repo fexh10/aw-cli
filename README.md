@@ -139,7 +139,7 @@ Opzioni:
   -c [{r}], --cronologia [{r}]
                         continua a guardare un anime dalla cronologia. 'r' per rimuovere un anime (opzionale)
   -l [{a,s,d,t}], --lista [{a,s,d,t}]
-                        lista degli ultimi anime usciti su AnimeWorld. a = all, s = sub, d = dub, t = tendenze. Default 'a'
+                        lista degli ultimi anime usciti. Filtri: a = all, s = sub, d = dub, t = tendenze. Default 'a'
   -i, --info            visualizza le informazioni e la trama di un anime
   -s, --syncplay        usa syncplay per guardare un anime insieme ai tuoi amici
   -d, --download        scarica gli episodi che preferisci
