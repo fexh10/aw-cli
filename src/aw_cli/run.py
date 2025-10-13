@@ -6,6 +6,7 @@ from threading import Thread
 from . import (
     anilist, 
     download,
+    providers,
     utilities as ut,
 )
 from .history import History
@@ -43,7 +44,7 @@ def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool 
 
     return output
 
-def RicercaAnime() -> list[Anime]:
+def RicercaAnime(provider: providers.Provider) -> list[Anime]:
     """
     Dato in input un nome di un anime inserito dall'utente, restituisce una lista con gli URL degli anime
     relativi alla ricerca.
@@ -62,7 +63,7 @@ def RicercaAnime() -> list[Anime]:
     ut.my_print("", end="", cls=True)
     return ut.my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
 
-def scegliEpisodi() -> list[Anime.Episode]:
+def scegliEpisodi(anime) -> list[Anime.Episode]:
     """
     Fa scegliere all'utente gli episodi dell'anime da guardare.
 
@@ -170,7 +171,7 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
 
     # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
     progress = 0
-    vlc_config_path = os.path.expanduser("~/.config/vlc/vlc-qt-interface.conf")
+    vlc_config_path = os.path.expanduser("~/.config/vlc/vlc-qt-interface.conf") # Linux
     if os.path.exists(vlc_config_path):
         with open(vlc_config_path, "r") as file:
             config = [line.strip() for line in file.readlines()]
@@ -179,28 +180,10 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
             positions = config[index + 2].split("=")[1].split(", ")
         progress = int(positions[urls.index(url_ep)]) // 1000 if url_ep in urls else 0
     
-    tmp = anime.info["Durata"].split()
-    # se non ho informazioni sul progresso, suppongo che sia completato
-    if progress == 0:
-        return True, 0
-    
-    # se non ho informazioni sulla durata dell'episodio, suppongo non sia completato
-    if tmp[0] == "??":
-        return False, progress
+    # Non informazioni sulla durata: suppongo che sia completato
+    return True, progress
 
-    # stimo la durata dell'episodio in secondi    
-    if tmp[0].endswith("h"):
-        duration = int(tmp[0][:-1]) * 3600 + int(tmp[2]) * 60
-    else:
-        duration = int(tmp[0]) * 60
-        
-    # se il progresso è maggiore della durata dell'episodio la sitma è errata
-    if progress > duration:
-        return False, progress
-    
-    return progress*100//duration >= completeLimit, progress
-
-def update_anilist(ep: Anime.Episode, anilist_rating: float, drop: bool = False):
+def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|None, drop: bool = False):
     """
     Procede ad aggiornare l'anime su AniList.
     Se l'episodio riprodotto è l'ultimo e
@@ -221,7 +204,7 @@ def update_anilist(ep: Anime.Episode, anilist_rating: float, drop: bool = False)
     favorite = False
     status_list = 'CURRENT' if not drop else 'DROPPED'
     #se ho finito di vedere l'anime o lo stato è dropped
-    if (ep.numeric() == int(anime.last_ep) and anime.status == AnimeStatus.FINISHED) or status_list == 'DROPPED':
+    if (episode.numeric() == int(anime.last_ep) and anime.status == AnimeStatus.FINISHED) or status_list == 'DROPPED':
         if status_list == 'CURRENT':
             status_list = 'COMPLETED'
     
@@ -235,9 +218,9 @@ def update_anilist(ep: Anime.Episode, anilist_rating: float, drop: bool = False)
             ut.my_print(f"Riproduco {anime.name} Ep. {anime.last_ep}", color="giallo", cls=True)
             favorite = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
     
-    Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, ep.numeric(), status_list, rating, favorite)).start()
+    Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, episode.numeric(), status_list, rating, favorite)).start()
 
-def openVideos(episode: Anime.Episode):
+def openVideos(anime: Anime, episode: Anime.Episode, provider: providers.Provider) -> tuple[bool, int]:
     """
     Riproduce l'episodio dell'anime.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
@@ -383,7 +366,7 @@ def removeFromCrono(anime: Anime) -> None:
             ut.sleep(1)
         else:
             rating = anilist.getAnimePrivateRating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
-            update_anilist(anime.episode(anime.curr_ep), rating, drop=True)
+            update_anilist(anime, anime.episode(anime.curr_ep), rating, drop=True)
 
     history.remove(anime)
 
@@ -391,8 +374,6 @@ def removeFromCrono(anime: Anime) -> None:
         exit()
 
 def main():
-    global anime
-    global provider
     global openPlayer
     global history
     
@@ -415,8 +396,8 @@ def main():
                 from .providers.animeworld import Animeworld
                 provider = Animeworld()
 
-    openPlayer = openMPV if ut.configData["player"]["type"] == "mpv" else openVLC
-
+    if ut.configData["player"]["type"] == "vlc":
+        openPlayer = openVLC
     if ut.nome_os != "Android" and args.syncpl:
         openPlayer = openSyncplay
 
@@ -426,18 +407,17 @@ def main():
         if reload:
             if offline:
                 animelist = provider.search("") # Uses offline provider
-                if len(animelist) == 0:
-                    ut.my_print("Nessun anime scaricato!", color="rosso")
-                    exit()
             elif cronologia:
-                if len(history.get()) == 0:
-                    ut.my_print("Cronologia vuota!", color="rosso")
-                    exit()
                 animelist = history.get()
             elif lista:
                 animelist = provider.latest(args.lista)
             else:
-                animelist = RicercaAnime()
+                animelist = RicercaAnime(provider)
+            
+            if not animelist:
+                message = "Cronologia vuota!" if cronologia else "Nessun anime trovato!"
+                ut.my_print(message, color="rosso")
+                exit()
 
         ut.my_print("", end="", cls=True)
         esci = True
@@ -457,8 +437,8 @@ def main():
 
         try:
             provider.info_anime(anime)
-        except LookupError as e:
-            ut.my_print(e, color="rosso")
+        except LookupError as error:
+            ut.my_print(str(error), color="rosso")
             ut.my_print("Cercarlo manualmente", color="magenta")
             exit()
 
@@ -492,7 +472,7 @@ def main():
         elif lista or cronologia:
             listaEpisodi = [anime.episode(anime.curr_ep)]
         else:
-            listaEpisodi = scegliEpisodi()
+            listaEpisodi = scegliEpisodi(anime)
             
         episode = listaEpisodi[0]
 
@@ -515,7 +495,7 @@ def main():
                 executor = ThreadPoolExecutor(max_workers=1)
                 voto_anilist = executor.submit(anilist.getAnimePrivateRating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
 
-            completed, progress = openVideos(episode)
+            completed, progress = openVideos(anime, episode, provider)
 
             if not privato:
                 episode.set_progress(progress)
@@ -523,7 +503,7 @@ def main():
                     episode.mark_completed()
                     #update watchlist anilist se ho fatto l'accesso
                     if voto_anilist:
-                        update_anilist(episode, voto_anilist.result())
+                        update_anilist(anime, episode, voto_anilist.result())
 
                 anime.curr_ep = episode.num
                 history.update(anime, episode) 
@@ -536,7 +516,7 @@ def main():
             if anime.last_ep != '1':
                 lista_menu.append("seleziona")
                 check = lambda: offline or len(anime.episodes()) != 1
-                get = lambda: scegliEpisodi()[0]
+                get = lambda: scegliEpisodi(anime)[0]
             if episode.has_prev() or (not offline and episode.numeric() > 1):
                 lista_menu.append("antecedente")
                 check, get = episode.has_prev, episode.prev
@@ -558,10 +538,8 @@ def main():
         reload = True
 
 history = History()
-openPlayer = None
+openPlayer = openMPV
 completeLimit = 90
-provider = None
-anime = Anime("", "")
 
 if __name__ == "__main__":
     main()

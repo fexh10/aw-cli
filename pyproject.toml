@@ -25,6 +25,6 @@ source = "vcs"
 
 [dependency-groups]
 dev = [
-    "hatch>=1.14.2",
+    "pyright>=1.1.406",
     "pytest>=8.4.2",
 ]
