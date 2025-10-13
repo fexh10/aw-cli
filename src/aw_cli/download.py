@@ -19,7 +19,7 @@ def path(create: bool = True) -> str:
     """
 
     if (ut.nome_os == "Android"):
-        path = f"/sdcard/Movies/Anime"
+        path = "/sdcard/Movies/Anime"
     else:
         path = f"{Path.home()}/Videos/Anime"
     if create and not os.path.exists(path):
@@ -58,7 +58,7 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider):
             ut.my_print(f"Ep. {ep.num}", color="blu", end=" ")
             ut.my_print("[", end="")
             ut.my_print(f"{'#' * 50}", color="verde", end="")
-            ut.my_print(f"] 100%")
+            ut.my_print("] 100%")
 
     async def worker(ep: Anime.Episode, i: int, progress: list[int], semaphore: asyncio.Semaphore):
         try:

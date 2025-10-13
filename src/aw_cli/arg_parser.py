@@ -1,6 +1,6 @@
 import sys
 import argparse
-from .utilities import nome_os 
+from .utilities import nome_os
 from importlib.metadata import version
 from .update import update
 
@@ -105,7 +105,7 @@ options_group.add_argument(
     nargs='?',
     action=Update,
     type=str,
-    help='aggiorna il programma', 
+    help='aggiorna il programma',
 )
 
 config_group.add_argument(
@@ -123,17 +123,16 @@ if args.offline:
     cronologia = True
 elif args.cronologia == 'r':
         cronologia = True
-else: 
+else:
     if args.info:
         info = True
     if args.download:
         downl = True
     if args.lista or '-l' in sys.argv:
-        if args.lista == None:
+        if args.lista is None:
             args.lista = 'a'
         lista = True
     if args.privato:
         privato = True
     if '-c' in sys.argv:
         cronologia = True
-    

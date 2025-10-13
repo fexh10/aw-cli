@@ -25,6 +25,7 @@ source = "vcs"
 
 [dependency-groups]
 dev = [
+    "pre-commit>=4.3.0",
     "pyright>=1.1.406",
     "pytest>=8.4.2",
 ]

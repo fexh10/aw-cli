@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import patch
 from aw_cli.anime import Anime
 
 @pytest.fixture
@@ -11,24 +10,24 @@ def test_episode_comparisons(anime: Anime):
     ep1 = Anime.Episode(anime, "5", "ref5")
     ep2 = Anime.Episode(anime, "5", "ref5_bis")
     assert ep1 == ep2
-    
+
     # Test less than
     ep3 = Anime.Episode(anime, "3", "ref3")
     ep4 = Anime.Episode(anime, "5", "ref5")
     assert ep3 < ep4
-    
+
     # Test greater than
     ep5 = Anime.Episode(anime, "10", "ref10")
     ep6 = Anime.Episode(anime, "5", "ref5")
     assert ep5 > ep6
-    
+
     # Test less than or equal
     ep7 = Anime.Episode(anime, "5", "ref5")
     ep8 = Anime.Episode(anime, "5", "ref5")
     ep9 = Anime.Episode(anime, "10", "ref10")
     assert ep7 <= ep8
     assert ep7 <= ep9
-    
+
     # Test greater than or equal
     ep10 = Anime.Episode(anime, "10", "ref10")
     ep11 = Anime.Episode(anime, "10", "ref10")
@@ -78,7 +77,7 @@ def test_load_info(anime, mock_get_info_anime):
     assert anime.status == 1
     assert anime.views == 232023
     assert anime.plot == "trama"
-    
+
 def test_load_info_error(anime, mock_get_info_anime):
     mock_get_info_anime.side_effect = IndexError
     with pytest.raises(IndexError):

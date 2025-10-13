@@ -62,7 +62,7 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
             sleep(1)
             my_print("",end="", cls=True)
     return i
-                
+
 
 def sanitize_filename(filename: str) -> str:
     """
@@ -76,7 +76,7 @@ def sanitize_filename(filename: str) -> str:
     """
     if nome_os != "Android":
         return filename
-    
+
     forbidden_char = '"*/:<>?\\|'
     replace_char = '”⁎∕꞉‹›︖＼⏐'
     for a, b in zip(forbidden_char, replace_char):
@@ -92,16 +92,16 @@ def getConfig() -> None:
         None
     """
     global configData
-    
+
     configPath = f"{os.path.dirname(__file__)}/config.toml"
-    
+
     with open(configPath, 'r') as f:
         configData = toml.load(f)
-    
-    if nome_os == "WSL": 
+
+    if nome_os == "WSL":
         configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''
         if "syncplay" in configData:
-            configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData["syncplay"]["path"]}'"
-    
+            configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData['syncplay']['path']}'"
+
     if "specials" not in configData["general"]:
         configData["general"]["specials"] = False

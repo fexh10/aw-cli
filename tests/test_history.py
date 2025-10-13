@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, mock_open # unittest.mock è nella libreria standard, non è un modulo esterno!
 from aw_cli.history import History
-from aw_cli.anime import Anime, AnimeStatus
+from aw_cli.anime import Anime
 
 @pytest.fixture(autouse=True)
 def mock_utilities(monkeypatch):
@@ -28,9 +28,9 @@ class MockSequencer:
             result = self._outcomes[self.call_count]
         except IndexError:
             raise AssertionError(f"Chiamata a open() inaspettata (n.{self.call_count + 1})")
-        
+
         self.call_count += 1
-        
+
         if isinstance(result, Exception):
             raise result
         else:
@@ -77,14 +77,14 @@ def test_load_existing(monkeypatch):
 
     history = History.read("ProvaPath")
     data = history.get()
-    
+
     assert [a.name for a in data] == [
-        "Ore wo Suki nano wa Omae dake ka yo", 
-        "Kaiju No. 8 2", 
-        "Fire Force 3", 
-        "Dan Da Dan 2", 
+        "Ore wo Suki nano wa Omae dake ka yo",
+        "Kaiju No. 8 2",
+        "Fire Force 3",
+        "Dan Da Dan 2",
         "One Piece",
-        "Dr. Stone 4 Part 2", 
+        "Dr. Stone 4 Part 2",
         "Sakamoto Days Part 2"
     ]
 
@@ -101,28 +101,28 @@ def history_with_data(monkeypatch):
 def test_remove_anime(history_with_data):
     history = history_with_data
     initial_length = len(history._anime_log)
-    
+
     anime_to_remove = history._anime_log[3]  # Rimuovo "Dan Da Dan 2"
     history.remove(anime_to_remove)
-    
+
     assert len(history._anime_log) == initial_length - 1
     assert all(anime.name != "Dan Da Dan 2" for anime in history._anime_log)
 
 def test_remove_nonexistent_anime(history_with_data):
     history = history_with_data
     initial_length = len(history._anime_log)
-    
+
     fake_anime = MagicMock()
     fake_anime.name = "Nonexistent Anime"
-    
+
     with pytest.raises(ValueError):
         history.remove(fake_anime)
-    
+
     assert len(history._anime_log) == initial_length  # La lunghezza non deve cambiare
 
 # TODO test update con vari casi
 # - aggiunta in testa
-# - aggiunta in coda 
+# - aggiunta in coda
 # - rimozione in caso di anime finito
 
 # TODO test reload
@@ -133,7 +133,7 @@ def test_reload(history_with_data):
     kaiju.id_anilist = 178754
     kaiju.last_ep = "7"
     kaiju.episodes.return_value = ["7"]
-    
+
     episode = MagicMock(spec=Anime.Episode)
     episode.num, episode.ref = "7", "ref7"
     kaiju.episode.return_value = episode
@@ -287,5 +287,3 @@ json_data = """[
         ]
     }
 ]"""
-
-

@@ -4,14 +4,22 @@ from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from . import (
-    anilist, 
+    anilist,
     download,
     providers,
     utilities as ut,
 )
 from .history import History
 from .anime import Anime, AnimeStatus
-from .arg_parser import *
+from .arg_parser import (
+    args,
+    info,
+    downl,
+    lista,
+    offline,
+    privato,
+    cronologia,
+)
 
 signal(SIGINT, lambda signum, frame: exit())
 
@@ -22,7 +30,7 @@ def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool 
     Args:
         elementi (list[str]): lista da passare ad fzf con gli elementi da selezionare.
         prompt (str, optional): il prompt che fzf deve stampare. Valore predefinito: "> ".
-        multi (bool, optional): se True, permette la selezione multipla, con aggiunta di un costum bind crtl+a che 
+        multi (bool, optional): se True, permette la selezione multipla, con aggiunta di un costum bind crtl+a che
          permette di selezionare tutto. Valore predefinito: False.
         cls (bool, optional): se impostato a True, pulisce lo schermo prima di stampare il testo. Valore predefinito: False.
         esci (bool, optional): se True, esce dal programma se l'input dell'utente è vuoto. Valore predefinito: True.
@@ -55,7 +63,7 @@ def RicercaAnime(provider: providers.Provider) -> list[Anime]:
 
     def check_search(s: str):
         if s == "exit":
-            exit() 
+            exit()
         result = provider.search(s)
         if len(result) != 0:
             return result
@@ -74,7 +82,7 @@ def scegliEpisodi(anime) -> list[Anime.Episode]:
         str: il numero dell'episodio da riprodurre.
     """
 
-    
+
     ut.my_print(anime.name, cls=True)
     #se contiene solo 1 ep sarà riprodotto automaticamente
     if len(anime.episodes()) == 1:
@@ -100,12 +108,12 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
     if "syncplay" not in ut.configData:
         ut.my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
         exit()
-    
-    
+
+
     args = f'''--force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
     if ut.configData["player"]["type"] == "vlc":
         args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
-    
+
     try :
         out = os.popen(f'''{ut.configData["syncplay"]["path"]} -d --language it "{url_ep}" -- {args} 2>&1''').read()
     except UnicodeDecodeError:
@@ -116,7 +124,7 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
     if not duration_match:
         ut.my_print("Errore, impossibile leggere l'output di Syncplay!", color="rosso")
         return False, 0
-    
+
     duration = max(map(int, duration_match))
     progress_match = list(filter(lambda x: x>0, map(int, progress_match)))
     progress = progress_match[-1] if progress_match else 0
@@ -146,7 +154,7 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
 
     res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
     progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
-    
+
     return int(res[3]) >= completeLimit, progress
 
 def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
@@ -164,9 +172,9 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
 
     if ut.nome_os == "Android":
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')    
+        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')
         return True, 0
-    
+
     os.system(f'''{ut.configData["player"]["path"]} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen > /dev/null 2>&1''')
 
     # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
@@ -179,7 +187,7 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
             urls = config[index + 1].split("=")[1].split(", ")
             positions = config[index + 2].split("=")[1].split(", ")
         progress = int(positions[urls.index(url_ep)]) // 1000 if url_ep in urls else 0
-    
+
     # Non informazioni sulla durata: suppongo che sia completato
     return True, progress
 
@@ -195,11 +203,11 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
         anilist_rating (float): il voto che l'utente ha assegnato all'anime.
         drop (bool, optional): True se l'utente decide di droppare l'anime, altrimenti False.
     """
-    
+
     if anime.id_anilist == 0:
         ut.my_print("Impossibile aggiornare AniList: id anime non trovato!", color="rosso")
         return
-    
+
     rating = 0
     favorite = False
     status_list = 'CURRENT' if not drop else 'DROPPED'
@@ -207,17 +215,19 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
     if (episode.numeric() == int(anime.last_ep) and anime.status == AnimeStatus.FINISHED) or status_list == 'DROPPED':
         if status_list == 'CURRENT':
             status_list = 'COMPLETED'
-    
+
         #chiedo di votare
         if ut.configData["anilist"]["rating"]:
-            is_number = lambda n: float(n) if n.replace('.', '', 1).isdigit() else None
-            rating = ut.my_input("Inserisci un voto per l'anime" + (f" (voto corrente: {anilist_rating})" if anilist_rating else ""), is_number)
-    
+            rating = ut.my_input(
+                "Inserisci un voto per l'anime" + (f" (voto corrente: {anilist_rating})" if anilist_rating else ""),
+                lambda n: float(n) if n.replace('.', '', 1).isdigit() else None
+            )
+
         #chiedo di mettere tra i preferiti
         if ut.configData["anilist"]["favorite"] and status_list == 'COMPLETED':
             ut.my_print(f"Riproduco {anime.name} Ep. {anime.last_ep}", color="giallo", cls=True)
             favorite = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
-    
+
     Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, episode.numeric(), status_list, rating, favorite)).start()
 
 def openVideos(anime: Anime, episode: Anime.Episode, provider: providers.Provider) -> tuple[bool, int]:
@@ -246,9 +256,9 @@ def setupConfig() -> None:
     Crea un file di configurazione chiamato "config.toml"
     nella stessa directory dello script.
     Le informazioni riportate saranno scelte dall'utente.
-    Sarà possibile scegliere il Player predefinito, 
-    se collegare il proprio profilo AniList e 
-    se inserire il path di syncplay.  
+    Sarà possibile scegliere il Player predefinito,
+    se collegare il proprio profilo AniList e
+    se inserire il path di syncplay.
     """
     ut.configData.clear()
 
@@ -258,16 +268,16 @@ def setupConfig() -> None:
 
     ut.configData["player"]["type"] = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
     if ut.nome_os != "Android":
-        res = os.popen(f"whereis -b {ut.configData["player"]["type"]} 2>&1").read().removeprefix(f"{ut.configData["player"]["type"]}:").strip().split()
+        res = os.popen(f"whereis -b {ut.configData['player']['type']} 2>&1").read().removeprefix(f"{ut.configData['player']['type']}:").strip().split()
         if len(res) == 0:
-            ut.my_print(f"Player {ut.configData["player"]["type"]} non trovato!", color="rosso")
-            ut.configData["player"]["path"] = ut.my_input(f"Inserisci il path di {ut.configData["player"]["type"]} manualmente se è installato")
+            ut.my_print(f"Player {ut.configData['player']['type']} non trovato!", color="rosso")
+            ut.configData["player"]["path"] = ut.my_input(f"Inserisci il path di {ut.configData['player']['type']} manualmente se è installato")
         else:
             ut.configData["player"]["path"] = res[0]
         ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
     ut.configData["general"]["specials"] = fzf(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
-    
+
 
     #provider preferito
     ut.configData["provider"]["source"] = fzf(["animeunity", "animeworld"], "Scegli il provider: ")
@@ -291,22 +301,23 @@ def setupConfig() -> None:
             ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
             if fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
                 ut.configData["anilist"]["rating"] = True
-                
+
             if fzf(["sì","no"], "Chiedere se mettere l'anime tra i preferiti una volta completato? ") == "sì":
                 ut.configData["anilist"]["favorite"] = True
-            
+
             if fzf(["sì","no"], "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
                 ut.configData["anilist"]["drop"] = True
-            
+
             ut.configData["anilist"]["user_id"]  = future.result()
 
     #syncplay
     if ut.nome_os != "Android":
-        res = os.popen(f"whereis -b syncplay 2>&1").read().removeprefix(f"syncplay:").strip().split()
+        res = os.popen("whereis -b syncplay 2>&1").read().removeprefix("syncplay:").strip().split()
         if len(res) == 0:
             ut.my_print("Syncplay non trovato!", color="rosso")
-            syncplay = ut.my_input(f"Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
-            if syncplay != "": ut.configData["syncplay"]["path"] = syncplay
+            syncplay = ut.my_input("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
+            if syncplay != "":
+                ut.configData["syncplay"]["path"] = syncplay
         else:
             ut.configData["syncplay"]["path"] = res[0]
 
@@ -315,15 +326,15 @@ def setupConfig() -> None:
     with open(config, 'w') as f:
         ut.toml.dump(ut.configData, f)
 
-def listAnimeNames(animelist: list[Anime]) -> list[str]: 
+def listAnimeNames(animelist: list[Anime]) -> list[str]:
     """
-    Genera una lista di stringhe formattate con i 
+    Genera una lista di stringhe formattate con i
     nomi degli anime presenti nella lista desiderata.
 
     Args:
-        animelist (list[Anime]): Una lista Anime.    
+        animelist (list[Anime]): Una lista Anime.
 
-    Return: 
+    Return:
         str: lista di stringhe formattate.
     """
 
@@ -338,11 +349,11 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
         if cronologia:
             nome += f"{a.name} [Ep {a.curr_ep}/{a.info['Episodi']}]"
         elif lista:
-            nome += f"{a.name} [Ep {a.curr_ep}]" 
+            nome += f"{a.name} [Ep {a.curr_ep}]"
         else:
             nome += f"{a.name}"
         nomi.append(nome)
-        
+
     return nomi
 
 def removeFromCrono(anime: Anime) -> None:
@@ -376,7 +387,7 @@ def removeFromCrono(anime: Anime) -> None:
 def main():
     global openPlayer
     global history
-    
+
     #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
     if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/config.toml"):
         setupConfig()
@@ -413,7 +424,7 @@ def main():
                 animelist = provider.latest(args.lista)
             else:
                 animelist = RicercaAnime(provider)
-            
+
             if not animelist:
                 message = "Cronologia vuota!" if cronologia else "Nessun anime trovato!"
                 ut.my_print(message, color="rosso")
@@ -426,7 +437,7 @@ def main():
             pass
 
         prompt = "Scegli un anime: " if args.cronologia != 'r' else "Rimuovi un anime: "
-        scelta_anime = fzf(listAnimeNames(animelist), prompt, esci=esci)        
+        scelta_anime = fzf(listAnimeNames(animelist), prompt, esci=esci)
 
         scelta = int(scelta_anime.split("  ")[0]) - 1
         anime = animelist[scelta]
@@ -473,7 +484,7 @@ def main():
             listaEpisodi = [anime.episode(anime.curr_ep)]
         else:
             listaEpisodi = scegliEpisodi(anime)
-            
+
         episode = listaEpisodi[0]
 
         if downl:
@@ -499,14 +510,14 @@ def main():
 
             if not privato:
                 episode.set_progress(progress)
-                if completed: 
+                if completed:
                     episode.mark_completed()
                     #update watchlist anilist se ho fatto l'accesso
                     if voto_anilist:
                         update_anilist(anime, episode, voto_anilist.result())
 
                 anime.curr_ep = episode.num
-                history.update(anime, episode) 
+                history.update(anime, episode)
 
             # menù che si visualizza dopo aver finito la riproduzione
             lista_menu = ["esci", "indietro"]
@@ -524,7 +535,7 @@ def main():
             if episode.has_next() or (not offline and episode.num != anime.last_ep):
                 lista_menu.append("prossimo")
                 check, get = episode.has_next, episode.next
-    
+
             scelta_menu = fzf(lista_menu)
 
             if scelta_menu in ["prossimo", "antecedente", "seleziona"]:

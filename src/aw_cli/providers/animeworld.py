@@ -1,7 +1,6 @@
 from functools import lru_cache
 import re
 from html import unescape
-from httpx import HTTPError
 from ..anime import Anime, AnimeStatus
 from .provider import Provider, HTTPError
 
@@ -23,7 +22,7 @@ class Animeworld(Provider):
     def _get_html(self, url: str) -> str:
         """
         Ottiene l'html della pagina web `url`.
-        Se la pagina non viene trovata o c'è un errore di connessione, 
+        Se la pagina non viene trovata o c'è un errore di connessione,
         viene stampato un messaggio di errore e il programma termina.
         Se la pagina viene reindirizzata, vengono aggiornati i `cookies` e viene ripetuta la richiesta.
 
@@ -39,7 +38,7 @@ class Animeworld(Provider):
         response = self.Client.get(url)
         response.raise_for_status()
 
-        if response.status_code == 202: 
+        if response.status_code == 202:
             match = re.search(r'(SecurityAW-\w+)=(.*) ;', response.text)
             if not match:
                 raise HTTPError("Errore: Cookies non trovati")
@@ -49,7 +48,7 @@ class Animeworld(Provider):
         if response.status_code != 200 or "Errore 404" in response.text:
             raise HTTPError("Errore 404: pagina non trovata")
 
-        return response.text    
+        return response.text
 
     def _search(self, input: str) -> list[Anime]:
         search_url = self.BASE_URL + "/search?keyword=" + input.replace(" ", "+")
@@ -61,7 +60,7 @@ class Animeworld(Provider):
         # prendo i link degli anime relativi alla ricerca
         for url, name in re.findall(r'<div class="inner">(?:.|\n)+?<a href="([^"]+)"\s+data-jtitle="[^"]+"\s+class="name">([^<]+)', html):
             animes.append(Anime(unescape(name), self.BASE_URL+url))
-        
+
         return animes
 
     def _latest(self, filter: str, specials: bool) -> list[Anime]:
@@ -73,11 +72,14 @@ class Animeworld(Provider):
             anime.update_episodes({ep: self.BASE_URL + url}, specials=specials)
             animes.append(anime)
 
-        match filter[0]:
-            case 's': return animes[45:90]
-            case 'd': return animes[90:135]
-            case 't': return animes[135:]
-            case  _ : return animes[:45]
+        BLOCK_SIZE = 45
+        filter_keys = ['a', 's', 'd', 't']
+        multiplier = filter_keys.index(filter[0])
+
+        start = multiplier * BLOCK_SIZE
+        end = (multiplier + 1) * BLOCK_SIZE if multiplier < len(filter_keys) else None
+
+        return animes[start:end]
 
     def _episodes(self, anime: Anime):
         html = self._get_html(anime.ref)
@@ -93,13 +95,13 @@ class Animeworld(Provider):
         if not res:
             raise ValueError("Errore nel parsing della pagina dell'episodio")
         return res.group(1)
-    
+
     def _info_anime(self, anime: Anime):
         html = self._get_html(anime.ref)
 
         res = re.search(r'<a.*id="anilist-button".*href="\D*(\d*)"', html)
         anilist_id = int(res.group(1)) if res else 0
-        
+
         temp = re.findall(r'<dt>(.*?):</dt>[\n\s]*<dd(?: class="[^"]*")?>((?:.|\n)+?)</dd>', html)
         trama_match = re.search(r'<div class="desc">((?:.|\n)+?)</div>', html)
         if trama_match:
