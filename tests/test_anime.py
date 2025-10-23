@@ -1,49 +1,47 @@
 import pytest
 from aw_cli.anime import Anime
+import operator
 
 @pytest.fixture
 def anime():
     return Anime("Test Anime", "test_ref", "5", "10")
 
-def test_episode_comparisons(anime: Anime):
-    # Test equality
-    ep1 = Anime.Episode(anime, "5", "ref5")
-    ep2 = Anime.Episode(anime, "5", "ref5_bis")
-    assert ep1 == ep2
-
-    # Test less than
-    ep3 = Anime.Episode(anime, "3", "ref3")
-    ep4 = Anime.Episode(anime, "5", "ref5")
-    assert ep3 < ep4
-
-    # Test greater than
-    ep5 = Anime.Episode(anime, "10", "ref10")
-    ep6 = Anime.Episode(anime, "5", "ref5")
-    assert ep5 > ep6
-
-    # Test less than or equal
-    ep7 = Anime.Episode(anime, "5", "ref5")
-    ep8 = Anime.Episode(anime, "5", "ref5")
-    ep9 = Anime.Episode(anime, "10", "ref10")
-    assert ep7 <= ep8
-    assert ep7 <= ep9
-
-    # Test greater than or equal
-    ep10 = Anime.Episode(anime, "10", "ref10")
-    ep11 = Anime.Episode(anime, "10", "ref10")
-    ep12 = Anime.Episode(anime, "5", "ref5")
-    assert ep10 >= ep11
-    assert ep10 >= ep12
-
-def test_episode_comparison_with_decimals(anime: Anime):
-    ep1 = Anime.Episode(anime, "5", "ref5")
-    ep2 = Anime.Episode(anime, "5.5", "ref5.5")
-    assert ep1 < ep2
-
-def test_episode_comparison_with_range(anime: Anime):
-    ep1 = Anime.Episode(anime, "5-10", "ref5-10")
-    ep2 = Anime.Episode(anime, "11", "ref11")
-    assert ep1 < ep2
+@pytest.mark.parametrize("ep1_num, op, ep2_num, expected", [
+    # Equality
+    ("5", "==", "5", True),
+    ("5", "!=", "5", False),
+    ("5", "==", "6", False),
+    # Less than
+    ("3", "<", "5", True),
+    ("5", "<", "3", False),
+    ("5", "<", "5.5", True),
+    ("5-10", "<", "11", True),
+    # Greater than
+    ("10", ">", "5", True),
+    ("5", ">", "10", False),
+    ("5.5", ">", "5", True),
+    ("11", ">", "5-10", True),
+    # Less than or equal
+    ("5", "<=", "5", True),
+    ("5", "<=", "10", True),
+    ("4", "<=", "5", True),
+    # Greater than or equal
+    ("10", ">=", "10", True),
+    ("10", ">=", "5", True),
+    ("11", ">=", "10", True),
+])
+def test_episode_comparisons(anime: Anime, ep1_num, op, ep2_num, expected):
+    ops = {
+        '<': operator.lt,
+        '<=': operator.le,
+        '==': operator.eq,
+        '!=': operator.ne,
+        '>=': operator.ge,
+        '>': operator.gt
+    }
+    ep1 = Anime.Episode(anime, ep1_num, f"ref{ep1_num}")
+    ep2 = Anime.Episode(anime, ep2_num, f"ref{ep2_num}")
+    assert ops[op](ep1, ep2) is expected
 
 def test_episodes_sorting(anime: Anime):
     episodes = {
@@ -61,26 +59,3 @@ def test_episodes_sorting(anime: Anime):
     anime.update_episodes({"5": "ref5"})
     expected = ["0", "1", "2", "3-4", "5", "5.5", "6-7", "7.5", "10", "12"]
     assert anime.episodes() == expected
-"""
-def test_load_info(anime, mock_get_info_anime):
-    anime.load_info()
-    assert anime.id_anilist == 23
-    assert anime.ep == 20
-    assert anime.category == "categoria"
-    assert anime.audio == "lingua"
-    assert anime.release_date == "data"
-    assert anime.season == "stagione"
-    assert anime.studios == "studio"
-    assert anime.genres == "genere"
-    assert anime.ep_len == "durata"
-    assert anime.ep_totali == "26"
-    assert anime.status == 1
-    assert anime.views == 232023
-    assert anime.plot == "trama"
-
-def test_load_info_error(anime, mock_get_info_anime):
-    mock_get_info_anime.side_effect = IndexError
-    with pytest.raises(IndexError):
-        anime.load_info()
-    assert mock_get_info_anime.call_count == 2
-"""
