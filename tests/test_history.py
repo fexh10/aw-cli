@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, mock_open # unittest.mock è nella libreria standard, non è un modulo esterno!
 from aw_cli.history import History
-from aw_cli.anime import Anime
+from aw_cli.anime import Anime, AnimeStatus
 
 @pytest.fixture(autouse=True)
 def mock_utilities(monkeypatch):
@@ -129,18 +129,24 @@ def test_remove_nonexistent_anime(history_with_data):
 def test_reload(history_with_data):
     history = history_with_data
 
-    kaiju = MagicMock(spec=Anime)
-    kaiju.id_anilist = 178754
-    kaiju.last_ep = "7"
-    kaiju.episodes.return_value = ["7"]
-
-    episode = MagicMock(spec=Anime.Episode)
-    episode.num, episode.ref = "7", "ref7"
-    kaiju.episode.return_value = episode
+    kaiju = Anime(name="Kaiju No. 8 2", ref="6726", last_ep="7")
+    kaiju.set_info(178754, AnimeStatus.ONGOING, {"Episodi": "12"})
+    kaiju.update_episodes({"7": "ref7"}, specials=True)
 
     history.reload([kaiju])
 
     assert history.get()[1].last_ep == "7"
+
+def test_reload_with_dub(history_with_data):
+    history = history_with_data
+
+    kaiju = Anime(name="Kaiju No. 8 2 (ITA)", ref="6726", last_ep="7")
+    kaiju.set_info(178754, AnimeStatus.ONGOING, {"Episodi": "12", "Audio": "Italiano"})
+    kaiju.update_episodes({"7": "ref7"}, specials=True)
+
+    history.reload([kaiju])
+
+    assert history.get()[1].last_ep == "6"
 
 
 legacy_data  = """Ore wo Suki nano wa Omae dake ka yo,1,1627,12,1,12,104464,1

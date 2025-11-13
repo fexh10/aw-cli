@@ -34,12 +34,13 @@ class Anime:
         last_ep (str): l'ultimo episodio disponibile.
         id_anilist (int): l'ID dell'anime su Anilist.
         info (dict[str, str]): dizionario con le informazioni dell'anime.
-    """ 
+    """
 
     def __init__(self, name: str, ref: str, curr_ep: str = "0", last_ep: str = "0", status: AnimeStatus = AnimeStatus.UNKNOWN) -> None:
         self.name: str = name
         self.ref: str = ref
         self.id_anilist: int = 0
+        self.dub: bool = "(ITA)" in name
         self.curr_ep: str = curr_ep
         self.last_ep: str = last_ep if last_ep != "0" else curr_ep
         self.status: AnimeStatus = status
@@ -52,14 +53,14 @@ class Anime:
             return False
 
         if self.id_anilist and other.id_anilist:
-            return self.id_anilist == other.id_anilist
-        
+            return self.id_anilist == other.id_anilist and self.dub == other.dub
+
         return self.name == other.name # idealmente andrebbe tolto
 
     def __hash__(self) -> int:
         if self.id_anilist:
-            return hash(self.id_anilist)
-        
+            return hash((self.id_anilist, self.dub))
+
         return hash(self.name)
 
     def update_episodes(self, episodes: dict[str, str] = {}, specials: bool = True) -> None:
@@ -87,7 +88,7 @@ class Anime:
         Restituisce una lista dei numeri degli episodi disponibili.
         """
         return list(self._num_to_index.keys())
-    
+
     def has_episode(self, ep_num: str) -> bool:
         """
         Controlla se l'anime ha l'episodio specificato.
@@ -115,11 +116,12 @@ class Anime:
         Args:
             anilist_id (int): l'ID di Anilist dell'anime.
             infos (list): lista delle informazioni dell'anime.
-        """ 
+        """
         self.id_anilist = anilist_id
         self.info = info
         self.status = status
-    
+        self.dub = info.get("Audio", "").lower() == "italiano"
+
     def print_info(self):
         """
         Stampa le informazioni dell'anime.
@@ -153,10 +155,15 @@ class Anime:
             curr_ep=str(data["curr_ep"]),
             last_ep=str(data["last_ep"])
         )
-        id_anilist = data["id_anilist"]
-        anime.id_anilist = int(id_anilist) if isinstance(id_anilist, int) else 0
-        anime.status = AnimeStatus.from_string(str(data["status"]))
-        anime.info = dict(data["info"]) if isinstance(data["info"], dict) else {}
+        id_anilist = data.get("id_anilist")
+        status_str = str(data.get("status", "Sconosciuto"))
+        info = data.get("info", {})
+
+        anime.set_info(
+            anilist_id=int(id_anilist) if isinstance(id_anilist, int) else 0,
+            status=AnimeStatus.from_string(status_str),
+            info=dict(info) if isinstance(info, dict) else {}
+        )
 
         episodes_data = data["episodes"] if isinstance(data["episodes"], list) else []
         for ep_data in episodes_data:
@@ -182,7 +189,7 @@ class Anime:
             "info": self.info,
             "episodes": [ep.to_dict() for ep in self._episodes]
         }
-    
+
     @total_ordering
     class Episode:
         """
@@ -264,7 +271,7 @@ class Anime:
             """
             index = self._anime._num_to_index[self.num] - 1
             return self._anime._episodes[index]
-        
+
         def numeric(self) -> int:
             """
             Restituisce il numero dell'episodio come intero.
@@ -321,8 +328,8 @@ class Anime:
                 ref=str(data["ref"])
             )
             episode.progress = int(data["progress"]) if isinstance(data["progress"], int) else 0
-            episode.completed = bool(data["completed"]) 
-           
+            episode.completed = bool(data["completed"])
+
             return episode
 
         def to_dict(self) -> dict[str, object]:
