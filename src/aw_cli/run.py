@@ -522,30 +522,34 @@ def main():
             # menù che si visualizza dopo aver finito la riproduzione
             lista_menu = ["esci", "indietro"]
 
-            check = lambda: False
-            get = lambda: None
+
             if anime.last_ep != '1':
                 lista_menu.append("seleziona")
-                check = lambda: offline or len(anime.episodes()) != 1
-                get = lambda: scegliEpisodi(anime)[0]
             if episode.has_prev() or (not offline and episode.numeric() > 1):
                 lista_menu.append("antecedente")
-                check, get = episode.has_prev, episode.prev
             lista_menu.append("riguarda")
             if episode.has_next() or (not offline and episode.num != anime.last_ep):
                 lista_menu.append("prossimo")
-                check, get = episode.has_next, episode.next
 
             scelta_menu = fzf(lista_menu)
 
-            if scelta_menu in ["prossimo", "antecedente", "seleziona"]:
-                if not check():
+            if scelta_menu == "prossimo":
+                if not episode.has_next():
                     provider.episodes(anime)
-                episode = get()
+                episode = episode.next()
+            elif scelta_menu == "antecedente":
+                if not episode.has_prev():
+                    provider.episodes(anime)
+                episode = episode.prev()
+            elif scelta_menu == "seleziona":
+                if not offline and len(anime.episodes()) == 1:
+                    provider.episodes(anime)
+                episode = scegliEpisodi(anime)[0]
             elif scelta_menu == "indietro":
                 break
             elif scelta_menu == "esci":
                 exit()
+
         reload = True
 
 history = History()
