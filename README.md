@@ -72,19 +72,6 @@ uv tool install aw-cli
 
 </details>
 
-<details><summary><b>iOS</b></summary>
-La versione per iOS richiede <a href="https://apps.apple.com/it/app/ish-shell/id1436902243">iSH</a> e <a href="https://apps.apple.com/it/app/vlc-media-player/id650377962">VLC</a>. 
-
-```
-apk update
-apk upgrade
-apk add python3 python3-dev py3-pip gcc musl-dev git
-python3 -m pip install git+https://github.com/fexh10/aw-cli.git@iosCompatibility
-```
-
-Nota che la velocità di download e caricamento molto bassa è un problema di iSH e non di aw-cli. 
-</details>
-
 ## Problemi noti
 
 - Se è impossibile avviare `aw-cli`, è possibile che non si abbia la cartella degli script Python aggiunta al path. <br /> 
