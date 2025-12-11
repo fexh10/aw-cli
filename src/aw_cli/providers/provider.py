@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
 from httpx import Client, HTTPError #, AsyncClient
+from rich.console import Console
 from ..anime import Anime
 from .. import utilities as ut
+
+
+console = Console()
 
 def error_handler(relink=False):
     """
@@ -14,7 +18,7 @@ def error_handler(relink=False):
             except Exception as e:
                 if relink and isinstance(e, HTTPError):
                     return update_link(self, func, *args, **kwargs)
-                ut.my_print(f"Errore {e.__class__.__name__} durante {func.__name__}: {e}", color="rosso")
+                console.print(f"Errore {e.__class__.__name__} durante {func.__name__}: {e}", style="bold red")
                 return None
         return wrapper
     return decorator
@@ -24,11 +28,11 @@ def update_link(self, callback, anime: Anime, episode: Anime.Episode | None = No
     Gestisce il caso in cui il riferimento dell'anime o all'episodio non è più valido
     """
     if episode:
-        ut.my_print("Il link dell'episodio è stato cambiato", color="rosso", end="\n")
+        console.print("Il link dell'episodio è stato cambiato", style="bold red")
         self.episodes(anime)
         return callback(self, anime, anime.episode(episode.num))
     else:
-        ut.my_print("Il link dell'anime è stato cambiato", color="rosso", end="\n")
+        console.print("Il link dell'anime è stato cambiato", style="bold red")
         res: list[Anime] = self.search(anime.name)
         if len(res) == 0:
             raise LookupError(f"Nessun risultato trovato per {anime.name} su {self.__class__.__name__}")
@@ -47,7 +51,7 @@ class Provider(ABC):
     def __init__(self, url: str):
         """
         Costruisce un'instanza di Provider.
-        
+
         Args:
             url (str): l'url del sito del provider.
         """
@@ -64,14 +68,14 @@ class Provider(ABC):
     def search(self, input: str) -> list[Anime]:
         """
         Ricerca un anime in base al titolo.
-        
+
         Args:
             input (str): il titolo dell'anime da ricercare.
 
         Returns:
             list[Anime]: la lista degli anime trovati.
         """
-        ut.my_print("Ricerco...", color="giallo")
+        console.print("Ricerco...", style="yellow")
         res = self._search(input)
         for anime in res:
             anime.name = ut.sanitize_filename(anime.name)
@@ -108,11 +112,11 @@ class Provider(ABC):
         Ottiene i riferimenti agli episodi disponibili dell'anime,
         caricandole dentro `anime` che viene modificato di conseguenza.
 
-        Args:   
+        Args:
             anime (Anime): l'anime di riferimento.
         """
         anime.update_episodes(
-            self._episodes(anime), 
+            self._episodes(anime),
             ut.configData["general"]["specials"]
         )
 
@@ -131,7 +135,7 @@ class Provider(ABC):
     @error_handler(relink=True)
     def episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         """
-        Cerca il link del video dell'episodio. 
+        Cerca il link del video dell'episodio.
 
         Args:
             episode (Anime.Episode): l'episodio di riferimento.
@@ -146,13 +150,13 @@ class Provider(ABC):
         """
         Implementazione della episode_link.
         """
-    
+
     @error_handler(relink=True)
     def info_anime(self, anime: Anime):
         """
         Prende le informazioni dell'anime selezionato,
         caricandole dentro `anime` che viene modificato di conseguenza.
-        
+
         Args:
             anime (Anime): l'anime di riferimento.
         """

@@ -6,6 +6,7 @@ from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from rich.console import Console
+from rich.prompt import Prompt, FloatPrompt
 from . import (
     anilist,
     download,
@@ -43,7 +44,7 @@ def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool 
     """
 
     if cls:
-        ut.my_print("", end="", cls=True)
+        console.clear()
     string = "\n".join(elementi)
     comando_fzf = f"""fzf --tac --height={len(elementi) + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
     if multi:
@@ -77,8 +78,14 @@ def RicercaAnime(provider: providers.Provider) -> list[Anime]:
         if len(result) != 0:
             return result
 
-    ut.my_print("", end="", cls=True)
-    return ut.my_input("Cerca un anime", check_search,"La ricerca non ha prodotto risultati", cls = True)
+    console.clear()
+    while True:
+        query = Prompt.ask("[cyan]Cerca un anime[/]")
+        if res := check_search(query):
+            return res
+        console.print("La ricerca non ha prodotto risultati", style="bold red")
+        ut.sleep(1)
+        console.clear()
 
 def scegliEpisodi(anime) -> list[Anime.Episode]:
     """
@@ -92,7 +99,8 @@ def scegliEpisodi(anime) -> list[Anime.Episode]:
     """
 
 
-    ut.my_print(anime.name, cls=True)
+    console.clear()
+    console.print(anime.name)
     #se contiene solo 1 ep sarà riprodotto automaticamente
     if len(anime.episodes()) == 1:
         return anime._episodes
@@ -115,7 +123,7 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
     """
 
     if "syncplay" not in ut.configData:
-        ut.my_print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", color="rosso")
+        console.print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", style="bold red")
         exit()
 
 
@@ -133,7 +141,7 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
     duration_match = re.findall(r'duration(?:-change)?"?: (\d+)\.?[\d]*', out)
     progress_match = re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)
     if not duration_match:
-        ut.my_print("Errore, impossibile leggere l'output di Syncplay!", color="rosso")
+        console.print("Errore, impossibile leggere l'output di Syncplay!", style="bold red")
         return False, 0
 
     duration = max(map(int, duration_match))
@@ -218,7 +226,7 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
     """
 
     if anime.id_anilist == 0:
-        ut.my_print("Impossibile aggiornare AniList: id anime non trovato!", color="rosso")
+        console.print("Impossibile aggiornare AniList: id anime non trovato!", style="bold red")
         return
 
     rating = 0
@@ -230,15 +238,21 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
             status_list = 'COMPLETED'
 
         #chiedo di votare
+        #chiedo di votare
         if ut.configData["anilist"]["rating"]:
-            rating = ut.my_input(
-                "Inserisci un voto per l'anime" + (f" (voto corrente: {anilist_rating})" if anilist_rating else ""),
-                lambda n: float(n) if n.replace('.', '', 1).isdigit() else None
-            )
+            prompt_text = "Inserisci un voto per l'anime" + (f" (voto corrente: {anilist_rating})" if anilist_rating else "")
+            while True:
+                try:
+                    rating = FloatPrompt.ask(prompt_text)
+                    if rating < 0: raise ValueError
+                    break
+                except ValueError:
+                    console.print("Seleziona una risposta valida!", style="bold red")
 
         #chiedo di mettere tra i preferiti
         if ut.configData["anilist"]["favorite"] and status_list == 'COMPLETED':
-            ut.my_print(f"Riproduco {anime.name} Ep. {anime.last_ep}", color="giallo", cls=True)
+            console.clear()
+            console.print(f"Riproduco {anime.name} Ep. {anime.last_ep}", style="yellow")
             favorite = fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
 
     Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, episode.numeric(), status_list, rating, favorite)).start()
@@ -261,7 +275,8 @@ def openVideos(anime: Anime, episode: Anime.Episode, provider: providers.Provide
     else:
         url_ep = provider.episode_link(anime, episode)
 
-    ut.my_print(f"Riproduco {episode}...", color="giallo", cls=True)
+    console.clear()
+    console.print(f"Riproduco {episode}...", style="yellow")
     return openPlayer(url_ep, str(episode), episode.progress)
 
 def setupConfig() -> None:
@@ -276,18 +291,19 @@ def setupConfig() -> None:
     ut.configData.clear()
 
     #player predefinito
-    ut.my_print("", end="", cls=True)
-    ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo")
+    console.clear()
+    console.print("AW-CLI - CONFIGURAZIONE", style="yellow")
 
     ut.configData["player"]["type"] = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
     if ut.nome_os != "Android":
         path = shutil.which(ut.configData['player']['type'])
         if path is None:
-            ut.my_print(f"Player {ut.configData['player']['type']} non trovato!", color="rosso")
-            ut.configData["player"]["path"] = ut.my_input(f"Inserisci il path di {ut.configData['player']['type']} manualmente se è installato")
+            console.print(f"Player {ut.configData['player']['type']} non trovato!", style="bold red")
+            ut.configData["player"]["path"] = Prompt.ask(f"Inserisci il path di {ut.configData['player']['type']} manualmente se è installato")
         else:
             ut.configData["player"]["path"] = path
-        ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
+        console.clear()
+        console.print("AW-CLI - CONFIGURAZIONE", style="yellow")
 
     ut.configData["general"]["specials"] = fzf(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
 
@@ -304,13 +320,15 @@ def setupConfig() -> None:
             subprocess.run(f"xdg-open '{link}'", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         #inserimento token
-        ut.configData["anilist"]["token"] = ut.my_input(f"Inserire il token di AniList ({link})", cls=True)
+        console.clear()
+        ut.configData["anilist"]["token"] = Prompt.ask(f"Inserire il token di AniList ({link})")
 
         #prendo l'id dell'utente tramite query
         with ThreadPoolExecutor() as executor:
             ut.configData["anilist"]["rating"], ut.configData["anilist"]["favorite"], ut.configData["anilist"]["drop"] = False, False, False
             future = executor.submit(anilist.getAnilistUserId, ut.configData["anilist"]["token"])
-            ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
+            console.clear()
+            console.print("AW-CLI - CONFIGURAZIONE", style="yellow")
             if fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
                 ut.configData["anilist"]["rating"] = True
 
@@ -326,8 +344,8 @@ def setupConfig() -> None:
     if ut.nome_os != "Android":
         syncplay_path = shutil.which("syncplay")
         if syncplay_path is None:
-            ut.my_print("Syncplay non trovato!", color="rosso")
-            syncplay = ut.my_input("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
+            console.print("Syncplay non trovato!", style="bold red")
+            syncplay = Prompt.ask("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
             if syncplay != "":
                 ut.configData["syncplay"]["path"] = syncplay
         else:
@@ -385,7 +403,7 @@ def removeFromCrono(anime: Anime) -> None:
 
     if "anilist" in ut.configData and ut.configData["anilist"]["drop"] and fzf(["sì","no"], f"Droppare {anime.name} su AniList? ") == "sì":
         if anime.id_anilist == 0:
-            ut.my_print("Impossibile droppare su AniList: id anime non trovato!", color="rosso")
+            console.print("Impossibile droppare su AniList: id anime non trovato!", style="bold red")
             ut.sleep(1)
         else:
             rating = anilist.getAnimePrivateRating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
@@ -439,10 +457,10 @@ def main():
 
             if not animelist:
                 message = "Cronologia vuota!" if cronologia else "Nessun anime trovato!"
-                ut.my_print(message, color="rosso")
+                console.print(message, style="bold red")
                 exit()
 
-        ut.my_print("", end="", cls=True)
+        console.clear()
         esci = True
         if cronologia and args.cronologia != 'r':
             history.reload(provider.latest())
@@ -461,13 +479,13 @@ def main():
         try:
             provider.info_anime(anime)
         except LookupError as error:
-            ut.my_print(str(error), color="rosso")
-            ut.my_print("Cercarlo manualmente", color="magenta")
+            console.print(str(error), style="bold red")
+            console.print("Cercarlo manualmente", style="magenta")
             exit()
 
 
         if info:
-            ut.my_print("", end="", cls=True)
+            console.clear()
             console.print(anime)
             #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
             if fzf(["indietro","guardare"]) == "indietro":
@@ -477,7 +495,7 @@ def main():
             provider.episodes(anime)
 
         if len(anime.episodes()) == 0:
-            ut.my_print("Eh, volevi! L'anime non è ancora stato rilasciato", color="rosso")
+            console.print("Eh, volevi! L'anime non è ancora stato rilasciato", style="bold red")
             ut.sleep(1)
             reload = False
             continue
@@ -487,7 +505,7 @@ def main():
                 provider.episodes(anime)
 
             if not anime.episode(anime.curr_ep).has_next():
-                ut.my_print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", color='rosso')
+                console.print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", style="bold red")
                 ut.sleep(1)
                 if len(animelist) == 1:
                     exit()
