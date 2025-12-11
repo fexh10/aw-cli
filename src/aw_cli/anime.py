@@ -1,6 +1,8 @@
 from __future__ import annotations
 from enum import Enum
 from functools import total_ordering
+from rich.console import Console, ConsoleOptions, RenderResult
+from rich.text import Text
 from . import utilities as ut
 
 
@@ -122,21 +124,23 @@ class Anime:
         self.status = status
         self.dub = info.get("Audio", "").lower() == "italiano"
 
-    def print_info(self):
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
         """
-        Stampa le informazioni dell'anime.
+        Implementazione del protocollo Rich per il rendering della classe.
         """
-        ut.my_print(self.name, cls=True)
-        tmp_info = dict(self.info)
+        yield Text(self.name, style="bold white")
 
-        # Usa l'enum per lo stato
+        tmp_info = dict(self.info)
         tmp_info["Stato"] = self.status.value
 
-        tmp_info["Trama"] = tmp_info.pop("Trama")
+        if "Trama" in tmp_info:
+             tmp_info["Trama"] = tmp_info.pop("Trama")
 
         for key, value in tmp_info.items():
-            ut.my_print(f"{key}: ", end="", color="azzurro")
-            ut.my_print(value, format=0)
+            text = Text()
+            text.append(f"{key}: ", style="cyan")
+            text.append(str(value))
+            yield text
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> Anime:

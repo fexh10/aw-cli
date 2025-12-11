@@ -5,6 +5,7 @@ import subprocess
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
+from rich.console import Console
 from . import (
     anilist,
     download,
@@ -464,8 +465,10 @@ def main():
             ut.my_print("Cercarlo manualmente", color="magenta")
             exit()
 
+
         if info:
-            anime.print_info()
+            ut.my_print("", end="", cls=True)
+            console.print(anime)
             #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
             if fzf(["indietro","guardare"]) == "indietro":
                 continue
@@ -566,6 +569,7 @@ def main():
 history = History()
 openPlayer = openMPV
 completeLimit = 90
+console = Console()
 
 if __name__ == "__main__":
     main()
