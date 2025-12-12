@@ -3,7 +3,6 @@ from enum import Enum
 from functools import total_ordering
 from rich.console import Console, ConsoleOptions, RenderResult
 from rich.text import Text
-from . import utilities as ut
 
 
 class AnimeStatus(Enum):
@@ -128,7 +127,7 @@ class Anime:
         """
         Implementazione del protocollo Rich per il rendering della classe.
         """
-        yield Text(self.name, style="bold white")
+        yield Text(self.name, style="general")
 
         tmp_info = dict(self.info)
         tmp_info["Stato"] = self.status.value
@@ -138,7 +137,7 @@ class Anime:
 
         for key, value in tmp_info.items():
             text = Text()
-            text.append(f"{key}: ", style="cyan")
+            text.append(f"{key}: ", style="highlight")
             text.append(str(value))
             yield text
 

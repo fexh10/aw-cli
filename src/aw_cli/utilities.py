@@ -2,9 +2,25 @@ import os
 import toml
 import subprocess
 from time import sleep
+from rich.console import Console
+from rich.theme import Theme
+
+from rich.prompt import Prompt, FloatPrompt
 from collections import defaultdict
 
 configData = defaultdict(dict)
+
+DEFAULT_STYLE = {
+    "error": "bold red",
+    "prompt": "bold light_sky_blue3",
+    "warning": "bold yellow",
+    "success": "bold green",
+    "info": "bright_yellow",
+    "highlight": "cyan",
+    "general": "white"
+}
+
+console = Console(theme=Theme(DEFAULT_STYLE), highlight=False)
 
 # controllo il tipo del dispositivo
 def get_os() -> str:
@@ -19,10 +35,6 @@ def get_os() -> str:
     return nome_os
 
 nome_os = get_os()
-
-
-
-
 
 def sanitize_filename(filename: str) -> str:
     """
@@ -57,6 +69,17 @@ def getConfig() -> None:
 
     with open(configPath, 'r') as f:
         configData = toml.load(f)
+
+    # Merge with default styles if missing
+    if "style" not in configData:
+        configData["style"] = DEFAULT_STYLE.copy()
+    else:
+        for key, value in DEFAULT_STYLE.items():
+            if key not in configData["style"]:
+                configData["style"][key] = value
+
+    global console
+    console = Console(theme=Theme(configData["style"]), highlight=False)
 
     if nome_os == "WSL":
         configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''

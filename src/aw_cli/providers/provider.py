@@ -1,11 +1,8 @@
 from abc import ABC, abstractmethod
 from httpx import Client, HTTPError #, AsyncClient
-from rich.console import Console
 from ..anime import Anime
 from .. import utilities as ut
 
-
-console = Console()
 
 def error_handler(relink=False):
     """
@@ -18,7 +15,7 @@ def error_handler(relink=False):
             except Exception as e:
                 if relink and isinstance(e, HTTPError):
                     return update_link(self, func, *args, **kwargs)
-                console.print(f"Errore {e.__class__.__name__} durante {func.__name__}: {e}", style="bold red")
+                ut.console.print(f"Errore {e.__class__.__name__} durante {func.__name__}: {e}", style="error")
                 return None
         return wrapper
     return decorator
@@ -28,11 +25,11 @@ def update_link(self, callback, anime: Anime, episode: Anime.Episode | None = No
     Gestisce il caso in cui il riferimento dell'anime o all'episodio non è più valido
     """
     if episode:
-        console.print("Il link dell'episodio è stato cambiato", style="bold red")
+        ut.console.print("Il link dell'episodio è stato cambiato", style="error")
         self.episodes(anime)
         return callback(self, anime, anime.episode(episode.num))
     else:
-        console.print("Il link dell'anime è stato cambiato", style="bold red")
+        ut.console.print("Il link dell'anime è stato cambiato", style="error")
         res: list[Anime] = self.search(anime.name)
         if len(res) == 0:
             raise LookupError(f"Nessun risultato trovato per {anime.name} su {self.__class__.__name__}")
@@ -75,7 +72,7 @@ class Provider(ABC):
         Returns:
             list[Anime]: la lista degli anime trovati.
         """
-        console.print("Ricerco...", style="yellow")
+        ut.console.print("Ricerco...", style="warning")
         res = self._search(input)
         for anime in res:
             anime.name = ut.sanitize_filename(anime.name)
