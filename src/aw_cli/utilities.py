@@ -1,5 +1,6 @@
 import os
 import toml
+import subprocess
 from time import sleep
 from collections import defaultdict
 
@@ -7,7 +8,8 @@ configData = defaultdict(dict)
 
 # controllo il tipo del dispositivo
 def get_os() -> str:
-    out = os.popen("uname -a").read().strip().split()
+    result = subprocess.run(["uname", "-a"], capture_output=True, text=True, check=False)
+    out = result.stdout.strip().split()
     nome_os = out[0]
     if nome_os == "Linux":
         if "Android" == out[-1]:

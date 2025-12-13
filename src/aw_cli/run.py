@@ -1,5 +1,7 @@
 import os
 import re
+import shutil
+import subprocess
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
@@ -42,10 +44,16 @@ def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False, cls: bool 
     if cls:
         ut.my_print("", end="", cls=True)
     string = "\n".join(elementi)
-    comando = f"""fzf --tac --height={len(elementi) + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
+    comando_fzf = f"""fzf --tac --height={len(elementi) + 2} --cycle --ansi --tiebreak=begin --prompt="{prompt}" """
     if multi:
-        comando += "--multi --bind 'ctrl-a:toggle-all'"
-    output = os.popen(f"""printf "{string}" | {comando}""").read().strip()
+        comando_fzf += "--multi --bind 'ctrl-a:toggle-all'"
+
+    comando_completo = f"""printf "{string}" | {comando_fzf}"""
+
+    # Esegue fzf, catturando solo lo stdout per ottenere la selezione,
+    # ma permettendo a fzf di usare stderr per disegnare l'interfaccia utente.
+    process = subprocess.run(comando_completo, shell=True, stdout=subprocess.PIPE, text=True, check=False)
+    output = process.stdout.strip()
 
     if esci and output == "":
         exit()
@@ -111,11 +119,13 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
 
 
     args = f'''--force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
-    if ut.configData["player"]["type"] == "vlc":
+    if ut.configData.get("player", {}).get("type") == "vlc":
         args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
 
-    try :
-        out = os.popen(f'''{ut.configData["syncplay"]["path"]} -d --language it "{url_ep}" -- {args} 2>&1''').read()
+    try:
+        command = f'''{ut.configData["syncplay"]["path"]} -d --language it "{url_ep}" -- {args}'''
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)
+        out = result.stdout
     except UnicodeDecodeError:
         out = ""
 
@@ -147,12 +157,14 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
 
 
     if (ut.nome_os == "Android"):
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity > /dev/null 2>&1''')
+        subprocess.run(f'am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True, 0
 
-    out = os.popen(f'''{ut.configData["player"]["path"]} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open 2>&1''')
+    command = f'''{ut.configData["player"]["path"]} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)
+    out = result.stdout
 
-    res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out.read())[-1]
+    res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out)[-1]
     progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
 
     return int(res[3]) >= completeLimit, progress
@@ -172,10 +184,10 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
 
     if ut.nome_os == "Android":
-        os.system(f'''am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}" > /dev/null 2>&1''')
+        subprocess.run(f'am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True, 0
 
-    os.system(f'''{ut.configData["player"]["path"]} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen > /dev/null 2>&1''')
+    subprocess.run(f'{ut.configData["player"]["path"]} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
     progress = 0
@@ -268,12 +280,12 @@ def setupConfig() -> None:
 
     ut.configData["player"]["type"] = fzf(["vlc","mpv"], "Scegli il player predefinito: ")
     if ut.nome_os != "Android":
-        res = os.popen(f"whereis -b {ut.configData['player']['type']} 2>&1").read().removeprefix(f"{ut.configData['player']['type']}:").strip().split()
-        if len(res) == 0:
+        path = shutil.which(ut.configData['player']['type'])
+        if path is None:
             ut.my_print(f"Player {ut.configData['player']['type']} non trovato!", color="rosso")
             ut.configData["player"]["path"] = ut.my_input(f"Inserisci il path di {ut.configData['player']['type']} manualmente se è installato")
         else:
-            ut.configData["player"]["path"] = res[0]
+            ut.configData["player"]["path"] = path
         ut.my_print("AW-CLI - CONFIGURAZIONE", color="giallo", cls=True)
 
     ut.configData["general"]["specials"] = fzf(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
@@ -286,10 +298,9 @@ def setupConfig() -> None:
     if fzf(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
         link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
         if ut.nome_os == "Darwin":
-            os.system(f"open '{link}' > /dev/null 2>&1")
+            subprocess.run(f"open '{link}'", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
-            os.system(f"xdg-open '{link}' > /dev/null 2>&1")
-
+            subprocess.run(f"xdg-open '{link}'", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         #inserimento token
         ut.configData["anilist"]["token"] = ut.my_input(f"Inserire il token di AniList ({link})", cls=True)
@@ -312,14 +323,14 @@ def setupConfig() -> None:
 
     #syncplay
     if ut.nome_os != "Android":
-        res = os.popen("whereis -b syncplay 2>&1").read().removeprefix("syncplay:").strip().split()
-        if len(res) == 0:
+        syncplay_path = shutil.which("syncplay")
+        if syncplay_path is None:
             ut.my_print("Syncplay non trovato!", color="rosso")
             syncplay = ut.my_input("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)").replace("Program Files (x86)", "Progra~2")
             if syncplay != "":
                 ut.configData["syncplay"]["path"] = syncplay
         else:
-            ut.configData["syncplay"]["path"] = res[0]
+            ut.configData["syncplay"]["path"] = syncplay_path
 
     #creo il file
     config = f"{os.path.dirname(__file__)}/config.toml"
