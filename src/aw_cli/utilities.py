@@ -4,8 +4,6 @@ import subprocess
 from time import sleep
 from rich.console import Console
 from rich.theme import Theme
-
-from rich.prompt import Prompt, FloatPrompt
 from collections import defaultdict
 
 configData = defaultdict(dict)
@@ -88,3 +86,35 @@ def getConfig() -> None:
 
     if "specials" not in configData["general"]:
         configData["general"]["specials"] = False
+
+def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False) -> str:
+    """
+    Avvia fzf con impostazioni predefinite.
+
+    Args:
+        elementi (list[str]): lista da passare ad fzf con gli elementi da selezionare.
+        prompt (str, optional): il prompt che fzf deve stampare. Valore predefinito: "> ".
+        multi (bool, optional): se True, permette la selezione multipla, con aggiunta di un costum bind crtl+a che
+         permette di selezionare tutto. Valore predefinito: False.
+
+    Returns:
+        str: la scelta selezionata tramite fzf.
+    """
+    cmd = ["fzf", "--tac", f"--height={len(elementi) + 2}", "--cycle", "--ansi", "--tiebreak=begin", f"--prompt={prompt}"]
+    if multi:
+        cmd += ["--multi", "--bind", "ctrl-a:toggle-all"]
+
+    while True:
+        process = subprocess.run(
+            cmd,
+            input="\n".join(elementi),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=None
+        )
+
+        if process.returncode == 130:
+            exit()
+
+        if process.stdout.strip():
+            return process.stdout.strip()
