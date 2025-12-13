@@ -61,9 +61,9 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider):
                                     progress.update(task_id, advance=n)
 
                 os.rename(filename + ".temp", filename)
-                progress.update(task_id, description=f"[green]Ep. {ep.num} (Completato)")
+                progress.update(task_id, description=f"[success]Ep. {ep.num} (Completato)[/]")
             except Exception as e:
-                progress.console.print(f"[red]Errore download Ep. {ep.num}: {e}")
+                progress.console.print(f"[error]Errore download Ep. {ep.num}: {e}[/]")
 
     async def _download_all():
         concurrent_downloads = ut.configData["general"].get("parallel-downloads", 3)
@@ -71,17 +71,17 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider):
         ordered_eps = sorted(episodes, key=lambda e: e.numeric())
 
         with Progress(
-            TextColumn("[bold blue]{task.fields[anime_name]}"),
-            TextColumn("[bold blue]{task.description}"),
+            TextColumn("[info]{task.description}[/]", style="info"),
             BarColumn(bar_width=None),
             "•",
             DownloadColumn(),
             "•",
             TransferSpeedColumn(),
+            console=ut.console,
         ) as progress:
             tasks = []
             for ep in ordered_eps:
-                task_id = progress.add_task(f"Ep. {ep.num}", total=None, anime_name=anime.name, ep_num=ep.num, start=True)
+                task_id = progress.add_task(str(ep), total=None, start=True)
                 tasks.append(asyncio.create_task(download_worker(ep, task_id, progress, semaphore)))
 
             await asyncio.gather(*tasks)

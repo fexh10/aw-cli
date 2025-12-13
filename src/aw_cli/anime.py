@@ -127,7 +127,7 @@ class Anime:
         """
         Implementazione del protocollo Rich per il rendering della classe.
         """
-        yield Text(self.name, style="general")
+        yield Text(self.name, style="info")
 
         tmp_info = dict(self.info)
         tmp_info["Stato"] = self.status.value
@@ -138,7 +138,7 @@ class Anime:
         for key, value in tmp_info.items():
             text = Text()
             text.append(f"{key}: ", style="highlight")
-            text.append(str(value))
+            text.append(str(value), style="general")
             yield text
 
     @classmethod

@@ -29,7 +29,7 @@ def update_link(self, callback, anime: Anime, episode: Anime.Episode | None = No
         self.episodes(anime)
         return callback(self, anime, anime.episode(episode.num))
     else:
-        ut.console.print("Il link dell'anime è stato cambiato", style="error")
+        ut.console.print("Il link dell'anime è stato cambiato", style="warning")
         res: list[Anime] = self.search(anime.name)
         if len(res) == 0:
             raise LookupError(f"Nessun risultato trovato per {anime.name} su {self.__class__.__name__}")
