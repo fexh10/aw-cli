@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from .provider import Provider, Anime
 
 class LocalProvider(Provider):
@@ -18,7 +18,12 @@ class LocalProvider(Provider):
     def _search(self, input: str) -> list[Anime]:
         """Restituisce gli anime scaricati localmente, ignorando l'input di ricerca."""
         animes = []
-        for name in os.listdir(self.BASE_URL):
+        base_path = Path(self.BASE_URL)
+        if not base_path.exists():
+            return []
+
+        for item in base_path.iterdir():
+            name = item.name
             anime = Anime(name, "local")
             if anime in self.history:
                 self.episodes(anime)
@@ -33,10 +38,14 @@ class LocalProvider(Provider):
         return res
 
     def _episodes(self, anime: Anime) -> dict[str, str]:
-        filenames = os.listdir(f"{self.BASE_URL}/{anime.name}")
+        base_path = Path(self.BASE_URL) / anime.name
+        if not base_path.exists():
+            return {}
+
+        filenames = [p.name for p in base_path.iterdir()]
         if len(filenames) == 0:
             return {}
-        
+
         episodes = dict[str, str]()
         for filename in filenames:
             num = filename.split("Ep. ")[1].split(".mp4")[0]
@@ -44,7 +53,7 @@ class LocalProvider(Provider):
         return episodes
 
     def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
-        return f"{self.BASE_URL}/{anime.name}/{episode.ref}"
+        return str(Path(self.BASE_URL) / anime.name / episode.ref)
 
     def _info_anime(self, anime: Anime):
         other = self.history[self.history.index(anime)]

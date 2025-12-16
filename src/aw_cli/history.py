@@ -1,5 +1,5 @@
 import json
-import os
+from pathlib import Path
 from . import utilities as ut
 from .anime import Anime, AnimeStatus
 
@@ -21,25 +21,25 @@ class History:
             History: l'oggetto History con i dati letti dal file.
         """
         anime_log = []
-        history_path = os.path.join(path, "history.json")
+        history_path = Path(path) / "history.json"
         try:
             with open(history_path, encoding='utf-8') as file:
                 anime_log = [Anime.from_dict(entry) for entry in json.load(file)]
         except FileNotFoundError:
             anime_log = legacy()
 
-        return cls(history_path, anime_log)
+        return cls(str(history_path), anime_log)
 
     def get(self) -> list[Anime]:
         """
         Prende i dati dalla cronologia.
 
         Returns:
-            list[Anime]: la lista degli anime trovati 
+            list[Anime]: la lista degli anime trovati
 
         """
         return self._anime_log
-    
+
     def remove(self, Anime: Anime) -> None:
         """
         Rimuove un anime dalla cronologia.
@@ -113,7 +113,7 @@ def legacy() -> list[Anime]:
     import csv
     legacy = []
     try:
-        with open(f"{os.path.dirname(__file__)}/aw-cronologia.csv", encoding='utf-8') as file:
+        with open(Path(__file__).parent / "aw-cronologia.csv", encoding='utf-8') as file:
             legacy = [riga for riga in csv.reader(file)]
     except FileNotFoundError:
         pass
@@ -127,7 +127,7 @@ def legacy() -> list[Anime]:
         if len(riga) < 5:
             riga.append("0")
         if len(riga) < 6:
-            riga.append(riga[1])    
+            riga.append(riga[1])
         if len(riga) < 7:
             riga.append("0")
         if len(riga) < 8:

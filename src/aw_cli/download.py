@@ -1,4 +1,3 @@
-import os
 import asyncio
 from pathlib import Path
 from httpx import AsyncClient
@@ -7,7 +6,10 @@ from . import utilities as ut
 from .anime import Anime
 from .providers import Provider
 
-def path(create: bool = True) -> str:
+from functools import lru_cache
+
+@lru_cache
+def path(create: bool = True) -> Path:
     """
     Restituisce il percorso di download dell'anime, a seconda del sistema operativo in uso.
     Se create è True (valore predefinito) e il percorso non esiste, viene creato.
@@ -16,15 +18,16 @@ def path(create: bool = True) -> str:
         create (bool, optional): se impostato a True, crea il percorso se non esiste. Valore predefinito: True.
 
     Returns:
-        str: il percorso di download dell'anime.
+        Path: il percorso di download dell'anime.
     """
 
     if (ut.nome_os == "Android"):
-        path = "/sdcard/Movies/Anime"
+        path = Path("/sdcard/Movies/Anime")
     else:
-        path = f"{Path.home()}/Videos/Anime"
-    if create and not os.path.exists(path):
-        os.makedirs(path)
+        path = Path.home() / "Videos/Anime"
+
+    if create:
+        path.mkdir(parents=True, exist_ok=True)
     return path
 
 
@@ -34,12 +37,12 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider):
     """
     async def download_worker(ep: Anime.Episode, task_id: TaskID, progress: Progress, sem: asyncio.Semaphore):
         async with sem:
-            filename = f"{path()}/{anime.name}/{ep}.mp4"
-            if os.path.exists(filename):
+            filename = path() / anime.name / f"{ep}.mp4"
+            if filename.exists():
                 progress.update(task_id, completed=100, total=100, description=f"[green]Ep. {ep.num} (Esistente)")
                 return
 
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            filename.parent.mkdir(parents=True, exist_ok=True)
             try:
                 url = provider.episode_link(anime, ep)
             except Exception as e:
@@ -53,14 +56,15 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider):
                         progress.update(task_id, total=total)
 
                         downloaded = 0
-                        with open(filename + ".temp", "wb") as f:
+                        temp_filename = filename.with_name(f"{filename.name}.temp")
+                        with open(temp_filename, "wb") as f:
                             async for chunk in response.aiter_bytes(1024):
                                 if chunk:
                                     n = f.write(chunk)
                                     downloaded += n
                                     progress.update(task_id, advance=n)
 
-                os.rename(filename + ".temp", filename)
+                temp_filename.rename(filename)
                 progress.update(task_id, description=f"[success]Ep. {ep.num} (Completato)[/]")
             except Exception as e:
                 progress.console.print(f"[error]Errore download Ep. {ep.num}: {e}[/]")

@@ -1,8 +1,8 @@
-import os
 import re
 import shutil
 import subprocess
 from time import sleep
+from pathlib import Path
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
@@ -166,8 +166,8 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
 
     # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
     progress = 0
-    vlc_config_path = os.path.expanduser("~/.config/vlc/vlc-qt-interface.conf") # Linux
-    if os.path.exists(vlc_config_path):
+    vlc_config_path = Path.home() / ".config/vlc/vlc-qt-interface.conf" # Linux
+    if vlc_config_path.exists():
         with open(vlc_config_path, "r") as file:
             config = [line.strip() for line in file.readlines()]
             index = config.index("[RecentsMRL]")
@@ -236,7 +236,7 @@ def openVideos(anime: Anime, episode: Anime.Episode, provider: providers.Provide
     #se il video è già stato scaricato lo riproduco invece di farlo in streaming
     path = f"{download.path(create=False)}/{anime.name}/{episode}.mp4"
 
-    if os.path.exists(path):
+    if Path(path).exists():
         url_ep = path if ut.nome_os == "Android" else "file://" + path
     else:
         url_ep = provider.episode_link(anime, episode)
@@ -321,7 +321,7 @@ def setupConfig() -> None:
     ut.configData["style"] = ut.DEFAULT_STYLE
 
     #creo il file
-    config = f"{os.path.dirname(__file__)}/config.toml"
+    config = Path(__file__).parent / "config.toml"
     with open(config, 'w') as f:
         ut.toml.dump(ut.configData, f)
 
@@ -389,11 +389,11 @@ def main():
     global history
 
     #se il file di configurazione non esiste viene chiesto all'utente di fare il setup
-    if args.avvia_config or not os.path.exists(f"{os.path.dirname(__file__)}/config.toml"):
+    if args.avvia_config or not (Path(__file__).parent / "config.toml").exists():
         setupConfig()
 
     ut.getConfig()
-    history = History.read(os.path.dirname(__file__))
+    history = History.read(str(Path(__file__).parent))
 
     if offline:
         from .providers.local import LocalProvider

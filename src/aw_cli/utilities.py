@@ -1,7 +1,6 @@
-import os
 import toml
 import subprocess
-from time import sleep
+from pathlib import Path
 from rich.console import Console
 from rich.theme import Theme
 from collections import defaultdict
@@ -63,7 +62,7 @@ def getConfig() -> None:
     """
     global configData
 
-    configPath = f"{os.path.dirname(__file__)}/config.toml"
+    configPath = Path(__file__).parent / "config.toml"
 
     with open(configPath, 'r') as f:
         configData = toml.load(f)
