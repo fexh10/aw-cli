@@ -30,10 +30,14 @@ def path(create: bool = True) -> Path:
         path.mkdir(parents=True, exist_ok=True)
     return path
 
-
-def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider):
+def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) -> None:
     """
     Scarica più episodi in modo concorrente (max concurrent_downloads).
+
+    Args:
+        anime (Anime): l'anime di cui scaricare gli episodi.
+        episodes (list[Anime.Episode]): la lista degli episodi da scaricare.
+        provider (Provider): il provider da cui scaricare gli episodi.
     """
     async def download_worker(ep: Anime.Episode, task_id: TaskID, progress: Progress, sem: asyncio.Semaphore):
         async with sem:
