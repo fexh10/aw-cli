@@ -103,9 +103,9 @@ class Animeworld(Provider):
         anilist_id = int(res.group(1)) if res else 0
 
         temp = re.findall(r'<dt>(.*?):</dt>[\n\s]*<dd(?: class="[^"]*")?>((?:.|\n)+?)</dd>', html)
-        trama_match = re.search(r'<div class="desc">((?:.|\n)+?)</div>', html)
-        if trama_match:
-            temp.append(("Trama", trama_match.group(1)))
+        plot_match = re.search(r'<div class="desc">((?:.|\n)+?)</div>', html)
+        if plot_match:
+            temp.append(("Trama", plot_match.group(1)))
 
         info = dict[str, str]()
         status = AnimeStatus.UNKNOWN
