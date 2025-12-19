@@ -19,10 +19,10 @@ from .arg_parser import (
     args,
     info,
     downl,
-    lista,
+    latest,
     offline,
-    privato,
-    cronologia,
+    private,
+    hist,
 )
 
 signal(SIGINT, lambda signum, frame: exit())
@@ -340,14 +340,14 @@ def listAnimeNames(animelist: list[Anime]) -> list[str]:
     nomi = []
     for i, a in reversed(list(enumerate(animelist))):
         colore = 2 #2 verde, 1 rosso
-        if cronologia and a.curr_ep == a.last_ep and (not a.has_episode(a.curr_ep) or a.episode(a.curr_ep).is_completed()):
+        if hist and a.curr_ep == a.last_ep and (not a.has_episode(a.curr_ep) or a.episode(a.curr_ep).is_completed()):
             colore = 1
 
         nome = f"\033[0;3{colore}m{i + 1}  \033[0;37m"
 
-        if cronologia:
+        if hist:
             nome += f"{a.name} [Ep {a.curr_ep}/{a.info['Episodi']}]"
-        elif lista:
+        elif latest:
             nome += f"{a.name} [Ep {a.curr_ep}]"
         else:
             nome += f"{a.name}"
@@ -418,19 +418,19 @@ def main():
         if reload:
             if offline:
                 animelist = provider.search("") # Uses offline provider
-            elif cronologia:
+            elif hist:
                 animelist = history.get()
-            elif lista:
+            elif latest:
                 animelist = provider.latest(args.lista)
             else:
                 animelist = RicercaAnime(provider)
 
             if not animelist:
-                message = "Cronologia vuota!" if cronologia else "Nessun anime trovato!"
+                message = "Cronologia vuota!" if hist else "Nessun anime trovato!"
                 ut.console.print(message, style="error")
                 exit()
 
-        if cronologia and args.cronologia != 'r':
+        if hist and args.cronologia != 'r':
             history.reload(provider.latest())
             pass
 
@@ -468,7 +468,7 @@ def main():
             reload = False
             continue
 
-        if cronologia and anime.episode(anime.curr_ep).is_completed():
+        if hist and anime.episode(anime.curr_ep).is_completed():
             if not anime.episode(anime.curr_ep).has_next():
                 provider.episodes(anime)
 
@@ -480,7 +480,7 @@ def main():
                 reload = False
                 continue
             listaEpisodi = [anime.episode(anime.curr_ep).next()]
-        elif lista or cronologia:
+        elif latest or hist:
             listaEpisodi = [anime.episode(anime.curr_ep)]
         else:
             listaEpisodi = scegliEpisodi(anime)
@@ -502,13 +502,13 @@ def main():
 
         while True:
             voto_anilist = None
-            if not (offline or privato) and "anilist" in ut.configData:
+            if not (offline or private) and "anilist" in ut.configData:
                 executor = ThreadPoolExecutor(max_workers=1)
                 voto_anilist = executor.submit(anilist.get_anime_private_rating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.anilist_id)
 
             completed, progress = openVideos(anime, episode, provider)
 
-            if not privato:
+            if not private:
                 episode.set_progress(progress)
                 if completed:
                     episode.mark_completed()

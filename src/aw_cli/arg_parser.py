@@ -11,11 +11,11 @@ class Update(argparse.Action):
 
 # args
 downl = False
-lista = False
+latest = False
 offline = False
-cronologia = False
+hist = False
 info = False
-privato = False
+private = False
 
 # args
 parser = argparse.ArgumentParser(
@@ -120,9 +120,9 @@ args = parser.parse_args()
 
 if args.offline:
     offline = True
-    cronologia = True
+    hist = True
 elif args.cronologia == 'r':
-        cronologia = True
+        hist = True
 else:
     if args.info:
         info = True
@@ -131,8 +131,8 @@ else:
     if args.lista or '-l' in sys.argv:
         if args.lista is None:
             args.lista = 'a'
-        lista = True
+        latest = True
     if args.privato:
-        privato = True
+        private = True
     if '-c' in sys.argv:
-        cronologia = True
+        hist = True
