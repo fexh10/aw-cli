@@ -221,7 +221,7 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
             ut.console.print(f"Riproduco {anime.name} Ep. {anime.last_ep}", style="warning")
             favorite = ut.fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
 
-    Thread(target=anilist.updateAnilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, episode.numeric(), status_list, rating, favorite)).start()
+    Thread(target=anilist.update_anilist, args=(ut.configData["anilist"]["token"],anime.id_anilist, episode.numeric(), status_list, rating, favorite)).start()
 
 def openVideos(anime: Anime, episode: Anime.Episode, provider: providers.Provider) -> tuple[bool, int]:
     """
@@ -292,7 +292,7 @@ def setupConfig() -> None:
         #prendo l'id dell'utente tramite query
         with ThreadPoolExecutor() as executor:
             ut.configData["anilist"]["rating"], ut.configData["anilist"]["favorite"], ut.configData["anilist"]["drop"] = False, False, False
-            future = executor.submit(anilist.getAnilistUserId, ut.configData["anilist"]["token"])
+            future = executor.submit(anilist.get_user_id, ut.configData["anilist"]["token"])
             ut.console.clear()
             ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
             if ut.fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
@@ -375,7 +375,7 @@ def removeFromCrono(anime: Anime) -> None:
             ut.console.print("Impossibile droppare su AniList: id anime non trovato!", style="error")
             sleep(1)
         else:
-            rating = anilist.getAnimePrivateRating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
+            rating = anilist.get_anime_private_rating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
             update_anilist(anime, anime.episode(anime.curr_ep), rating, drop=True)
 
     history.remove(anime)
@@ -504,7 +504,7 @@ def main():
             voto_anilist = None
             if not (offline or privato) and "anilist" in ut.configData:
                 executor = ThreadPoolExecutor(max_workers=1)
-                voto_anilist = executor.submit(anilist.getAnimePrivateRating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
+                voto_anilist = executor.submit(anilist.get_anime_private_rating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.id_anilist)
 
             completed, progress = openVideos(anime, episode, provider)
 
