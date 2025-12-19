@@ -88,17 +88,17 @@ def openSyncplay(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int
         int: il progresso dell'episodio.
     """
 
-    if "syncplay" not in ut.configData:
+    if "syncplay" not in ut.config_data:
         ut.console.print("Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a", style="error")
         exit()
 
 
     args = f'''--force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
-    if ut.configData.get("player", {}).get("type") == "vlc":
+    if ut.config_data.get("player", {}).get("type") == "vlc":
         args = f'''--meta-title "{nome_video}" --start-time="{progress}" --fullscreen'''
 
     try:
-        command = f'''{ut.configData["syncplay"]["path"]} -d --language it "{url_ep}" -- {args}'''
+        command = f'''{ut.config_data["syncplay"]["path"]} -d --language it "{url_ep}" -- {args}'''
         result = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)
         out = result.stdout
     except UnicodeDecodeError:
@@ -131,11 +131,11 @@ def openMPV(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
     """
 
 
-    if (ut.nome_os == "Android"):
+    if (ut.os_name == "Android"):
         subprocess.run(f'am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n is.xyz.mpv/.MPVActivity', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True, 0
 
-    command = f'''{ut.configData["player"]["path"]} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
+    command = f'''{ut.config_data["player"]["path"]} "{url_ep}" --force-media-title="{nome_video}" --start="{progress}" --fullscreen --keep-open'''
     result = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)
     out = result.stdout
 
@@ -158,11 +158,11 @@ def openVLC(url_ep: str, nome_video: str, progress: int) -> tuple[bool, int]:
         int: il progresso dell'episodio.
     """
 
-    if ut.nome_os == "Android":
+    if ut.os_name == "Android":
         subprocess.run(f'am start --user 0 -a android.intent.action.VIEW -d "{url_ep}" -n org.videolan.vlc/.StartActivity -e "title" "{nome_video}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True, 0
 
-    subprocess.run(f'{ut.configData["player"]["path"]} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(f'{ut.config_data["player"]["path"]} "{url_ep}" --meta-title "{nome_video}" --start-time="{progress}" --fullscreen', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
     progress = 0
@@ -205,7 +205,7 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
 
         #chiedo di votare
         #chiedo di votare
-        if ut.configData["anilist"]["rating"]:
+        if ut.config_data["anilist"]["rating"]:
             prompt_text = "Inserisci un voto per l'anime" + (f" (voto corrente: {anilist_rating})" if anilist_rating else "")
             while True:
                 try:
@@ -216,12 +216,12 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
                     ut.console.print("Seleziona una risposta valida!", style="error")
 
         #chiedo di mettere tra i preferiti
-        if ut.configData["anilist"]["favorite"] and status_list == 'COMPLETED':
+        if ut.config_data["anilist"]["favorite"] and status_list == 'COMPLETED':
             ut.console.clear()
             ut.console.print(f"Riproduco {anime.name} Ep. {anime.last_ep}", style="warning")
             favorite = ut.fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
 
-    Thread(target=anilist.update_anilist, args=(ut.configData["anilist"]["token"],anime.anilist_id, episode.numeric(), status_list, rating, favorite)).start()
+    Thread(target=anilist.update_anilist, args=(ut.config_data["anilist"]["token"],anime.anilist_id, episode.numeric(), status_list, rating, favorite)).start()
 
 def openVideos(anime: Anime, episode: Anime.Episode, provider: providers.Provider) -> tuple[bool, int]:
     """
@@ -237,7 +237,7 @@ def openVideos(anime: Anime, episode: Anime.Episode, provider: providers.Provide
     path = f"{download.path(create=False)}/{anime.name}/{episode}.mp4"
 
     if Path(path).exists():
-        url_ep = path if ut.nome_os == "Android" else "file://" + path
+        url_ep = path if ut.os_name == "Android" else "file://" + path
     else:
         url_ep = provider.episode_link(anime, episode)
 
@@ -254,76 +254,76 @@ def setupConfig() -> None:
     se collegare il proprio profilo AniList e
     se inserire il path di syncplay.
     """
-    ut.configData.clear()
+    ut.config_data.clear()
 
     #player predefinito
     ut.console.clear()
     ut.console.print("AW-CLI - CONFIGURAZIONE", style="warning")
 
-    ut.configData["player"]["type"] = ut.fzf(["vlc","mpv"], "Scegli il player predefinito: ")
-    if ut.nome_os != "Android":
-        path = shutil.which(ut.configData['player']['type'])
+    ut.config_data["player"]["type"] = ut.fzf(["vlc","mpv"], "Scegli il player predefinito: ")
+    if ut.os_name != "Android":
+        path = shutil.which(ut.config_data['player']['type'])
         if path is None:
-            ut.console.print(f"Player {ut.configData['player']['type']} non trovato!", style="error")
-            ut.configData["player"]["path"] = Prompt.ask(f"Inserisci il path di {ut.configData['player']['type']} manualmente se è installato", console=ut.console)
+            ut.console.print(f"Player {ut.config_data['player']['type']} non trovato!", style="error")
+            ut.config_data["player"]["path"] = Prompt.ask(f"Inserisci il path di {ut.config_data['player']['type']} manualmente se è installato", console=ut.console)
         else:
-            ut.configData["player"]["path"] = path
+            ut.config_data["player"]["path"] = path
         ut.console.clear()
         ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
 
-    ut.configData["general"]["specials"] = ut.fzf(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
+    ut.config_data["general"]["specials"] = ut.fzf(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
 
 
     #provider preferito
-    ut.configData["provider"]["source"] = ut.fzf(["animeunity", "animeworld"], "Scegli il provider: ")
+    ut.config_data["provider"]["source"] = ut.fzf(["animeunity", "animeworld"], "Scegli il provider: ")
 
     #anilist
     if ut.fzf(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
         link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
-        if ut.nome_os == "Darwin":
+        if ut.os_name == "Darwin":
             subprocess.run(f"open '{link}'", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             subprocess.run(f"xdg-open '{link}'", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         #inserimento token
         ut.console.clear()
-        ut.configData["anilist"]["token"] = Prompt.ask(f"Inserire il token di AniList ({link})", console=ut.console)
+        ut.config_data["anilist"]["token"] = Prompt.ask(f"Inserire il token di AniList ({link})", console=ut.console)
 
         #prendo l'id dell'utente tramite query
         with ThreadPoolExecutor() as executor:
-            ut.configData["anilist"]["rating"], ut.configData["anilist"]["favorite"], ut.configData["anilist"]["drop"] = False, False, False
-            future = executor.submit(anilist.get_user_id, ut.configData["anilist"]["token"])
+            ut.config_data["anilist"]["rating"], ut.config_data["anilist"]["favorite"], ut.config_data["anilist"]["drop"] = False, False, False
+            future = executor.submit(anilist.get_user_id, ut.config_data["anilist"]["token"])
             ut.console.clear()
             ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
             if ut.fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
-                ut.configData["anilist"]["rating"] = True
+                ut.config_data["anilist"]["rating"] = True
 
             if ut.fzf(["sì","no"], "Chiedere se mettere l'anime tra i preferiti una volta completato? ") == "sì":
-                ut.configData["anilist"]["favorite"] = True
+                ut.config_data["anilist"]["favorite"] = True
 
             if ut.fzf(["sì","no"], "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
-                ut.configData["anilist"]["drop"] = True
+                ut.config_data["anilist"]["drop"] = True
 
-            ut.configData["anilist"]["user_id"]  = future.result()
+            ut.config_data["anilist"]["user_id"]  = future.result()
 
     #syncplay
-    if ut.nome_os != "Android":
+    if ut.os_name != "Android":
         syncplay_path = shutil.which("syncplay")
         if syncplay_path is None:
             ut.console.print("Syncplay non trovato!", style="error")
             syncplay = Prompt.ask("Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)", console=ut.console).replace("Program Files (x86)", "Progra~2")
             if syncplay != "":
-                ut.configData["syncplay"]["path"] = syncplay
+                ut.config_data["syncplay"]["path"] = syncplay
         else:
-            ut.configData["syncplay"]["path"] = syncplay_path
+            ut.config_data["syncplay"]["path"] = syncplay_path
 
     # style
-    ut.configData["style"] = ut.DEFAULT_STYLE
+    ut.config_data["style"] = ut.DEFAULT_STYLE
 
     #creo il file
     config = Path(__file__).parent / "config.toml"
     with open(config, 'w') as f:
-        ut.toml.dump(ut.configData, f)
+        ut.toml.dump(ut.config_data, f)
 
 def listAnimeNames(animelist: list[Anime]) -> list[str]:
     """
@@ -370,12 +370,12 @@ def removeFromCrono(anime: Anime) -> None:
     if ut.fzf(["sì","no"], f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ") == "no":
         return
 
-    if "anilist" in ut.configData and ut.configData["anilist"]["drop"] and ut.fzf(["sì","no"], f"Droppare {anime.name} su AniList? ") == "sì":
+    if "anilist" in ut.config_data and ut.config_data["anilist"]["drop"] and ut.fzf(["sì","no"], f"Droppare {anime.name} su AniList? ") == "sì":
         if anime.anilist_id == 0:
             ut.console.print("Impossibile droppare su AniList: id anime non trovato!", style="error")
             sleep(1)
         else:
-            rating = anilist.get_anime_private_rating(ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.anilist_id)
+            rating = anilist.get_anime_private_rating(ut.config_data["anilist"]["token"], ut.config_data["anilist"]["user_id"], anime.anilist_id)
             update_anilist(anime, anime.episode(anime.curr_ep), rating, drop=True)
 
     history.remove(anime)
@@ -392,14 +392,14 @@ def main():
     if args.avvia_config or not (Path(__file__).parent / "config.toml").exists():
         setupConfig()
 
-    ut.getConfig()
+    ut.get_config()
     history = History.read(str(Path(__file__).parent))
 
     if offline:
         from .providers.local import LocalProvider
         provider = LocalProvider(download.path(), history.get())
     else:
-        match ut.configData["provider"]["source"]:
+        match ut.config_data["provider"]["source"]:
             case "animeunity":
                 from .providers.animeunity import Animeunity
                 provider = Animeunity()
@@ -407,9 +407,9 @@ def main():
                 from .providers.animeworld import Animeworld
                 provider = Animeworld()
 
-    if ut.configData["player"]["type"] == "vlc":
+    if ut.config_data["player"]["type"] == "vlc":
         openPlayer = openVLC
-    if ut.nome_os != "Android" and args.syncpl:
+    if ut.os_name != "Android" and args.syncpl:
         openPlayer = openSyncplay
 
     reload = True
@@ -502,9 +502,9 @@ def main():
 
         while True:
             voto_anilist = None
-            if not (offline or private) and "anilist" in ut.configData:
+            if not (offline or private) and "anilist" in ut.config_data:
                 executor = ThreadPoolExecutor(max_workers=1)
-                voto_anilist = executor.submit(anilist.get_anime_private_rating, ut.configData["anilist"]["token"], ut.configData["anilist"]["user_id"], anime.anilist_id)
+                voto_anilist = executor.submit(anilist.get_anime_private_rating, ut.config_data["anilist"]["token"], ut.config_data["anilist"]["user_id"], anime.anilist_id)
 
             completed, progress = openVideos(anime, episode, provider)
 

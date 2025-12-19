@@ -6,7 +6,7 @@ from aw_cli.anime import Anime, AnimeStatus
 @pytest.fixture(autouse=True)
 def mock_utilities(monkeypatch):
     class MockUtilities:
-        configData = {
+        config_data = {
             "general": {
                 "specials": True
             }

@@ -1,6 +1,6 @@
 import sys
 import argparse
-from .utilities import nome_os
+from .utilities import os_name
 from importlib.metadata import version
 from .update import update
 
@@ -67,7 +67,7 @@ options_group.add_argument(
     help='visualizza le informazioni e la trama di un anime'
 )
 
-if nome_os != "Android":
+if os_name != "Android":
     options_group.add_argument(
         '-s',
         '--syncplay',
