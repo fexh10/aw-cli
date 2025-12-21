@@ -222,7 +222,7 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
         #chiedo di mettere tra i preferiti
         if ut.config_data["anilist"]["favorite"] and status_list == 'COMPLETED':
             ut.console.clear()
-            ut.console.print(f"Riproduco {anime.name} Ep. {anime.last_ep}", style="warning")
+            ut.console.print(f"Riproduco {anime.name} Ep. {anime.last_ep}", style="info")
             favorite = ut.fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
 
     Thread(target=anilist.update_anilist, args=(ut.config_data["anilist"]["token"],anime.anilist_id, episode.numeric(), status_list, rating, favorite)).start()
@@ -248,7 +248,7 @@ def open_videos(anime: Anime, episode: Anime.Episode, provider: providers.Provid
         ep_url = provider.episode_link(anime, episode)
 
     ut.console.clear()
-    ut.console.print(f"Riproduco {anime.name} Ep. {episode}", style="warning")
+    ut.console.print(f"Riproduco {episode}...", style="info")
     return open_player(ep_url, str(episode), episode.progress)
 
 def setup_config() -> None:
@@ -264,7 +264,7 @@ def setup_config() -> None:
 
     #player predefinito
     ut.console.clear()
-    ut.console.print("AW-CLI - CONFIGURAZIONE", style="warning")
+    ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
 
     ut.config_data["player"]["type"] = ut.fzf(["vlc","mpv"], "Scegli il player predefinito: ")
     if ut.os_name != "Android":
