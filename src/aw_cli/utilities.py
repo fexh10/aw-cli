@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.theme import Theme
 from collections import defaultdict
 
-configData = defaultdict(dict)
+config_data = defaultdict(dict)
 
 DEFAULT_STYLE = {
     "error": "bold red",
@@ -23,15 +23,15 @@ console = Console(theme=Theme(DEFAULT_STYLE), highlight=False)
 def get_os() -> str:
     result = subprocess.run(["uname", "-a"], capture_output=True, text=True, check=False)
     out = result.stdout.strip().split()
-    nome_os = out[0]
-    if nome_os == "Linux":
+    os_name = out[0]
+    if os_name == "Linux":
         if "Android" == out[-1]:
-            nome_os = "Android"
+            os_name = "Android"
         elif "WSL" in out[2]:
-            nome_os = "WSL"
-    return nome_os
+            os_name = "WSL"
+    return os_name
 
-nome_os = get_os()
+os_name = get_os()
 
 def sanitize_filename(filename: str) -> str:
     """
@@ -43,7 +43,7 @@ def sanitize_filename(filename: str) -> str:
     Returns:
         str: il nome del file sanitizzato.
     """
-    if nome_os != "Android":
+    if os_name != "Android":
         return filename
 
     forbidden_char = '"*/:<>?\\|'
@@ -52,7 +52,7 @@ def sanitize_filename(filename: str) -> str:
         filename = filename.replace(a, b)
     return filename
 
-def getConfig() -> None:
+def get_config() -> None:
     """
     Prende le impostazioni scelte dall'utente
     dal file di configurazione.
@@ -60,38 +60,38 @@ def getConfig() -> None:
     Returns:
         None
     """
-    global configData
+    global config_data
 
-    configPath = Path(__file__).parent / "config.toml"
+    config_path = Path(__file__).parent / "config.toml"
 
-    with open(configPath, 'r') as f:
-        configData = toml.load(f)
+    with open(config_path, 'r') as f:
+        config_data = toml.load(f)
 
     # Merge with default styles if missing
-    if "style" not in configData:
-        configData["style"] = DEFAULT_STYLE.copy()
+    if "style" not in config_data:
+        config_data["style"] = DEFAULT_STYLE.copy()
     else:
         for key, value in DEFAULT_STYLE.items():
-            if key not in configData["style"]:
-                configData["style"][key] = value
+            if key not in config_data["style"]:
+                config_data["style"][key] = value
 
     global console
-    console = Console(theme=Theme(configData["style"]), highlight=False)
+    console = Console(theme=Theme(config_data["style"]), highlight=False)
 
-    if nome_os == "WSL":
-        configData["player"]["path"] = f'''"$(wslpath '{configData["player"]["path"]}')"'''
-        if "syncplay" in configData:
-            configData["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{configData['syncplay']['path']}'"
+    if os_name == "WSL":
+        config_data["player"]["path"] = f'''"$(wslpath '{config_data["player"]["path"]}')"'''
+        if "syncplay" in config_data:
+            config_data["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{config_data['syncplay']['path']}'"
 
-    if "specials" not in configData["general"]:
-        configData["general"]["specials"] = False
+    if "specials" not in config_data["general"]:
+        config_data["general"]["specials"] = False
 
-def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False) -> str:
+def fzf(elements: list[str], prompt: str = "> ", multi: bool = False) -> str:
     """
     Avvia fzf con impostazioni predefinite.
 
     Args:
-        elementi (list[str]): lista da passare ad fzf con gli elementi da selezionare.
+        elements (list[str]): lista da passare ad fzf con gli elementi da selezionare.
         prompt (str, optional): il prompt che fzf deve stampare. Valore predefinito: "> ".
         multi (bool, optional): se True, permette la selezione multipla, con aggiunta di un costum bind crtl+a che
          permette di selezionare tutto. Valore predefinito: False.
@@ -99,14 +99,14 @@ def fzf(elementi: list[str], prompt: str = "> ", multi: bool = False) -> str:
     Returns:
         str: la scelta selezionata tramite fzf.
     """
-    cmd = ["fzf", "--tac", f"--height={len(elementi) + 2}", "--cycle", "--ansi", "--tiebreak=begin", f"--prompt={prompt}"]
+    cmd = ["fzf", "--tac", f"--height={len(elements) + 2}", "--cycle", "--ansi", "--tiebreak=begin", f"--prompt={prompt}"]
     if multi:
         cmd += ["--multi", "--bind", "ctrl-a:toggle-all"]
 
     while True:
         process = subprocess.run(
             cmd,
-            input="\n".join(elementi),
+            input="\n".join(elements),
             text=True,
             stdout=subprocess.PIPE,
             stderr=None

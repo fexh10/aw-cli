@@ -73,7 +73,7 @@ class Animeunity(Provider):
         return animes
 
     def _episodes(self, anime: Anime) -> dict[str, str]:
-        episodi = {}
+        episodes = {}
         start_range = 0
         episode_count = max(int(anime.last_ep), int(anime.info["Episodi"]) if anime.info["Episodi"].isdigit() else 0) # potenzialmente non numerico
         # Fetch episodes in chunks
@@ -88,9 +88,9 @@ class Animeunity(Provider):
                 }
             )
             response.raise_for_status()
-            episodi.update({str(episode['number']): str(episode['id']) for episode in response.json()['episodes']})
+            episodes.update({str(episode['number']): str(episode['id']) for episode in response.json()['episodes']})
             start_range = end_range + 1
-        return episodi
+        return episodes
 
     def _episode_link(self, anime: Anime, episode: Anime.Episode) -> str:
         embed_url = f"{self.BASE_URL}/embed-url/{episode.ref}"

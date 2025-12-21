@@ -95,7 +95,7 @@ class Provider(ABC):
         Returns:
             list[Anime]: la lista degli anime trovati.
         """
-        return self._latest(filter, ut.configData["general"]["specials"])
+        return self._latest(filter, ut.config_data["general"]["specials"])
 
     @abstractmethod
     def _latest(self, filter: str, specials: bool) -> list[Anime]:
@@ -114,7 +114,7 @@ class Provider(ABC):
         """
         anime.update_episodes(
             self._episodes(anime),
-            ut.configData["general"]["specials"]
+            ut.config_data["general"]["specials"]
         )
 
     @abstractmethod

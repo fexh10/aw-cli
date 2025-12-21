@@ -21,7 +21,7 @@ def path(create: bool = True) -> Path:
         Path: il percorso di download dell'anime.
     """
 
-    if (ut.nome_os == "Android"):
+    if (ut.os_name == "Android"):
         path = Path("/sdcard/Movies/Anime")
     else:
         path = Path.home() / "Videos/Anime"
@@ -30,10 +30,14 @@ def path(create: bool = True) -> Path:
         path.mkdir(parents=True, exist_ok=True)
     return path
 
-
-def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider):
+def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) -> None:
     """
     Scarica più episodi in modo concorrente (max concurrent_downloads).
+
+    Args:
+        anime (Anime): l'anime di cui scaricare gli episodi.
+        episodes (list[Anime.Episode]): la lista degli episodi da scaricare.
+        provider (Provider): il provider da cui scaricare gli episodi.
     """
     async def download_worker(ep: Anime.Episode, task_id: TaskID, progress: Progress, sem: asyncio.Semaphore):
         async with sem:
@@ -70,7 +74,7 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider):
                 progress.console.print(f"[error]Errore download Ep. {ep.num}: {e}[/]")
 
     async def _download_all():
-        concurrent_downloads = ut.configData["general"].get("parallel-downloads", 3)
+        concurrent_downloads = ut.config_data["general"].get("parallel-downloads", 3)
         semaphore = asyncio.Semaphore(concurrent_downloads)
         ordered_eps = sorted(episodes, key=lambda e: e.numeric())
 

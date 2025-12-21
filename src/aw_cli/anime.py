@@ -31,16 +31,18 @@ class Anime:
     Attributes:
         name (str): il nome dell'anime.
         ref (str): il riferimento dell'anime.
+        anilist_id (int): l'ID dell'anime su Anilist.
+        dub (bool): indica se l'anime è doppiato in italiano.
         curr_ep (str): l'episodio corrente.
         last_ep (str): l'ultimo episodio disponibile.
-        id_anilist (int): l'ID dell'anime su Anilist.
+        status (AnimeStatus): lo stato dell'anime.
         info (dict[str, str]): dizionario con le informazioni dell'anime.
     """
 
     def __init__(self, name: str, ref: str, curr_ep: str = "0", last_ep: str = "0", status: AnimeStatus = AnimeStatus.UNKNOWN) -> None:
         self.name: str = name
         self.ref: str = ref
-        self.id_anilist: int = 0
+        self.anilist_id: int = 0
         self.dub: bool = "(ITA)" in name
         self.curr_ep: str = curr_ep
         self.last_ep: str = last_ep if last_ep != "0" else curr_ep
@@ -53,14 +55,14 @@ class Anime:
         if not isinstance(other, Anime):
             return False
 
-        if self.id_anilist and other.id_anilist:
-            return self.id_anilist == other.id_anilist and self.dub == other.dub
+        if self.anilist_id and other.anilist_id:
+            return self.anilist_id == other.anilist_id and self.dub == other.dub
 
         return self.name == other.name # idealmente andrebbe tolto
 
     def __hash__(self) -> int:
-        if self.id_anilist:
-            return hash((self.id_anilist, self.dub))
+        if self.anilist_id:
+            return hash((self.anilist_id, self.dub))
 
         return hash(self.name)
 
@@ -68,7 +70,7 @@ class Anime:
         """
         Imposta i riferimenti degli episodi dell'anime.
         Args:
-            episodi (dict[str, str]): dizionario dei riferimenti degli episodi dell'anime (numero->URL/ID).
+            episodes (dict[str, str]): dizionario dei riferimenti degli episodi dell'anime (numero->URL/ID).
         """
         for num, ref in episodes.items():
             if not specials and ("." in num or num == "0"):
@@ -87,6 +89,9 @@ class Anime:
     def episodes(self) -> list[str]:
         """
         Restituisce una lista dei numeri degli episodi disponibili.
+
+        Returns:
+            list[str]: la lista dei numeri degli episodi disponibili.
         """
         return list(self._num_to_index.keys())
 
@@ -94,7 +99,7 @@ class Anime:
         """
         Controlla se l'anime ha l'episodio specificato.
         Args:
-            ep (str): Il numero dell'episodio.
+            ep_num (str): Il numero dell'episodio.
         Returns:
             (bool): True se l'anime ha l'episodio, False altrimenti.
         """
@@ -104,7 +109,7 @@ class Anime:
         """
         Restituisce il riferimento dell'episodio corrispondente al numero specificato.
         Args:
-            ep (str): Il numero dell'episodio.
+            ep_num (str): Il numero dell'episodio.
         Returns:
             Anime.Episode : l'episodio corrispondente al numero
         """
@@ -116,9 +121,10 @@ class Anime:
         Imposta le informazioni dell'anime.
         Args:
             anilist_id (int): l'ID di Anilist dell'anime.
-            infos (list): lista delle informazioni dell'anime.
+            status (AnimeStatus): lo stato dell'anime.
+            info (dict): dizionario delle informazioni dell'anime.
         """
-        self.id_anilist = anilist_id
+        self.anilist_id = anilist_id
         self.info = info
         self.status = status
         self.dub = info.get("Audio", "").lower() == "italiano"
@@ -187,7 +193,7 @@ class Anime:
             "ref": self.ref,
             "curr_ep": self.curr_ep,
             "last_ep": self.last_ep,
-            "id_anilist": self.id_anilist,
+            "id_anilist": self.anilist_id,
             "status": self.status.value,
             "info": self.info,
             "episodes": [ep.to_dict() for ep in self._episodes]
@@ -338,6 +344,9 @@ class Anime:
         def to_dict(self) -> dict[str, object]:
             """
             Restituisce un dizionario con le informazioni dell'episodio.
+
+            Returns:
+                dict: il dizionario con le informazioni dell'episodio.
             """
             return {
                 "num": self.num,

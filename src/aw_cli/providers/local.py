@@ -58,4 +58,4 @@ class LocalProvider(Provider):
     def _info_anime(self, anime: Anime):
         other = self.history[self.history.index(anime)]
         anime.ref = other.ref
-        anime.set_info(other.id_anilist, anime.status, other.info)
+        anime.set_info(other.anilist_id, anime.status, other.info)

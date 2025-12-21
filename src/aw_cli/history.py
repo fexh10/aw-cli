@@ -13,9 +13,12 @@ class History:
         self._anime_log = anime_log
 
     @classmethod
-    def read(cls, path: str):
+    def read(cls, path: str) -> "History":
         """
         Legge la cronologia da un file json.
+
+        Args:
+            path (str): il percorso della cartella contenente il file history.json.
 
         Returns:
             History: l'oggetto History con i dati letti dal file.
@@ -50,7 +53,7 @@ class History:
         self._anime_log.remove(Anime)
         self.save()
 
-    def reload(self, last_releases: list[Anime]):
+    def reload(self, last_releases: list[Anime]) -> None:
         """
         Aggiorna la cronologia degli anime con le ultime uscite disponibili.
 
@@ -121,26 +124,26 @@ def legacy() -> list[Anime]:
         return []
 
     animes = []
-    for riga in legacy:
-        if len(riga) < 4:
-            riga.append("??")
-        if len(riga) < 5:
-            riga.append("0")
-        if len(riga) < 6:
-            riga.append(riga[1])
-        if len(riga) < 7:
-            riga.append("0")
-        if len(riga) < 8:
-            riga.append("0")
-        anime = Anime(name=riga[0], ref=riga[2], curr_ep=riga[1], last_ep=riga[5])
-        anime.update_episodes({anime.curr_ep: "Not available"}, ut.configData["general"]["specials"])
+    for row in legacy:
+        if len(row) < 4:
+            row.append("??")
+        if len(row) < 5:
+            row.append("0")
+        if len(row) < 6:
+            row.append(row[1])
+        if len(row) < 7:
+            row.append("0")
+        if len(row) < 8:
+            row.append("0")
+        anime = Anime(name=row[0], ref=row[2], curr_ep=row[1], last_ep=row[5])
+        anime.update_episodes({anime.curr_ep: "Not available"}, ut.config_data["general"]["specials"])
         episode = anime.episode(anime.curr_ep)
         if episode:
-            if (progress := int(riga[7])) == 0:
+            if (progress := int(row[7])) == 0:
                 episode.mark_completed()
             else:
                 episode.set_progress(progress)
-        anime.set_info(int(riga[6]), list(AnimeStatus)[int(riga[4])], {"Episodi": riga[3]})
+        anime.set_info(int(row[6]), list(AnimeStatus)[int(row[4])], {"Episodi": row[3]})
         animes.append(anime)
 
     return animes

@@ -1,6 +1,6 @@
 import sys
 import argparse
-from .utilities import nome_os
+from .utilities import os_name
 from importlib.metadata import version
 from .update import update
 
@@ -11,11 +11,11 @@ class Update(argparse.Action):
 
 # args
 downl = False
-lista = False
+latest = False
 offline = False
-cronologia = False
+hist = False
 info = False
-privato = False
+private = False
 
 # args
 parser = argparse.ArgumentParser(
@@ -46,7 +46,7 @@ options_group.add_argument(
     '-c',
     '--cronologia',
     nargs='?',
-    choices=['r'], dest='cronologia',
+    choices=['r'], dest='history',
     help='continua a guardare un anime dalla cronologia. \'r\' per rimuovere un anime (opzionale)'
 )
 
@@ -55,7 +55,7 @@ options_group.add_argument(
     '--lista',
     nargs='?',
     choices=['a', 's', 'd', 't'],
-    dest='lista',
+    dest='latest',
     help="lista degli ultimi anime usciti. Filtri: a = all, s = sub, d = dub, t = tendenze. Default 'a'"
 )
 
@@ -67,7 +67,7 @@ options_group.add_argument(
     help='visualizza le informazioni e la trama di un anime'
 )
 
-if nome_os != "Android":
+if os_name != "Android":
     options_group.add_argument(
         '-s',
         '--syncplay',
@@ -95,7 +95,7 @@ options_group.add_argument(
     '-p',
     '--privato',
     action='store_true',
-    dest='privato',
+    dest='private',
     help="guarda un episodio senza che si aggiorni la cronologia o AniList"
 )
 
@@ -112,7 +112,7 @@ config_group.add_argument(
     '-a',
     '--configurazione',
     action='store_true',
-    dest='avvia_config',
+    dest='start_config',
     help='avvia il menu di configurazione'
 )
 
@@ -120,19 +120,19 @@ args = parser.parse_args()
 
 if args.offline:
     offline = True
-    cronologia = True
-elif args.cronologia == 'r':
-        cronologia = True
+    hist = True
+elif args.history == 'r':
+        hist = True
 else:
     if args.info:
         info = True
     if args.download:
         downl = True
-    if args.lista or '-l' in sys.argv:
-        if args.lista is None:
-            args.lista = 'a'
-        lista = True
-    if args.privato:
-        privato = True
+    if args.latest or '-l' in sys.argv:
+        if args.latest is None:
+            args.latest = 'a'
+        latest = True
+    if args.private:
+        private = True
     if '-c' in sys.argv:
-        cronologia = True
+        hist = True

@@ -6,7 +6,7 @@ from aw_cli.anime import Anime, AnimeStatus
 @pytest.fixture(autouse=True)
 def mock_utilities(monkeypatch):
     class MockUtilities:
-        configData = {
+        config_data = {
             "general": {
                 "specials": True
             }
@@ -61,9 +61,9 @@ def test_legacy(monkeypatch):
     History.read("ProvaPath").save()
 
     output_strings = [call.args[0] for call in mock_file_writer.write.call_args_list]
-    output_completo = "".join(output_strings)
+    complete_output = "".join(output_strings)
 
-    assert output_completo == json_data
+    assert complete_output == json_data
 
 def test_load_existing(monkeypatch):
     """
