@@ -78,7 +78,7 @@ def select_episodes(anime: Anime) -> list[Anime.Episode]:
     if downl:
         res = Fzf().run(
             list(reversed(anime.episodes())),
-            prompt="Episodi (range: inizio-fine) > ",
+            prompt="Scegli episodi: ",
             multi=True,
             filter=True,
         ).split("\n")

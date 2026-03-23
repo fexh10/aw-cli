@@ -112,7 +112,8 @@ class Fzf:
             reload_cmd = f"{sys.executable} -m aw_cli.fzf.fzf --filter {{q}} --episodes \"{elements}\""
             cmd += [
                 "--phony",
-                "--bind", f"change:reload({reload_cmd})"
+                "--bind", f"change:reload({reload_cmd})",
+                "--header=Range: inizio-fine. crtl+A seleziona tutto, tab/shift+tab selezione singola"
             ]
 
         return cmd
