@@ -75,7 +75,17 @@ def select_episodes(anime: Anime) -> list[Anime.Episode]:
     if len(anime.episodes()) == 1:
         return anime._episodes
 
-    res = Fzf().run(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
+    if downl:
+        res = Fzf().run(
+            list(reversed(anime.episodes())),
+            prompt="Episodi (range: inizio-fine) > ",
+            multi=True,
+            filter=True,
+        ).split("\n")
+    else:
+        res = Fzf().run(list(reversed(anime.episodes())), "Scegli un episodio: ").split("\n")
+
+
     return [anime.episode(num) for num in res]
 
 def open_syncplay(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
@@ -440,13 +450,9 @@ def main():
 
         if hist and history.has_ongoing() and args.history != 'r':
             def background_reload():
-                sleep(1)
                 history.reload(provider.latest())
-                sleep(1)
                 animelist_updated = history.get()
-                sleep(1)
                 fzf.reload(list_anime_names(animelist_updated))
-                sleep(1)
             Thread(target=background_reload, daemon=True).start()
 
         ut.console.clear()
