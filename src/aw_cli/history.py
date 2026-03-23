@@ -53,6 +53,9 @@ class History:
         self._anime_log.remove(Anime)
         self.save()
 
+    def has_ongoing(self) -> bool:
+        return AnimeStatus.ONGOING in [anime.status for anime in self._anime_log]
+
     def reload(self, last_releases: list[Anime]) -> None:
         """
         Aggiorna la cronologia degli anime con le ultime uscite disponibili.
@@ -63,8 +66,6 @@ class History:
         Args:
             last_releases (list[Anime]): La lista degli ultimi anime rilasciati.
         """
-        if AnimeStatus.ONGOING not in [anime.status for anime in self._anime_log]:
-            return
 
         for anime in reversed(self._anime_log):
             for anime_latest in last_releases:

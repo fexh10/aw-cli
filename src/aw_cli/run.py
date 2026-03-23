@@ -13,6 +13,7 @@ from . import (
     providers,
     utilities as ut,
 )
+from .fzf import Fzf
 from .history import History
 from .anime import Anime, AnimeStatus
 from .arg_parser import (
@@ -74,7 +75,7 @@ def select_episodes(anime: Anime) -> list[Anime.Episode]:
     if len(anime.episodes()) == 1:
         return anime._episodes
 
-    res = ut.fzf(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
+    res = Fzf().run(list(reversed(anime.episodes())), "Scegli un episodio: ", multi=downl).split("\n")
     return [anime.episode(num) for num in res]
 
 def open_syncplay(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
@@ -223,7 +224,7 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
         if ut.config_data["anilist"]["favorite"] and status_list == 'COMPLETED':
             ut.console.clear()
             ut.console.print(f"Riproduco {anime.name} Ep. {anime.last_ep}", style="info")
-            favorite = ut.fzf(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
+            favorite = Fzf().run(["sì","no"], "Mettere l'anime tra i preferiti? ") == "sì"
 
     Thread(target=anilist.update_anilist, args=(ut.config_data["anilist"]["token"],anime.anilist_id, episode.numeric(), status_list, rating, favorite)).start()
 
@@ -266,7 +267,7 @@ def setup_config() -> None:
     ut.console.clear()
     ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
 
-    ut.config_data["player"]["type"] = ut.fzf(["vlc","mpv"], "Scegli il player predefinito: ")
+    ut.config_data["player"]["type"] = Fzf().run(["vlc","mpv"], "Scegli il player predefinito: ")
     if ut.os_name != "Android":
         path = shutil.which(ut.config_data['player']['type'])
         if path is None:
@@ -277,14 +278,14 @@ def setup_config() -> None:
         ut.console.clear()
         ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
 
-    ut.config_data["general"]["specials"] = ut.fzf(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
+    ut.config_data["general"]["specials"] = Fzf().run(["sì","no"], "Mostrare gli episodi speciali? ") == "sì"
 
 
     #provider preferito
-    ut.config_data["provider"]["source"] = ut.fzf(["animeunity", "animeworld"], "Scegli il provider: ")
+    ut.config_data["provider"]["source"] = Fzf().run(["animeunity", "animeworld"], "Scegli il provider: ")
 
     #anilist
-    if ut.fzf(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
+    if Fzf().run(["sì","no"], "Aggiornare automaticamente la watchlist con AniList? ") == "sì":
         link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
         if ut.os_name == "Darwin":
             subprocess.run(f"open '{link}'", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -301,13 +302,13 @@ def setup_config() -> None:
             future = executor.submit(anilist.get_user_id, ut.config_data["anilist"]["token"])
             ut.console.clear()
             ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
-            if ut.fzf(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
+            if Fzf().run(["sì","no"], "Votare l'anime una volta completato? ") == "sì":
                 ut.config_data["anilist"]["rating"] = True
 
-            if ut.fzf(["sì","no"], "Chiedere se mettere l'anime tra i preferiti una volta completato? ") == "sì":
+            if Fzf().run(["sì","no"], "Chiedere se mettere l'anime tra i preferiti una volta completato? ") == "sì":
                 ut.config_data["anilist"]["favorite"] = True
 
-            if ut.fzf(["sì","no"], "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
+            if Fzf().run(["sì","no"], "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ") == "sì":
                 ut.config_data["anilist"]["drop"] = True
 
             ut.config_data["anilist"]["user_id"]  = future.result()
@@ -373,10 +374,10 @@ def remove_from_history(anime: Anime) -> None:
         None.
     """
 
-    if ut.fzf(["sì","no"], f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ") == "no":
+    if Fzf().run(["sì","no"], f"Si è sicuri di voler rimuovere {anime.name} dalla cronologia? ") == "no":
         return
 
-    if "anilist" in ut.config_data and ut.config_data["anilist"]["drop"] and ut.fzf(["sì","no"], f"Droppare {anime.name} su AniList? ") == "sì":
+    if "anilist" in ut.config_data and ut.config_data["anilist"]["drop"] and Fzf().run(["sì","no"], f"Droppare {anime.name} su AniList? ") == "sì":
         if anime.anilist_id == 0:
             ut.console.print("Impossibile droppare su AniList: id anime non trovato!", style="error")
             sleep(1)
@@ -387,7 +388,7 @@ def remove_from_history(anime: Anime) -> None:
     history.remove(anime)
 
     ut.console.clear()
-    if ut.fzf(["esci","continua"]) == "esci":
+    if Fzf().run(["esci","continua"]) == "esci":
         exit()
 
 def main():
@@ -418,6 +419,7 @@ def main():
     if ut.os_name != "Android" and args.syncpl:
         open_player = open_syncplay
 
+    fzf = Fzf()
     reload = True
     animelist = []
     while True:
@@ -436,13 +438,20 @@ def main():
                 ut.console.print(message, style="error")
                 exit()
 
-        if hist and args.history != 'r':
-            history.reload(provider.latest())
-            pass
+        if hist and history.has_ongoing() and args.history != 'r':
+            def background_reload():
+                sleep(1)
+                history.reload(provider.latest())
+                sleep(1)
+                animelist_updated = history.get()
+                sleep(1)
+                fzf.reload(list_anime_names(animelist_updated))
+                sleep(1)
+            Thread(target=background_reload, daemon=True).start()
 
         ut.console.clear()
         prompt = "Scegli un anime: " if args.history != 'r' else "Rimuovi un anime: "
-        selected_anime = ut.fzf(list_anime_names(animelist), prompt)
+        selected_anime = fzf.run(list_anime_names(animelist), prompt)
         selected = int(selected_anime.split("  ")[0]) - 1
         anime = animelist[selected]
 
@@ -461,7 +470,7 @@ def main():
             ut.console.clear()
             ut.console.print(anime)
             #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
-            if ut.fzf(["indietro","guardare"]) == "indietro":
+            if Fzf().run(["indietro","guardare"]) == "indietro":
                 continue
 
         if len(anime.episodes()) == 0:
@@ -499,7 +508,7 @@ def main():
             if not any(anime == a for a in history.get()):
                 history.update(anime, episode)
 
-            answer = ut.fzf(["esci","indietro","guarda"])
+            answer = Fzf().run(["esci","indietro","guarda"])
             if answer == "esci":
                 exit()
             if answer == "indietro":
@@ -535,7 +544,7 @@ def main():
             if episode.has_next() or (not offline and episode.num != anime.last_ep):
                 menu.append("prossimo")
 
-            menu_selection = ut.fzf(menu)
+            menu_selection = Fzf().run(menu)
 
             if menu_selection == "prossimo":
                 if not episode.has_next():
