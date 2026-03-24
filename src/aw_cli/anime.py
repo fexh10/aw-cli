@@ -211,8 +211,6 @@ class Anime:
             completed (bool): indica se l'episodio è stato completato.
         """
 
-        ## TODO: fare un comparatore in base a num (considerando i casi x, x.5, x-y)
-
         def __init__(self, anime: Anime, num: str, ref: str) -> None:
             self._anime = anime
             self.num = num

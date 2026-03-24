@@ -6,6 +6,7 @@ from pathlib import Path
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
+from typing import Callable
 from rich.prompt import Prompt, FloatPrompt
 from . import (
     anilist,
@@ -401,6 +402,40 @@ def remove_from_history(anime: Anime) -> None:
     if Fzf().run(["esci","continua"]) == "esci":
         exit()
 
+def create_ep_menu(anime: Anime, episode: Anime.Episode) -> dict[str, Callable]:
+    """
+    Genera il menu di riproduzione sotto forma di mappa opzione -> azione.
+
+    Args:
+        anime (Anime): l'anime da riprodurre.
+        episode (Anime.Episode): l'episodio appena riprodotto.
+
+    """
+    def handle_exit(ep): exit()
+    def handle_back(ep): return "break"
+    def handle_select(ep): return select_episodes(anime)[0]
+    def handle_prev(ep): return ep.prev()
+    def handle_watch_again(ep): return ep
+    def handle_next(ep): return ep.next()
+
+    menu = {
+        "esci": handle_exit,
+        "indietro": handle_back
+    }
+
+    if len(anime.episodes()) > 1 or anime.last_ep != '1':
+        menu["seleziona"] = handle_select
+
+    if episode.has_prev():
+        menu["antecedente"] = handle_prev
+
+    menu["riguarda"] = handle_watch_again
+
+    if episode.has_next():
+        menu["prossimo"] = handle_next
+
+    return menu
+
 def main():
     global open_player
     global history
@@ -490,9 +525,6 @@ def main():
 
         if hist and anime.episode(anime.curr_ep).is_completed():
             if not anime.episode(anime.curr_ep).has_next():
-                provider.episodes(anime)
-
-            if not anime.episode(anime.curr_ep).has_next():
                 ut.console.print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", style="error")
                 sleep(1)
                 if len(animelist) == 1:
@@ -540,34 +572,14 @@ def main():
                 history.update(anime, episode)
 
             # menù che si visualizza dopo aver finito la riproduzione
-            menu = ["esci", "indietro"]
+            menu_actions = create_ep_menu(anime, episode)
 
-            if anime.last_ep != '1':
-                menu.append("seleziona")
-            if episode.has_prev() or (not offline and episode.numeric() > 1):
-                menu.append("antecedente")
-            menu.append("riguarda")
-            if episode.has_next() or (not offline and episode.num != anime.last_ep):
-                menu.append("prossimo")
+            menu_selection = Fzf().run(list(menu_actions.keys()))
 
-            menu_selection = Fzf().run(menu)
-
-            if menu_selection == "prossimo":
-                if not episode.has_next():
-                    provider.episodes(anime)
-                episode = episode.next()
-            elif menu_selection == "antecedente":
-                if not episode.has_prev():
-                    provider.episodes(anime)
-                episode = episode.prev()
-            elif menu_selection == "seleziona":
-                if not offline and len(anime.episodes()) == 1:
-                    provider.episodes(anime)
-                episode = select_episodes(anime)[0]
-            elif menu_selection == "indietro":
+            res = menu_actions[menu_selection](episode)
+            if res == "break":
                 break
-            elif menu_selection == "esci":
-                exit()
+            episode = res
 
         reload = True
 
