@@ -422,7 +422,19 @@ def remove_from_history(anime: Anime) -> None:
     if Fzf().run(["esci","continua"]) == "esci":
         exit()
 
-def create_ep_menu(anime: Anime, episode: Anime.Episode) -> dict[str, Callable]:
+def create_ep_menu(anime: Anime, episode: Anime.Episode) -> dict[str, Callable[[], Anime.Episode|str]]:
+    """
+    Genera il menu di riproduzione di un episodio,
+    con le azioni disponibili in base allo stato dell'anime e dell'episodio.
+
+    Args:
+        anime (Anime): l'anime di cui è stato riprodotto l'episodio.
+        episode (Anime.Episode): l'episodio riprodotto.
+
+    Returns:
+        dict[str, Callable[[], Anime.Episode|str]]: un dizionario che
+            associa a ogni azione disponibile una funzione che la esegue.
+    """
     actions = {
         "esci": exit,
         "indietro": lambda: "break",
