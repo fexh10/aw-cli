@@ -203,9 +203,8 @@ class Anime:
         )
 
         episodes_data = data["episodes"] if isinstance(data["episodes"], list) else []
-        for ep_data in episodes_data:
-            anime._episodes = [Anime.Episode.from_dict(anime, ep_data) for ep_data in episodes_data]
-            anime.update_episodes()
+        anime._episodes = [Anime.Episode.from_dict(anime, ep) for ep in episodes_data]
+        anime.update_episodes()
 
         return anime
 
