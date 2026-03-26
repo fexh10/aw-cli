@@ -500,7 +500,7 @@ def main():
                 ut.console.print(message, style="error")
                 exit()
 
-        if hist and history.has_ongoing() and args.history != 'r':
+        if hist and history.has_ongoing() and args.history != 'r' and not offline:
             def background_reload():
                 history.reload(provider.latest())
                 animelist_updated = history.get()
