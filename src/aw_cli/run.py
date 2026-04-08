@@ -250,11 +250,6 @@ def watch_episode(anime: Anime, episode: Anime.Episode, provider: providers.Prov
         episode (Anime.Episode): l'episodio da riprodurre.
         provider (Provider): il provider da cui prendere il link dell'episodio.
     """
-    needs_fetch = not anime.has_all_episodes()
-
-    if needs_fetch and not offline:
-        Thread(target=provider.episodes, args=(anime,), daemon=True).start()
-
     anilist_rating = None
     if not (offline or private) and "anilist" in ut.config_data:
         executor = ThreadPoolExecutor(max_workers=1)
@@ -568,6 +563,10 @@ def main():
                 exit()
             if answer == "indietro":
                 continue
+
+        needs_fetch = not anime.has_all_episodes()
+        if needs_fetch and not offline:
+            Thread(target=provider.episodes, args=(anime,), daemon=True).start()
 
         while True:
             watch_episode(anime, episode, provider)

@@ -88,6 +88,7 @@ class Provider(ABC):
     def latest(self, filter: str = "all") -> list[Anime]:
         """
         Restituisce le ultime uscite degli anime.
+        Si assicura che tutte le entry di uno stesso anime abbiano gli stessi episodi.
 
         Args:
             filter (str, optional): permette di filtrare i risultati tra [all, dub, sub]. Default: all.
@@ -95,7 +96,24 @@ class Provider(ABC):
         Returns:
             list[Anime]: la lista degli anime trovati.
         """
-        return self._latest(filter, ut.config_data["general"]["specials"])
+        specials = ut.config_data["general"]["specials"]
+        animes = self._latest(filter, specials)
+
+        grouped_animes: dict[str, list[Anime]] = {}
+        for anime in animes:
+            grouped_animes.setdefault(anime.name, []).append(anime)
+
+        for group in grouped_animes.values():
+            if len(group) > 1:
+                all_episodes = {}
+                for anime in group:
+                    for ep in anime._episodes:
+                        all_episodes[ep.num] = ep.ref
+
+                for anime in group:
+                    anime.update_episodes(all_episodes, specials=specials)
+
+        return animes
 
     @abstractmethod
     def _latest(self, filter: str, specials: bool) -> list[Anime]:
