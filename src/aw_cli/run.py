@@ -6,6 +6,7 @@ from pathlib import Path
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
+from typing import Callable
 from rich.prompt import Prompt, FloatPrompt
 from . import (
     anilist,
@@ -238,9 +239,9 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
 
     Thread(target=anilist.update_anilist, args=(ut.config_data["anilist"]["token"],anime.anilist_id, episode.numeric(), status_list, rating, favorite)).start()
 
-def open_videos(anime: Anime, episode: Anime.Episode, provider: providers.Provider) -> tuple[bool, int]:
+def watch_episode(anime: Anime, episode: Anime.Episode, provider: providers.Provider) -> None:
     """
-    Riproduce l'episodio dell'anime.
+    Riproduce l'episodio dell'anime e gestisce gli aggiornamenti di stato.
     Se un episodio è già stato scaricato, viene riprodotto dal file scaricato.
     Altrimenti, viene riprodotto in streaming.
 
@@ -249,6 +250,10 @@ def open_videos(anime: Anime, episode: Anime.Episode, provider: providers.Provid
         episode (Anime.Episode): l'episodio da riprodurre.
         provider (Provider): il provider da cui prendere il link dell'episodio.
     """
+    anilist_rating = None
+    if not (offline or private) and "anilist" in ut.config_data:
+        executor = ThreadPoolExecutor(max_workers=1)
+        anilist_rating = executor.submit(anilist.get_anime_private_rating, ut.config_data["anilist"]["token"], ut.config_data["anilist"]["user_id"], anime.anilist_id)
 
     #se il video è già stato scaricato lo riproduco invece di farlo in streaming
     path = f"{download.path(create=False)}/{anime.name}/{episode}.mp4"
@@ -260,7 +265,18 @@ def open_videos(anime: Anime, episode: Anime.Episode, provider: providers.Provid
 
     ut.console.clear()
     ut.console.print(f"Riproduco {episode}...", style="info")
-    return open_player(ep_url, str(episode), episode.progress)
+    completed, progress = open_player(ep_url, str(episode), episode.progress)
+
+    if not private:
+        episode.set_progress(progress)
+        if completed:
+            episode.mark_completed()
+            #update watchlist anilist se ho fatto l'accesso
+            if anilist_rating:
+                update_anilist(anime, episode, anilist_rating.result())
+
+        anime.curr_ep = episode.num
+        history.update(anime, episode)
 
 def setup_config() -> None:
     """
@@ -401,6 +417,37 @@ def remove_from_history(anime: Anime) -> None:
     if Fzf().run(["esci","continua"]) == "esci":
         exit()
 
+def create_ep_menu(anime: Anime, episode: Anime.Episode) -> dict[str, Callable[[], Anime.Episode|str]]:
+    """
+    Genera il menu di riproduzione di un episodio,
+    con le azioni disponibili in base allo stato dell'anime e dell'episodio.
+
+    Args:
+        anime (Anime): l'anime di cui è stato riprodotto l'episodio.
+        episode (Anime.Episode): l'episodio riprodotto.
+
+    Returns:
+        dict[str, Callable[[], Anime.Episode|str]]: un dizionario che
+            associa a ogni azione disponibile una funzione che la esegue.
+    """
+    actions = {
+        "esci": exit,
+        "indietro": lambda: "break",
+        "seleziona": lambda: select_episodes(anime)[0],
+        "antecedente": episode.prev,
+        "riguarda": lambda: episode,
+        "prossimo": episode.next
+    }
+
+    conditions = {
+        "seleziona": len(anime.episodes()) > 1 or anime.last_ep != '1',
+        "antecedente": episode.has_prev(),
+        "prossimo": episode.has_next()
+    }
+
+    return {k: v for k, v in actions.items() if conditions.get(k, True)}
+
+
 def main():
     global open_player
     global history
@@ -448,7 +495,7 @@ def main():
                 ut.console.print(message, style="error")
                 exit()
 
-        if hist and history.has_ongoing() and args.history != 'r':
+        if hist and history.has_ongoing() and args.history != 'r' and not offline:
             def background_reload():
                 history.reload(provider.latest())
                 animelist_updated = history.get()
@@ -490,9 +537,6 @@ def main():
 
         if hist and anime.episode(anime.curr_ep).is_completed():
             if not anime.episode(anime.curr_ep).has_next():
-                provider.episodes(anime)
-
-            if not anime.episode(anime.curr_ep).has_next():
                 ut.console.print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", style="error")
                 sleep(1)
                 if len(animelist) == 1:
@@ -520,54 +564,20 @@ def main():
             if answer == "indietro":
                 continue
 
+        needs_fetch = not anime.has_all_episodes()
+        if needs_fetch and not offline:
+            Thread(target=provider.episodes, args=(anime,), daemon=True).start()
+
         while True:
-            anilist_rating = None
-            if not (offline or private) and "anilist" in ut.config_data:
-                executor = ThreadPoolExecutor(max_workers=1)
-                anilist_rating = executor.submit(anilist.get_anime_private_rating, ut.config_data["anilist"]["token"], ut.config_data["anilist"]["user_id"], anime.anilist_id)
-
-            completed, progress = open_videos(anime, episode, provider)
-
-            if not private:
-                episode.set_progress(progress)
-                if completed:
-                    episode.mark_completed()
-                    #update watchlist anilist se ho fatto l'accesso
-                    if anilist_rating:
-                        update_anilist(anime, episode, anilist_rating.result())
-
-                anime.curr_ep = episode.num
-                history.update(anime, episode)
+            watch_episode(anime, episode, provider)
 
             # menù che si visualizza dopo aver finito la riproduzione
-            menu = ["esci", "indietro"]
+            menu_actions = create_ep_menu(anime, episode)
 
-            if anime.last_ep != '1':
-                menu.append("seleziona")
-            if episode.has_prev() or (not offline and episode.numeric() > 1):
-                menu.append("antecedente")
-            menu.append("riguarda")
-            if episode.has_next() or (not offline and episode.num != anime.last_ep):
-                menu.append("prossimo")
-
-            menu_selection = Fzf().run(menu)
-
-            if menu_selection == "prossimo":
-                if not episode.has_next():
-                    provider.episodes(anime)
-                episode = episode.next()
-            elif menu_selection == "antecedente":
-                if not episode.has_prev():
-                    provider.episodes(anime)
-                episode = episode.prev()
-            elif menu_selection == "seleziona":
-                if not offline and len(anime.episodes()) == 1:
-                    provider.episodes(anime)
-                episode = select_episodes(anime)[0]
-            elif menu_selection == "indietro":
+            res = menu_actions[Fzf().run(list(menu_actions.keys()))]()
+            if res == "break":
                 break
-            elif menu_selection == "esci":
-                exit()
+            episode = res
 
         reload = True
 

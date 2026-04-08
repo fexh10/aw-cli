@@ -129,6 +129,34 @@ class Anime:
         self.status = status
         self.dub = info.get("Audio", "").lower() == "italiano"
 
+    def effective_episodes_count(self) -> int:
+        """
+        Calcola il numero totale effettivo di episodi, ignorando gli speciali (.5)
+        e scompattando i batch (es. 1-12 conta come 12 episodi).
+        """
+        total = 0
+        for ep in self.episodes():
+            if '.' in ep:
+                continue
+            if '-' in ep:
+                parts = ep.split('-')
+                if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                    total += (int(parts[1]) - int(parts[0]) + 1)
+                else:
+                    total += 1
+            else:
+                total += 1
+        return total
+
+    def has_all_episodes(self) -> bool:
+        """
+        Verifica se l'anime ha già in memoria tutti gli episodi noti per essere stati rilasciati.
+        """
+        try:
+            return self.effective_episodes_count() >= int(self.last_ep)
+        except ValueError:
+            return False
+
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
         """
         Implementazione del protocollo Rich per il rendering della classe.
@@ -175,9 +203,8 @@ class Anime:
         )
 
         episodes_data = data["episodes"] if isinstance(data["episodes"], list) else []
-        for ep_data in episodes_data:
-            anime._episodes = [Anime.Episode.from_dict(anime, ep_data) for ep_data in episodes_data]
-            anime.update_episodes()
+        anime._episodes = [Anime.Episode.from_dict(anime, ep) for ep in episodes_data]
+        anime.update_episodes()
 
         return anime
 
@@ -210,8 +237,6 @@ class Anime:
             progress (int): il progresso di visualizzazione dell'episodio.
             completed (bool): indica se l'episodio è stato completato.
         """
-
-        ## TODO: fare un comparatore in base a num (considerando i casi x, x.5, x-y)
 
         def __init__(self, anime: Anime, num: str, ref: str) -> None:
             self._anime = anime
