@@ -1,6 +1,7 @@
 from functools import lru_cache
 import re
 from html import unescape
+from urllib.parse import quote_plus
 from ..anime import Anime, AnimeStatus
 from .provider import Provider, HTTPError
 
@@ -42,7 +43,7 @@ class Animeworld(Provider):
             match = re.search(r'(SecurityAW-\w+)=(.*) ;', response.text)
             if not match:
                 raise HTTPError("Errore: Cookies non trovati")
-            self.Client.cookies = {match.group(1): match.group(2)}
+            self.Client.cookies.set(match.group(1), match.group(2))
             response = self.Client.get(url)
 
         if response.status_code != 200 or "Errore 404" in response.text:
@@ -51,7 +52,7 @@ class Animeworld(Provider):
         return response.text
 
     def _search(self, input: str) -> list[Anime]:
-        search_url = self.BASE_URL + "/search?keyword=" + input.replace(" ", "+")
+        search_url = self.BASE_URL + "/search?keyword=" + quote_plus(input)
         html = self._get_html(search_url)
         if re.search(r'<div class="alert alert-danger">', html):
             return []

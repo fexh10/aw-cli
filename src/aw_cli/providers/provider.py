@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from httpx import Client, HTTPError #, AsyncClient
+from httpx import Client, HTTPError  # , AsyncClient
 from ..anime import Anime
 from .. import utilities as ut
 
@@ -8,6 +8,7 @@ def error_handler(relink=False):
     """
     Decoratore per gestire gli errori delle funzioni.
     """
+
     def decorator(func):
         def wrapper(self, *args, **kwargs):
             try:
@@ -15,10 +16,16 @@ def error_handler(relink=False):
             except Exception as e:
                 if relink and isinstance(e, HTTPError):
                     return update_link(self, func, *args, **kwargs)
-                ut.console.print(f"Errore {e.__class__.__name__} durante {func.__name__}: {e}", style="error")
+                ut.console.print(
+                    f"Errore {e.__class__.__name__} durante {func.__name__}: {e}",
+                    style="error",
+                )
                 return None
+
         return wrapper
+
     return decorator
+
 
 def update_link(self, callback, anime: Anime, episode: Anime.Episode | None = None):
     """
@@ -30,9 +37,11 @@ def update_link(self, callback, anime: Anime, episode: Anime.Episode | None = No
         return callback(self, anime, anime.episode(episode.num))
     else:
         ut.console.print("Il link dell'anime è stato cambiato", style="warning")
-        res: list[Anime] = self.search(anime.name)
-        if len(res) == 0:
-            raise LookupError(f"Nessun risultato trovato per {anime.name} su {self.__class__.__name__}")
+        res: list[Anime] | None = self.search(anime.name)
+        if not res:
+            raise LookupError(
+                f"Errore o nessun risultato durante la ricerca di {anime.name} su {self.__class__.__name__}"
+            )
         anime.ref = res[0].ref
         return callback(self, anime)
 
@@ -45,6 +54,7 @@ class Provider(ABC):
         _url (str): l'url del sito del provider.
         _headers (dict): gli headers da utilizzare per le richieste HTTP.
     """
+
     def __init__(self, url: str):
         """
         Costruisce un'instanza di Provider.
@@ -55,10 +65,11 @@ class Provider(ABC):
         self.BASE_URL = url
         self.Client = Client(
             headers={
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+                "Connection": "close"
             },
             follow_redirects=True,
-            timeout=10
+            timeout=10,
         )
 
     @error_handler(relink=False)
@@ -131,8 +142,7 @@ class Provider(ABC):
             anime (Anime): l'anime di riferimento.
         """
         anime.update_episodes(
-            self._episodes(anime),
-            ut.config_data["general"]["specials"]
+            self._episodes(anime), ut.config_data["general"]["specials"]
         )
 
     @abstractmethod
