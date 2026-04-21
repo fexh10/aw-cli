@@ -153,5 +153,6 @@ class Animeunity(Provider):
             "Episodi": str(data['episodes_count']) if data['episodes_count'] != 0 else "??",
             "Visualizzazioni": data['visite'],
             "Trama": data['plot'],
+            "Cover": data.get('image_url', ''),
         }
         return title, last_ep, anilist_id, status, info

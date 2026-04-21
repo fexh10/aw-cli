@@ -61,11 +61,16 @@ class Animeworld(Provider):
         # Split by the result item container to avoid giant regex backtracking
         items = html.split('<div class="item">')[1:]
         for item in items:
-            # Extract URL and Name within each item block
-            match = re.search(r'<a href="([^"]+)"[^>]*class="name"[^>]*>([^<]+)</a>', item)
-            if match:
-                url, name = match.groups()
-                animes.append(Anime(unescape(name), self.BASE_URL + url))
+            # Extract URL, Name and Cover Image within each item block
+            img_match = re.search(r'<img src="([^"]+)"', item)
+            link_match = re.search(r'<a href="([^"]+)"[^>]*class="name"[^>]*>([^<]+)</a>', item)
+            
+            if link_match:
+                url, name = link_match.groups()
+                anime = Anime(unescape(name), self.BASE_URL + url)
+                if img_match:
+                    anime.info["Cover"] = img_match.group(1)
+                animes.append(anime)
 
         return animes
 
@@ -73,9 +78,10 @@ class Animeworld(Provider):
         html = self._get_html(self.BASE_URL)
         animes = list[Anime]()
 
-        for url, name, ep in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">', html):
+        for url, name, ep, img in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">\s*<img src="([^"]+)"', html):
             anime = Anime(unescape(name), self.BASE_URL + url, ep)
             anime.update_episodes({ep: self.BASE_URL + url}, specials=specials)
+            anime.info["Cover"] = img
             animes.append(anime)
 
         BLOCK_SIZE = 45
