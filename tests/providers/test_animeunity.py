@@ -24,6 +24,8 @@ class TestAnimeunity:
             animes = au._search("naruto")
             assert len(animes) > 0, "Nessun anime trovato nella fixture per la ricerca"
             assert animes[0].name != ""
+            assert "Cover" in animes[0].info
+            assert animes[0].info["Cover"].startswith("http")
 
     def test_animeunity_latest(self, au):
         html = (FIXTURES_DIR / "au_latest.html").read_text(encoding="utf-8")
@@ -32,6 +34,8 @@ class TestAnimeunity:
         animes = au._latest("a", specials=False)
         assert len(animes) > 0, "Nessun anime trovato nella fixture per il latest"
         assert animes[0].name != ""
+        assert "Cover" in animes[0].info
+        assert animes[0].info["Cover"].startswith("http")
 
     def test_animeunity_info_anime(self, au):
         with patch.object(Animeunity, '_get_token', return_value=None):

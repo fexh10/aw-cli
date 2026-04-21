@@ -62,9 +62,9 @@ class Animeworld(Provider):
         items = html.split('<div class="item">')[1:]
         for item in items:
             # Extract URL, Name and Cover Image within each item block
-            img_match = re.search(r'<img src="([^"]+)"', item)
+            img_match = re.search(r'<img[^>]+src="([^"]+)"', item)
             link_match = re.search(r'<a href="([^"]+)"[^>]*class="name"[^>]*>([^<]+)</a>', item)
-            
+
             if link_match:
                 url, name = link_match.groups()
                 anime = Anime(unescape(name), self.BASE_URL + url)
@@ -78,7 +78,7 @@ class Animeworld(Provider):
         html = self._get_html(self.BASE_URL)
         animes = list[Anime]()
 
-        for url, name, ep, img in re.findall(r'<a[\n\s]+href="([^"]+)"\n\s+class="poster" data-tip="[^"]+"\n\s+title="([^"]+) Ep ([^"]+)">\s*<img src="([^"]+)"', html):
+        for url, name, ep, img in re.findall(r'<a[^>]+href="([^"]+)"[^>]+class="poster"[^>]+title="([^"]+) Ep ([^"]+)"[^>]*>\s*<img[^>]+src="([^"]+)"', html):
             anime = Anime(unescape(name), self.BASE_URL + url, ep)
             anime.update_episodes({ep: self.BASE_URL + url}, specials=specials)
             anime.info["Cover"] = img

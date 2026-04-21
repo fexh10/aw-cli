@@ -19,6 +19,8 @@ class TestAnimeworld:
             animes = aw._search("naruto")
             assert len(animes) > 0, "Nessun anime trovato nella fixture per la ricerca"
             assert animes[0].name != ""
+            assert "Cover" in animes[0].info
+            assert animes[0].info["Cover"].startswith("http")
 
     def test_animeworld_latest(self, aw):
         html = (FIXTURES_DIR / "aw_latest.html").read_text(encoding="utf-8")
@@ -27,6 +29,8 @@ class TestAnimeworld:
             animes = aw._latest("a", specials=False)
             assert len(animes) > 0, "Nessun anime trovato nella fixture per il latest"
             assert animes[0].name != ""
+            assert "Cover" in animes[0].info
+            assert animes[0].info["Cover"].startswith("http")
 
     def test_animeworld_episodes(self, aw):
         html = (FIXTURES_DIR / "aw_info.html").read_text(encoding="utf-8")
