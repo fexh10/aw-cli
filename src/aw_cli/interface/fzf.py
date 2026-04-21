@@ -109,7 +109,7 @@ class Fzf:
             cmd += ["--multi", "--bind", "ctrl-a:toggle-all"]
 
         if filter:
-            reload_cmd = f"{sys.executable} -m aw_cli.fzf.fzf --filter {{q}} --episodes \"{elements}\""
+            reload_cmd = f"{sys.executable} -m aw_cli.interface.fzf --filter {{q}} --episodes \"{elements}\""
             cmd += [
                 "--phony",
                 "--bind", f"change:reload({reload_cmd})",

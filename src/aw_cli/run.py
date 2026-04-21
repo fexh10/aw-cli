@@ -14,7 +14,7 @@ from . import (
     providers,
     utilities as ut,
 )
-from .fzf import Fzf
+from .interface import Fzf
 from .history import History
 from .anime import Anime, AnimeStatus
 from .arg_parser import (

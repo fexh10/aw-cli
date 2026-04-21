@@ -2,7 +2,7 @@ import io
 from unittest.mock import patch, MagicMock
 import pytest
 
-from aw_cli.fzf import Fzf
+from aw_cli.interface import Fzf
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ class TestBuildCmd:
         # Verifica bind per il reload su filter
         binds = [c for c in cmd if c.startswith("change:reload(")]
         assert len(binds) == 1
-        assert "aw_cli.fzf.fzf" in binds[0]
+        assert "aw_cli.interface.fzf" in binds[0]
 
 class TestReload:
     """Verifica l'invio del reload HTTP a fzf --listen."""
@@ -91,7 +91,7 @@ class TestFilterEpisodes:
         ]
     )
     def test_filter_variations(self, query, episodes, expected):
-        from aw_cli.fzf.fzf import _filter_episodes
+        from aw_cli.interface.fzf import _filter_episodes
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             _filter_episodes(query, str(episodes))
             assert mock_stdout.getvalue().strip() == expected
