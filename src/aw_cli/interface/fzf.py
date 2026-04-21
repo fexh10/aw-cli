@@ -1,10 +1,10 @@
 import subprocess
 import sys
 import re
+import socket
+import json
 import argparse
 import urllib.request
-
-import aw_cli.utilities as ut
 
 
 class Fzf:
@@ -20,7 +20,7 @@ class Fzf:
     }
 
     def __init__(self):
-        self._port: int = ut.config_data.get("fzf", {}).get("port", 4321)
+        self._port: int = 0
 
     def run(
         self,
@@ -38,7 +38,10 @@ class Fzf:
             multi:    se True abilita la selezione multipla (Ctrl+A = toggle all).
             filter:   se True abilita il filtro per range (formato: inizio-fine).
         """
-        cmd = self._build_cmd(elements=elements, prompt=prompt, multi=multi, filter=filter)
+        self._port = self._find_free_port()
+        cmd = self._build_cmd(
+            elements=elements, prompt=prompt, multi=multi, filter=filter
+        )
 
         try:
             while True:
@@ -82,6 +85,16 @@ class Fzf:
         except OSError:
             pass
 
+    @staticmethod
+    def _find_free_port() -> int:
+        """
+        Restituisce una porta TCP libera assegnata dal sistema operativo.
+        Usare questa porta per --listen evita conflitti e TIME_WAIT tra riavvii di fzf.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("", 0))
+            return s.getsockname()[1]
+
     def _build_cmd(
         self,
         elements: list[str],
@@ -109,11 +122,12 @@ class Fzf:
             cmd += ["--multi", "--bind", "ctrl-a:toggle-all"]
 
         if filter:
-            reload_cmd = f"{sys.executable} -m aw_cli.fzf.fzf --filter {{q}} --episodes \"{elements}\""
+            reload_cmd = f"{sys.executable} -m aw_cli.interface.fzf --filter {{q}} --episodes '{json.dumps(elements)}'"
             cmd += [
                 "--phony",
-                "--bind", f"change:reload({reload_cmd})",
-                "--header=Range: inizio-fine. crtl+A seleziona tutto, tab/shift+tab selezione singola"
+                "--bind",
+                f"change:reload({reload_cmd})",
+                "--header=Range: inizio-fine. crtl+A seleziona tutto, tab/shift+tab selezione singola",
             ]
 
         return cmd
@@ -132,7 +146,10 @@ def _filter_episodes(query: str, episodes_raw: str) -> None:
     ha successo se i due intervalli si intersecano.
     """
 
-    episodes: list[str] = eval(episodes_raw)
+    try:
+        episodes: list[str] = json.loads(episodes_raw)
+    except (json.JSONDecodeError, ValueError):
+        return
 
     if not query:
         print("\n".join(episodes))
@@ -185,8 +202,12 @@ def _filter_episodes(query: str, episodes_raw: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--filter", type=str, default="", help="Query per filtrare gli episodi")
-    parser.add_argument("--episodes", type=str, required=True, help="Lista episodi JSON")
+    parser.add_argument(
+        "--filter", type=str, default="", help="Query per filtrare gli episodi"
+    )
+    parser.add_argument(
+        "--episodes", type=str, required=True, help="Lista episodi JSON"
+    )
     args = parser.parse_args()
 
     _filter_episodes(args.filter, args.episodes)

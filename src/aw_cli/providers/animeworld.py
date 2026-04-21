@@ -58,9 +58,14 @@ class Animeworld(Provider):
             return []
 
         animes = list[Anime]()
-        # prendo i link degli anime relativi alla ricerca
-        for url, name in re.findall(r'<div class="inner">(?:.|\n)+?<a href="([^"]+)"\s+data-jtitle="[^"]+"\s+class="name">([^<]+)', html):
-            animes.append(Anime(unescape(name), self.BASE_URL+url))
+        # Split by the result item container to avoid giant regex backtracking
+        items = html.split('<div class="item">')[1:]
+        for item in items:
+            # Extract URL and Name within each item block
+            match = re.search(r'<a href="([^"]+)"[^>]*class="name"[^>]*>([^<]+)</a>', item)
+            if match:
+                url, name = match.groups()
+                animes.append(Anime(unescape(name), self.BASE_URL + url))
 
         return animes
 
