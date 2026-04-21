@@ -5,6 +5,38 @@ import socket
 import json
 import argparse
 import urllib.request
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from threading import Thread
+from typing import Callable, Optional
+from urllib.parse import urlparse, parse_qs
+
+import aw_cli.utilities as ut
+
+
+class _PreviewHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        query = parse_qs(urlparse(self.path).query)
+        try:
+            index = int(query.get('index', ['0'])[0])
+            width = int(query.get('width', ['80'])[0])
+        except ValueError:
+            index, width = 0, 80
+
+        try:
+            res = self.server.preview_callback(index, width)
+        except Exception as e:
+            res = f"Preview error: {e}"
+
+        try:
+            self.send_response(200)
+            self.send_header('Content-type', 'text/plain; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(res.encode('utf-8'))
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+    def log_message(self, format, *args):
+        pass
 
 
 class Fzf:
@@ -28,6 +60,7 @@ class Fzf:
         prompt: str = "> ",
         multi: bool = False,
         filter: bool = False,
+        preview_callback: Optional[Callable[[int, int], str]] = None,
     ) -> str:
         """
         Avvia fzf e restituisce la selezione dell'utente.
@@ -39,8 +72,17 @@ class Fzf:
             filter:   se True abilita il filtro per range (formato: inizio-fine).
         """
         self._port = self._find_free_port()
+        preview_server = None
+        preview_port = 0
+
+        if preview_callback:
+            preview_port = self._find_free_port()
+            preview_server = HTTPServer(('127.0.0.1', preview_port), _PreviewHandler)
+            preview_server.preview_callback = preview_callback
+            Thread(target=preview_server.serve_forever, daemon=True).start()
+
         cmd = self._build_cmd(
-            elements=elements, prompt=prompt, multi=multi, filter=filter
+            elements=elements, prompt=prompt, multi=multi, filter=filter, preview_port=preview_port
         )
 
         try:
@@ -60,6 +102,10 @@ class Fzf:
                     return process.stdout.strip()
         except KeyboardInterrupt:
             exit()
+        finally:
+            if preview_server:
+                preview_server.shutdown()
+                preview_server.server_close()
 
     def reload(self, new_elements: list[str]) -> None:
         """
@@ -75,6 +121,21 @@ class Fzf:
         req = urllib.request.Request(
             f"http://localhost:{self._port}",
             data=action.encode(),
+            method="POST",
+        )
+        req.add_header("Content-Type", "text/plain")
+
+        try:
+            with urllib.request.urlopen(req, timeout=3):
+                pass
+        except OSError:
+            pass
+
+    def refresh_preview(self) -> None:
+        """Invia un comando refresh-preview all'istanza fzf in ascolto tramite --listen."""
+        req = urllib.request.Request(
+            f"http://localhost:{self._port}",
+            data=b"refresh-preview",
             method="POST",
         )
         req.add_header("Content-Type", "text/plain")
@@ -101,6 +162,7 @@ class Fzf:
         prompt: str,
         multi: bool,
         filter: bool = False,
+        preview_port: int = 0,
     ) -> list[str]:
         """Costruisce la lista di argomenti per il processo fzf."""
         cmd = ["fzf", "--listen", str(self._port)]
@@ -129,6 +191,10 @@ class Fzf:
                 f"change:reload({reload_cmd})",
                 "--header=Range: inizio-fine. crtl+A seleziona tutto, tab/shift+tab selezione singola",
             ]
+
+        if preview_port:
+            preview_cmd = f"{sys.executable} -m aw_cli.interface.fzf --preview http://127.0.0.1:{preview_port} --index {{n}} --width {{$FZF_PREVIEW_COLUMNS}}"
+            cmd += ["--preview", preview_cmd, "--preview-window", "right:50%:wrap"]
 
         return cmd
 
@@ -206,8 +272,19 @@ if __name__ == "__main__":
         "--filter", type=str, default="", help="Query per filtrare gli episodi"
     )
     parser.add_argument(
-        "--episodes", type=str, required=True, help="Lista episodi JSON"
+        "--episodes", type=str, required=False, help="Lista episodi JSON"
     )
+    parser.add_argument("--preview", type=str, help="URL base per la preview")
+    parser.add_argument("--index", type=int, help="Indice elemento in fzf")
+    parser.add_argument("--width", type=int, default=80, help="Larghezza finestra preview")
     args = parser.parse_args()
 
-    _filter_episodes(args.filter, args.episodes)
+    if args.preview:
+        req = urllib.request.Request(f"{args.preview}?index={args.index}&width={args.width}")
+        try:
+            with urllib.request.urlopen(req, timeout=3) as res:
+                print(res.read().decode('utf-8'))
+        except OSError:
+            pass
+    elif args.episodes:
+        _filter_episodes(args.filter, args.episodes)

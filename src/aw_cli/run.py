@@ -505,27 +505,19 @@ def main():
 
         ut.console.clear()
         prompt = "Scegli un anime: " if args.history != 'r' else "Rimuovi un anime: "
-        selected_anime = fzf.run(list_anime_names(animelist), prompt)
+        
+        preview_callback = None
+        if args.history != 'r':
+            from .interface import AnimePreview
+            preview_callback = AnimePreview(provider, animelist, fzf=fzf)
+
+        selected_anime = fzf.run(list_anime_names(animelist), prompt, preview_callback=preview_callback)
         selected = int(selected_anime.split("  ")[0]) - 1
         anime = animelist[selected]
 
         if args.history == 'r':
             remove_from_history(anime)
             continue
-
-        try:
-            provider.info_anime(anime)
-        except LookupError as error:
-            ut.console.print(str(error), style="error")
-            ut.console.print("Cercarlo manualmente", style="highlight")
-            exit()
-
-        if info:
-            ut.console.clear()
-            ut.console.print(anime)
-            #stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
-            if Fzf().run(["indietro","guardare"]) == "indietro":
-                continue
 
         if len(anime.episodes()) == 0:
             provider.episodes(anime)
