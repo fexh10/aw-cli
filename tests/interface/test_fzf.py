@@ -44,6 +44,20 @@ class TestBuildCmd:
         # La stringa JSON deve essere presente nel comando (non repr Python)
         assert json.dumps(elements) in binds[0]
 
+    def test_build_cmd_preview_formatting(self, fzf: Fzf):
+        """Verifica la formattazione dei parametri passati alla shell per il comando preview."""
+        cmd = fzf._build_cmd(elements=["a", "b"], prompt="> ", multi=False, preview_port=12345)
+        # Il preview cmd si trova all'indice successivo a '--preview'
+        idx = cmd.index("--preview")
+        preview_cmd = cmd[idx + 1]
+        
+        # L'index di fzf deve mantenere le parentesi graffe: {n}
+        assert "--index {n}" in preview_cmd
+        
+        # La variabile bash FZF_PREVIEW_COLUMNS NON deve avere parentesi graffe attorno
+        # altrimenti argparse rileverebbe roba tipo '{114}' che non è un int valido.
+        assert "--width $FZF_PREVIEW_COLUMNS" in preview_cmd
+
 
 class TestDynamicPort:
     """Verifica che _find_free_port restituisca una porta dinamica valida."""

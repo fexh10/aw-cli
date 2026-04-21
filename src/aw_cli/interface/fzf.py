@@ -184,7 +184,7 @@ class Fzf:
             cmd += ["--multi", "--bind", "ctrl-a:toggle-all"]
 
         if filter:
-            reload_cmd = f"{sys.executable} -m aw_cli.interface.fzf --filter {{q}} --episodes '{json.dumps(elements)}'"
+            reload_cmd = f"{sys.executable} -c \"from aw_cli.interface.fzf import _main; _main()\" --filter {{q}} --episodes '{json.dumps(elements)}'"
             cmd += [
                 "--phony",
                 "--bind",
@@ -193,7 +193,7 @@ class Fzf:
             ]
 
         if preview_port:
-            preview_cmd = f"{sys.executable} -m aw_cli.interface.fzf --preview http://127.0.0.1:{preview_port} --index {{n}} --width {{$FZF_PREVIEW_COLUMNS}}"
+            preview_cmd = f"{sys.executable} -c \"from aw_cli.interface.fzf import _main; _main()\" --preview http://127.0.0.1:{preview_port} --index {{n}} --width $FZF_PREVIEW_COLUMNS"
             cmd += ["--preview", preview_cmd, "--preview-window", "right:50%:wrap"]
 
         return cmd
@@ -266,7 +266,7 @@ def _filter_episodes(query: str, episodes_raw: str) -> None:
                     print(e)
 
 
-if __name__ == "__main__":
+def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--filter", type=str, default="", help="Query per filtrare gli episodi"
@@ -288,3 +288,7 @@ if __name__ == "__main__":
             pass
     elif args.episodes:
         _filter_episodes(args.filter, args.episodes)
+
+
+if __name__ == "__main__":
+    _main()
