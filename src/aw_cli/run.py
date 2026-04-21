@@ -226,7 +226,8 @@ def update_anilist(anime: Anime, episode: Anime.Episode, anilist_rating: float|N
             while True:
                 try:
                     rating = FloatPrompt.ask(prompt_text, console=ut.console)
-                    if rating < 0: raise ValueError
+                    if rating < 0:
+                        raise ValueError
                     break
                 except ValueError:
                     ut.console.print("Seleziona una risposta valida!", style="error")

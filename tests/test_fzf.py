@@ -1,4 +1,5 @@
 import io
+import json
 from unittest.mock import patch, MagicMock
 import pytest
 
@@ -34,6 +35,30 @@ class TestBuildCmd:
         assert len(binds) == 1
         assert "aw_cli.interface.fzf" in binds[0]
 
+    def test_build_cmd_filter_uses_json_episodes(self, fzf: Fzf):
+        """Il comando di reload deve serializzare gli episodi come JSON valido."""
+        elements = ["1", "2-3", "4"]
+        cmd = fzf._build_cmd(elements=elements, prompt="> ", multi=False, filter=True)
+        binds = [c for c in cmd if c.startswith("change:reload(")]
+        assert len(binds) == 1
+        # La stringa JSON deve essere presente nel comando (non repr Python)
+        assert json.dumps(elements) in binds[0]
+
+
+class TestDynamicPort:
+    """Verifica che _find_free_port restituisca una porta dinamica valida."""
+
+    def test_find_free_port_returns_valid_port(self):
+        port = Fzf._find_free_port()
+        assert isinstance(port, int)
+        assert port > 0
+
+    def test_find_free_port_not_hardcoded(self):
+        """Il valore non deve essere la vecchia porta fissa da config."""
+        port = Fzf._find_free_port()
+        assert port != 4321
+
+
 class TestReload:
     """Verifica l'invio del reload HTTP a fzf --listen."""
 
@@ -67,7 +92,6 @@ class TestReload:
             fzf.reload(["a", "b"])
 
 
-
 class TestFilterEpisodes:
     """Verifica la logica di filtering degli episodi."""
 
@@ -93,5 +117,12 @@ class TestFilterEpisodes:
     def test_filter_variations(self, query, episodes, expected):
         from aw_cli.interface.fzf import _filter_episodes
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
-            _filter_episodes(query, str(episodes))
+            _filter_episodes(query, json.dumps(episodes))
             assert mock_stdout.getvalue().strip() == expected
+
+    def test_filter_malformed_json_does_not_crash(self):
+        """Input JSON malformato deve essere ignorato silenziosamente."""
+        from aw_cli.interface.fzf import _filter_episodes
+        with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+            _filter_episodes("query", "{broken json")
+            assert mock_stdout.getvalue() == ""
