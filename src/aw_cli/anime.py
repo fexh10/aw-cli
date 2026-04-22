@@ -164,6 +164,7 @@ class Anime:
         yield Text(self.name, style="info")
 
         tmp_info = dict(self.info)
+        tmp_info.pop("Cover", None)
         tmp_info["Stato"] = self.status.value
 
         if "Trama" in tmp_info:

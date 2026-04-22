@@ -120,6 +120,8 @@ class Animeworld(Provider):
             temp.append(("Trama", plot_match.group(1)))
 
         info = dict[str, str]()
+        if "Cover" in anime.info:
+            info["Cover"] = anime.info["Cover"]
         status = AnimeStatus.UNKNOWN
         for key, value in temp:
             key, value = key.strip(), value.strip()
