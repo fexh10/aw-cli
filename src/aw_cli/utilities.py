@@ -85,3 +85,9 @@ def get_config() -> None:
 
     if "specials" not in config_data["general"]:
         config_data["general"]["specials"] = False
+
+    if "cache" not in config_data:
+        config_data["cache"] = {}
+    config_data["cache"].setdefault("ttl_ongoing_hours", 1)       # 1 ora
+    config_data["cache"].setdefault("ttl_unreleased_hours", 24)   # 24 ore
+    config_data["cache"].setdefault("ttl_finished_days", 30)      # 30 giorni

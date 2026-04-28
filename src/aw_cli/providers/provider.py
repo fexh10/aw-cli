@@ -1,5 +1,6 @@
 import hashlib
 import json
+import time
 import urllib.request
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -220,17 +221,38 @@ class Provider(ABC):
         if cache_file.exists():
             try:
                 data = json.loads(cache_file.read_text())
-                old_cover = anime.info.get("Cover")
-                anime.set_info(
-                    anilist_id=data["anilist_id"],
-                    status=AnimeStatus.from_string(data["status"]),
-                    info=data["info"],
-                )
-                if old_cover and "Cover" not in anime.info:
-                    anime.info["Cover"] = old_cover
-                return
+                status_str = data.get("status", "Sconosciuto")
+                cached_at = data.get("cached_at", 0)
+
+                # Check expiration based on cache configurations
+                age_hours = (time.time() - cached_at) / 3600
+                stale = False
+
+                if status_str == "In corso":
+                    if age_hours > ut.config_data.get("cache", {}).get("ttl_ongoing_hours", 1):
+                        stale = True
+                elif status_str in ["Non rilasciato", "Sconosciuto"]:
+                    if age_hours > ut.config_data.get("cache", {}).get("ttl_unreleased_hours", 24):
+                        stale = True
+                elif status_str == "Terminato":
+                    if age_hours > (ut.config_data.get("cache", {}).get("ttl_finished_days", 30) * 24):
+                        stale = True
+
+                if not stale:
+                    old_cover = anime.info.get("Cover")
+                    anime.set_info(
+                        anilist_id=data["anilist_id"],
+                        status=AnimeStatus.from_string(status_str),
+                        info=data["info"],
+                    )
+                    if old_cover and "Cover" not in anime.info:
+                        anime.info["Cover"] = old_cover
+                    return
             except (json.JSONDecodeError, KeyError):
-                cache_file.unlink(missing_ok=True)
+                pass
+
+            # If we reach here, cache is stale or invalid
+            cache_file.unlink(missing_ok=True)
 
         old_cover = anime.info.get("Cover")
         self._info_anime(anime)
@@ -242,6 +264,7 @@ class Provider(ABC):
             cache_data = {
                 "anilist_id": anime.anilist_id,
                 "status": anime.status.value,
+                "cached_at": time.time(),
                 "info": anime.info,
             }
             cache_file.write_text(json.dumps(cache_data, ensure_ascii=False))

@@ -1,6 +1,6 @@
-"""Test TDD per il caching nel Provider (info + immagini)."""
 import hashlib
 import json
+import time
 import pytest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
@@ -98,6 +98,69 @@ class TestInfoCache:
             provider.info_anime(anime)
 
         assert "Cover" in anime.info
+
+    @patch('aw_cli.providers.provider.time.time')
+    def test_info_anime_saves_cached_at_timestamp(self, mock_time, provider, anime, tmp_path):
+        """info_anime deve salvare il timestamp corrente in cached_at."""
+        mock_time.return_value = 1000.0
+        with patch.object(provider, '_get_info_cache_dir', return_value=tmp_path):
+            provider.info_anime(anime)
+
+        json_files = list(tmp_path.glob("*.json"))
+        data = json.loads(json_files[0].read_text())
+        assert data["cached_at"] == 1000.0
+
+    @pytest.mark.parametrize("status,age_hours,should_fetch", [
+        ("In corso", 1.5, True),      # > 1 hour
+        ("In corso", 0.5, False),     # < 1 hour
+        ("Terminato", 24 * 31, True), # > 30 days
+        ("Terminato", 24 * 29, False),# < 30 days
+        ("Non rilasciato", 25, True), # > 24 hours
+        ("Non rilasciato", 23, False),# < 24 hours
+        ("Sconosciuto", 25, True),    # > 24 hours
+        ("Sconosciuto", 23, False),   # < 24 hours
+    ])
+    @patch('aw_cli.providers.provider.time.time')
+    def test_info_anime_respects_ttl_based_on_status(self, mock_time, provider, anime, tmp_path, status, age_hours, should_fetch):
+        """Verifica la scadenza del TTL in base allo stato dell'anime usando time.time e configurazione di default."""
+        cache_key = hashlib.md5(anime.ref.encode()).hexdigest()
+        cache_file = tmp_path / f"{cache_key}.json"
+
+        # Simula il file di cache scritto nel passato
+        # base time: 1000000.0
+        current_time = 1000000.0
+        cached_time = current_time - (age_hours * 3600)
+
+        cache_data = {
+            "anilist_id": 99999,
+            "status": status,
+            "cached_at": cached_time,
+            "info": {
+                "Categoria": "TV",
+                "Trama": "Trama dalla cache",
+            }
+        }
+        cache_file.write_text(json.dumps(cache_data))
+
+        # Facciamo finta che utilities abbia queste configurazioni (ci prepariamo per il GREEN)
+        mock_config = {
+            "cache": {
+                "ttl_ongoing_hours": 1,
+                "ttl_unreleased_hours": 24,
+                "ttl_finished_days": 30
+            }
+        }
+
+        mock_time.return_value = current_time
+
+        with patch.object(provider, '_get_info_cache_dir', return_value=tmp_path):
+            with patch('aw_cli.providers.provider.ut.config_data', mock_config):
+                with patch.object(provider, '_info_anime') as mock_info:
+                    provider.info_anime(anime)
+                    if should_fetch:
+                        mock_info.assert_called_once()
+                    else:
+                        mock_info.assert_not_called()
 
 
 # ── Image Cache ─────────────────────────────────────────────────────────────

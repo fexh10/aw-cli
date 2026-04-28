@@ -3,11 +3,12 @@ from pathlib import Path
 from . import utilities as ut
 from .anime import Anime, AnimeStatus
 
-class History:
 
+class History:
     """
     Classe che gestisce la cronologia degli anime.
     """
+
     def __init__(self, path: str = "", anime_log: list[Anime] = []):
         self._path = path
         self._anime_log = anime_log
@@ -26,7 +27,7 @@ class History:
         anime_log = []
         history_path = Path(path) / "history.json"
         try:
-            with open(history_path, encoding='utf-8') as file:
+            with open(history_path, encoding="utf-8") as file:
                 anime_log = [Anime.from_dict(entry) for entry in json.load(file)]
         except FileNotFoundError:
             anime_log = legacy()
@@ -70,10 +71,12 @@ class History:
         for anime in reversed(self._anime_log):
             for anime_latest in last_releases:
                 if anime == anime_latest and anime.last_ep != anime_latest.last_ep:
-                    anime.update_episodes({
-                        num: anime_latest.episode(num).ref
-                        for num in anime_latest.episodes()
-                    })
+                    anime.update_episodes(
+                        {
+                            num: anime_latest.episode(num).ref
+                            for num in anime_latest.episodes()
+                        }
+                    )
                     break
         self.save()
 
@@ -87,7 +90,13 @@ class History:
         """
         self._anime_log.remove(anime) if anime in self._anime_log else None
         last_completed = episode.is_completed() and episode.num == anime.last_ep
-        if anime.status == AnimeStatus.FINISHED and last_completed:
+
+        is_finished = (
+            anime.status == AnimeStatus.FINISHED
+            or episode.num == anime.info.get("Episodi")
+        )
+
+        if is_finished and last_completed:
             self.save()
             return
 
@@ -102,22 +111,26 @@ class History:
         """
         Salva la cronologia su un file JSON.
         """
-        with open(self._path, 'w', encoding='utf-8') as file:
+        with open(self._path, "w", encoding="utf-8") as file:
             json.dump(
                 [anime.to_dict() for anime in self._anime_log],
                 file,
                 ensure_ascii=False,
-                indent=4
+                indent=4,
             )
+
 
 def legacy() -> list[Anime]:
     """
     Legge i dati dalla vecchia cronologia in csv
     """
     import csv
+
     legacy = []
     try:
-        with open(Path(__file__).parent / "aw-cronologia.csv", encoding='utf-8') as file:
+        with open(
+            Path(__file__).parent / "aw-cronologia.csv", encoding="utf-8"
+        ) as file:
             legacy = [riga for riga in csv.reader(file)]
     except FileNotFoundError:
         pass
@@ -137,7 +150,9 @@ def legacy() -> list[Anime]:
         if len(row) < 8:
             row.append("0")
         anime = Anime(name=row[0], ref=row[2], curr_ep=row[1], last_ep=row[5])
-        anime.update_episodes({anime.curr_ep: "Not available"}, ut.config_data["general"]["specials"])
+        anime.update_episodes(
+            {anime.curr_ep: "Not available"}, ut.config_data["general"]["specials"]
+        )
         episode = anime.episode(anime.curr_ep)
         if episode:
             if (progress := int(row[7])) == 0:
