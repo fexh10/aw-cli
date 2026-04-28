@@ -1,6 +1,12 @@
+import hashlib
+import json
+import urllib.request
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Optional
+
 from httpx import Client, HTTPError  # , AsyncClient
-from ..anime import Anime
+from ..anime import Anime, AnimeStatus
 from .. import utilities as ut
 
 
@@ -176,16 +182,102 @@ class Provider(ABC):
         Implementazione della episode_link.
         """
 
+    def _get_info_cache_dir(self) -> Path:
+        """Ritorna la directory di cache per le info di questo provider."""
+        cache_dir = Path.home() / ".cache" / "aw-cli" / "info" / self.__class__.__name__
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir
+
+    def _get_image_cache_dir(self) -> Path:
+        """Ritorna la directory di cache per le immagini."""
+        cache_dir = Path.home() / ".cache" / "aw-cli" / "images"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir
+
+    def _cache_key(self, anime: Anime) -> str:
+        """Genera una chiave di cache univoca basata sul ref dell'anime."""
+        return hashlib.md5(anime.ref.encode()).hexdigest()
+
+    def _image_name(self, anime: Anime, cover_url: str) -> str:
+        """Ritorna un nome file univoco per l'immagine."""
+        if anime.anilist_id:
+            return f"{anime.anilist_id}.jpg"
+        return f"{hashlib.md5(cover_url.encode()).hexdigest()}.jpg"
+
     @error_handler(relink=True)
     def info_anime(self, anime: Anime):
         """
         Prende le informazioni dell'anime selezionato,
         caricandole dentro `anime` che viene modificato di conseguenza.
+        Utilizza una cache su disco per evitare richieste ripetute.
 
         Args:
             anime (Anime): l'anime di riferimento.
         """
+        cache_dir = self._get_info_cache_dir()
+        cache_file = cache_dir / f"{self._cache_key(anime)}.json"
+
+        if cache_file.exists():
+            try:
+                data = json.loads(cache_file.read_text())
+                old_cover = anime.info.get("Cover")
+                anime.set_info(
+                    anilist_id=data["anilist_id"],
+                    status=AnimeStatus.from_string(data["status"]),
+                    info=data["info"],
+                )
+                if old_cover and "Cover" not in anime.info:
+                    anime.info["Cover"] = old_cover
+                return
+            except (json.JSONDecodeError, KeyError):
+                cache_file.unlink(missing_ok=True)
+
+        old_cover = anime.info.get("Cover")
         self._info_anime(anime)
+        if old_cover and "Cover" not in anime.info:
+            anime.info["Cover"] = old_cover
+
+        # Salva in cache
+        try:
+            cache_data = {
+                "anilist_id": anime.anilist_id,
+                "status": anime.status.value,
+                "info": anime.info,
+            }
+            cache_file.write_text(json.dumps(cache_data, ensure_ascii=False))
+        except Exception:
+            pass
+
+    def cover_image(self, anime: Anime) -> Optional[Path]:
+        """
+        Ritorna il path dell'immagine di copertina dell'anime.
+        Se non è in cache, la scarica e la salva su disco.
+
+        Args:
+            anime (Anime): l'anime di riferimento.
+
+        Returns:
+            Optional[Path]: il path dell'immagine, o None se non disponibile.
+        """
+        cover_url = anime.info.get("Cover") if anime.info else None
+        if not cover_url:
+            return None
+
+        cache_dir = self._get_image_cache_dir()
+        img_path = cache_dir / self._image_name(anime, cover_url)
+
+        if img_path.exists() and img_path.stat().st_size > 0:
+            return img_path
+
+        try:
+            req = urllib.request.Request(cover_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                tmp_path = img_path.with_suffix('.tmp')
+                tmp_path.write_bytes(response.read())
+                tmp_path.rename(img_path)
+            return img_path
+        except Exception:
+            return None
 
     @abstractmethod
     def _info_anime(self, anime: Anime) -> None:

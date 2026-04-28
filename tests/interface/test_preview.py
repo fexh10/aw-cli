@@ -1,6 +1,7 @@
-import time
+"""Test per AnimePreview con flusso sincrono (info + immagini via provider)."""
 import pytest
-from unittest.mock import MagicMock, call, patch
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from aw_cli.anime import Anime, AnimeStatus
 from aw_cli.interface.preview import AnimePreview
@@ -9,10 +10,12 @@ from aw_cli.interface.preview import AnimePreview
 @pytest.fixture
 def provider_mock():
     provider = MagicMock()
-    # Mock info_anime to set Trama
+    # Mock info_anime to set Trama (simula il caricamento sincrono)
     def fake_info(anime):
         anime.info["Trama"] = "Trama mockata"
     provider.info_anime.side_effect = fake_info
+    # cover_image restituisce None di default (nessuna immagine)
+    provider.cover_image.return_value = None
     return provider
 
 
@@ -29,116 +32,92 @@ def animelist():
 
 
 class TestAnimePreview:
-    def test_immediate_response_if_trama_present(self, provider_mock, fzf_mock, animelist):
-        # Imposta trama in anticipo
+    def test_always_calls_info_anime_even_if_trama_present(self, provider_mock, fzf_mock, animelist):
+        """info_anime viene SEMPRE chiamato (il caching è nel provider, non qui)."""
         animelist[1].info["Trama"] = "Già presente"
 
         preview = AnimePreview(provider_mock, animelist, fzf_mock)
-        # index 0 corrsponde a animelist[-1] cioè animelist[1]
-        res = preview(index=0, width=80)
+        res = preview(index=0, width=80)  # index 0 → animelist[-1] → animelist[1]
 
-        assert "Già presente" in res
-        assert "Caricamento trama..." not in res
-        # Nessun background fetch dovrebbe partire
-        assert 0 not in preview._fetching
+        # info_anime sovrascrive la Trama, il risultato è quello del mock
+        assert "Trama mockata" in res
+        provider_mock.info_anime.assert_called_once_with(animelist[1])
 
-    def test_partial_response_and_fetch_if_trama_missing(self, provider_mock, fzf_mock, animelist):
+    def test_fetches_info_synchronously_if_trama_missing(self, provider_mock, fzf_mock, animelist):
+        """Se la Trama manca, info_anime deve essere chiamato in modo sincrono
+        e il risultato deve essere visibile immediatamente senza step intermedi."""
         preview = AnimePreview(provider_mock, animelist, fzf_mock)
+        res = preview(index=1, width=80)  # index 1 → animelist[0]
 
-        # Patch sleep to avoid waiting in tests
-        with patch('time.sleep', return_value=None):
-            res = preview(index=1, width=80) # index 1 corresponds to animelist[0]
-
-            assert "Anime 1" in res
-            assert "Caricamento trama..." in res
-
-            # Attendo che il thread finisca
-            time.sleep(0.1) # just in case, since sleep is patched
-            while 1 in preview._fetching:
-                time.sleep(0.01)
-
-            provider_mock.info_anime.assert_called_once_with(animelist[0])
-            fzf_mock.refresh_preview.assert_called_once()
-            assert animelist[0].info["Trama"] == "Trama mockata"
-
-    def test_debouncing_prevents_fetch_on_fast_scroll(self, provider_mock, fzf_mock, animelist):
-        preview = AnimePreview(provider_mock, animelist, fzf_mock)
-
-        # Non patchiamo sleep per testare il debouncing ma lo facciamo veloce
-        # Invece di usare sleep reale, patchiamo per un delay piccolissimo
-        with patch('time.sleep') as mock_sleep:
-            def sleep_del(secs):
-                # Simulo che durante lo split l'indice cambi prima che il background proceda
-                preview._current_index = 0
-            mock_sleep.side_effect = sleep_del
-
-            # L'utente visita index 1
-            res = preview(index=1, width=80)
-            assert "Caricamento trama..." in res
-
-        time.sleep(0.1)
-        # _background_fetch dovrebbe essere terminato prematuramente per index 1
-        provider_mock.info_anime.assert_not_called()
-        fzf_mock.refresh_preview.assert_not_called()
-
-    def test_idempotence_only_one_fetch_per_index(self, provider_mock, fzf_mock, animelist):
-        preview = AnimePreview(provider_mock, animelist, fzf_mock)
-
-        preview._fetching[0] = True # Simuliamo fetch già in corso
-        # Chiamiamo ancora
-        preview(index=0, width=80)
-
-        # Check threads count? Since it's already in _fetching, it shouldn't spawn a new one
-        # Not easily testable without mocking threading.Thread, but we can verify provider wasn't called twice
-        # Wait, if we mock Thread, we can verify correctly.
-        pass
+        # info_anime deve essere stato chiamato in modo sincrono
+        provider_mock.info_anime.assert_called_once_with(animelist[0])
+        # La trama deve apparire nella risposta, senza "[Caricamento...]"
+        assert "Anime 1" in res
+        assert "Trama mockata" in res
+        assert "Caricamento" not in res
 
     @patch('aw_cli.interface.preview.subprocess.run')
-    @patch('aw_cli.interface.preview.urllib.request.urlopen')
-    @patch('aw_cli.interface.preview.shutil.which', return_value="/usr/bin/chafa")
-    def test_sync_image_rendering_and_memory_cache(self, mock_which, mock_urlopen, mock_run, provider_mock, fzf_mock, animelist):
-        # Anime 1 has a Cover without Trama
-        animelist[0].info["Cover"] = "http://example.com/cover.jpg"
+    def test_renders_image_from_provider_cover_image(self, mock_run, provider_mock, fzf_mock, animelist, tmp_path):
+        """Se il provider restituisce un path immagine, preview deve renderizzarla con chafa."""
+        # Preparo un file immagine finto
+        img_file = tmp_path / "12345.jpg"
+        img_file.write_bytes(b"fake_image")
+        provider_mock.cover_image.return_value = img_file
 
-        # Setup mock http response
-        mock_response = MagicMock()
-        mock_response.read.return_value = b"dummy_image_data"
-        mock_response.__enter__.return_value = mock_response
-        mock_urlopen.return_value = mock_response
+        # Trama già presente per evitare la chiamata info_anime
+        animelist[1].info["Trama"] = "Presente"
 
-        # Setup mock chafa
         mock_result = MagicMock()
         mock_result.returncode = 0
-        mock_result.stdout = b"ansicode"
+        mock_result.stdout = b"sixel_output"
         mock_run.return_value = mock_result
 
         preview = AnimePreview(provider_mock, animelist, fzf_mock)
+        res = preview(index=0, width=80)
 
-        # First query (index 1 is animelist[0])
-        with patch('time.sleep', return_value=None):
-            res = preview(index=1, width=80)
+        # cover_image deve essere stato chiamato
+        provider_mock.cover_image.assert_called_once_with(animelist[1])
+        # chafa deve ricevere il path del file
+        mock_run.assert_called_once()
+        args = mock_run.call_args[0][0]
+        assert str(img_file) in args
+        # L'output deve contenere il rendering
+        assert "sixel_output" in res
 
-            # The URL must be fetched synchronously to avoid flashing
-            mock_urlopen.assert_called_once()
-            mock_run.assert_called_once()
+    @patch('aw_cli.interface.preview.subprocess.run')
+    def test_image_rendered_once_cached_in_memory(self, mock_run, provider_mock, fzf_mock, animelist, tmp_path):
+        """Se l'immagine è già stata renderizzata (cache RAM), non deve chiamare chafa di nuovo."""
+        img_file = tmp_path / "12345.jpg"
+        img_file.write_bytes(b"fake_image")
+        provider_mock.cover_image.return_value = img_file
 
-            # Verify the output contains the image representation and the loading text for Trama
-            assert "ansicode\n" in res
-            assert "Anime 1" in res
-            assert "[Caricamento trama...]" in res
+        animelist[1].info["Trama"] = "Presente"
 
-            # Wait for background thread to finish fetching Trama
-            time.sleep(0.1)
-            while 1 in preview._fetching:
-                time.sleep(0.01)
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = b"sixel_output"
+        mock_run.return_value = mock_result
 
-            # Now __call__ is invoked again, image should NOT be fetched again (cached in memory)
-            res2 = preview(index=1, width=80)
-            assert "ansicode\n" in res2
-            assert "Anime 1" in res2
-            assert "Trama mockata" in res2
-            assert "[Caricamento trama...]" not in res2
+        preview = AnimePreview(provider_mock, animelist, fzf_mock)
+        preview(index=0, width=80)
+        preview(index=0, width=80)  # Seconda chiamata
 
-            # Mocks should still only have been called ONCE
-            mock_urlopen.assert_called_once()
-            mock_run.assert_called_once()
+        # chafa deve essere chiamato UNA sola volta
+        mock_run.assert_called_once()
+
+    def test_no_image_no_crash(self, provider_mock, fzf_mock, animelist):
+        """Se cover_image restituisce None, nessun crash e solo testo."""
+        animelist[1].info["Trama"] = "Presente"
+        provider_mock.cover_image.return_value = None
+
+        preview = AnimePreview(provider_mock, animelist, fzf_mock)
+        res = preview(index=0, width=80)
+
+        assert "Trama mockata" in res
+        assert "Anime 2" in res
+
+    def test_index_out_of_range_returns_empty(self, provider_mock, fzf_mock, animelist):
+        """Un indice fuori range deve restituire stringa vuota."""
+        preview = AnimePreview(provider_mock, animelist, fzf_mock)
+        res = preview(index=99, width=80)
+        assert res == ""
