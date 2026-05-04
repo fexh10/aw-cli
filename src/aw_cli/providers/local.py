@@ -12,7 +12,7 @@ class LocalProvider(Provider):
     - info_anime: carica info dalla cronologia
     """
     def __init__(self, path, history: list[Anime]):
-        super().__init__(path)
+        self.BASE_URL = path
         self.history = history
 
     def _search(self, input: str) -> list[Anime]:
