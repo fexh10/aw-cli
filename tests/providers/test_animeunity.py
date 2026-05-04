@@ -1,24 +1,27 @@
-import pytest
 import json
-from unittest.mock import patch
+import pytest
 from pathlib import Path
+from unittest.mock import patch, MagicMock
 from aw_cli.providers.animeunity import Animeunity
+from aw_cli.anime import Anime
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
+
 
 class TestAnimeunity:
     """Test unitari per il provider AnimeUnity usando le fixtures aggiornabili dinamicamente."""
 
     @pytest.fixture
     def au(self):
-        provider = Animeunity()
-        setattr(provider, '_session', "<html></html>")
+        mock_client = MagicMock()
+        provider = Animeunity(client=mock_client)
+        setattr(provider, "_session", "<html></html>")
         return provider
 
     def test_animeunity_search(self, au):
         data = json.loads((FIXTURES_DIR / "au_search.json").read_text(encoding="utf-8"))
 
-        with patch.object(au, 'Client') as mock_client:
+        with patch.object(au, "Client") as mock_client:
             mock_client.post.return_value.json.return_value = data
             mock_client.post.return_value.raise_for_status = lambda: None
 
@@ -28,7 +31,7 @@ class TestAnimeunity:
 
     def test_animeunity_latest(self, au):
         html = (FIXTURES_DIR / "au_latest.html").read_text(encoding="utf-8")
-        setattr(au, '_session', html)
+        setattr(au, "_session", html)
 
         animes = au._latest("a", specials=False)
         assert len(animes) > 0, "Nessun anime trovato nella fixture per il latest"
@@ -36,10 +39,10 @@ class TestAnimeunity:
 
     def test_animeunity_info_anime(self, au):
         data = json.loads((FIXTURES_DIR / "au_info.json").read_text(encoding="utf-8"))
-        from aw_cli.anime import Anime
+
         anime = Anime("Naruto", "1469")
 
-        with patch.object(au, 'Client') as mock_client:
+        with patch.object(au, "Client") as mock_client:
             mock_client.get.return_value.json.return_value = data
             mock_client.get.return_value.raise_for_status = lambda: None
 
