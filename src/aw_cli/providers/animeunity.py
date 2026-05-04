@@ -1,13 +1,14 @@
 import re
 import json
 from html import unescape
+from functools import cached_property
 from ..anime import Anime, AnimeStatus
 from .provider import Provider, HTTPError
 
 class Animeunity(Provider):
     """
     Classe che gestisce il collegamento con Animeworld.
-    
+
     Attributes:
         _url (str): l'url del sito di Animeworld.
         _headers (dict): gli headers da utilizzare per le richieste HTTP.
@@ -16,23 +17,22 @@ class Animeunity(Provider):
     """
     def __init__(self):
         super().__init__("https://www.animeunity.so")
-        self._get_token()  # Assicura che i token/cookie siano aggiornati
 
-    
-    def _get_token(self) -> None:
-        # Send a GET request to the specified URL
+    @cached_property
+    def _session(self) -> str:
+        """Inizializza la sessione (token CSRF + cookies) al primo accesso. Ritorna l'HTML."""
         response = self.Client.get(self.BASE_URL)
-        self.html = response.text
-        # Regex to find the meta tag with csrf-token and extract the content
-        csrf_match = re.search(r'<meta.*?name="csrf-token".*?content="([^"]*)".*?>', self.html)
+        html = response.text
+        csrf_match = re.search(r'<meta.*?name="csrf-token".*?content="([^"]*)".*?>', html)
         if not csrf_match:
             raise ValueError("CSRF token not found in the HTML")
-        csrf_token = csrf_match.group(1)
-        self.Client.headers['x-csrf-token'] = csrf_token
+        self.Client.headers['x-csrf-token'] = csrf_match.group(1)
         self.Client.cookies['animeunity_session'] = response.cookies.get('animeunity_session') or ""
+        return html
 
 
     def _search(self, input: str) -> list[Anime]:
+        _ = self._session  # trigger lazy init
         search_url = f"{self.BASE_URL}/livesearch"
         response = self.Client.post(
             url=search_url,
@@ -52,7 +52,7 @@ class Animeunity(Provider):
 
 
     def _latest(self, filter, specials) -> list[Anime]:
-        regex = re.search(r'<layout-items[^>]*items-json="([^"]*)"', self.html)
+        regex = re.search(r'<layout-items[^>]*items-json="([^"]*)"', self._session)
         if not regex:
             raise ValueError("Errore nel parsing della pagina principale")
 
@@ -131,7 +131,7 @@ class Animeunity(Provider):
 
     def _parse_info(self, data: dict) -> tuple[str, str, int, AnimeStatus, dict[str, str]]:
         title = data['title_eng'] or data['title'] or data['title_it']
-        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else "0" 
+        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else "0"
         anilist_id = data['anilist_id']
         match data['status']:
             case "In Corso":

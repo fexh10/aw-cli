@@ -11,8 +11,9 @@ class TestAnimeunity:
 
     @pytest.fixture
     def au(self):
-        with patch.object(Animeunity, '_get_token', return_value=None):
-            return Animeunity()
+        provider = Animeunity()
+        setattr(provider, '_session', "<html></html>")
+        return provider
 
     def test_animeunity_search(self, au):
         data = json.loads((FIXTURES_DIR / "au_search.json").read_text(encoding="utf-8"))
@@ -27,15 +28,13 @@ class TestAnimeunity:
 
     def test_animeunity_latest(self, au):
         html = (FIXTURES_DIR / "au_latest.html").read_text(encoding="utf-8")
-        au.html = html
+        setattr(au, '_session', html)
 
         animes = au._latest("a", specials=False)
         assert len(animes) > 0, "Nessun anime trovato nella fixture per il latest"
         assert animes[0].name != ""
 
     def test_animeunity_info_anime(self, au):
-        with patch.object(Animeunity, '_get_token', return_value=None):
-            au = Animeunity()
         data = json.loads((FIXTURES_DIR / "au_info.json").read_text(encoding="utf-8"))
         from aw_cli.anime import Anime
         anime = Anime("Naruto", "1469")
