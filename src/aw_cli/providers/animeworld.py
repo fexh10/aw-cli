@@ -15,8 +15,8 @@ class Animeworld(Provider):
         _cookies (dict): i cookies da utilizzare per le richieste HTTP.
         _visited (dict): le pagine già visitate.
     """
-    def __init__(self):
-        super().__init__("https://www.animeworld.ac")
+    def __init__(self, client=None):
+        super().__init__("https://www.animeworld.ac", client=client)
         self._visited = {}
 
     @lru_cache

@@ -55,15 +55,16 @@ class Provider(ABC):
         _headers (dict): gli headers da utilizzare per le richieste HTTP.
     """
 
-    def __init__(self, url: str):
+    def __init__(self, url: str, client: Client | None = None):
         """
         Costruisce un'instanza di Provider.
 
         Args:
             url (str): l'url del sito del provider.
+            client (Client | None): client HTTP opzionale da iniettare (utile per testing).
         """
         self.BASE_URL = url
-        self.Client = Client(
+        self.Client = client or Client(
             headers={
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
                 "Connection": "close"

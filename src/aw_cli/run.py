@@ -14,6 +14,7 @@ from . import (
     providers,
     utilities as ut,
 )
+from .providers.local import LocalProvider
 from .interface import Fzf
 from .history import History
 from .anime import Anime, AnimeStatus
@@ -461,16 +462,9 @@ def main():
     history = History.read(str(Path(__file__).parent))
 
     if offline:
-        from .providers.local import LocalProvider
         provider = LocalProvider(download.path(), history.get())
     else:
-        match ut.config_data["provider"]["source"]:
-            case "animeunity":
-                from .providers.animeunity import Animeunity
-                provider = Animeunity()
-            case _:
-                from .providers.animeworld import Animeworld
-                provider = Animeworld()
+        provider = providers.create_provider(ut.config_data["provider"]["source"])
 
     if ut.config_data["player"]["type"] == "vlc":
         open_player = open_vlc
