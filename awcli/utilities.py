@@ -61,13 +61,12 @@ def getBs(url: str) -> BeautifulSoup:
     try:
         result = requests.get(url, headers=headers)
         
-        # --- AGGIUNTA PER BYPASSARE LO SCUDO ANTI-BOT DI ANIMEWORLD ---
+        #BYPASS ANTI-BOT DI ANIMEWORLD 
         if result.status_code == 202:
             match = re.search(r'(SecurityAW-\w+)=(.*) ;', result.text)
             if match:
                 cookies = {match.group(1): match.group(2)}
                 result = requests.get(url, headers=headers, cookies=cookies)
-        # --------------------------------------------------------------
                 
     except requests.exceptions.ConnectionError:
         my_print("Errore di connessione", color="rosso")
