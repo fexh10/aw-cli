@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import awcli.anilist as anilist
 from awcli.anime import Anime
    
-_url = "https://www.animeworld.so"
+_url = "https://www.animeworld.ac"
 # controllo il tipo del dispositivo
 nome_os = system()
 if nome_os == "Linux":
@@ -58,22 +58,22 @@ def my_input(text: str, format = lambda i: i, error: str = "Seleziona una rispos
 
 
 def getBs(url: str) -> BeautifulSoup:
-    """
-    Prende l'html della pagina web selezionata.
-
-    Args:
-        url (str): indica la pagina web da cui prendere l'html.
-
-    Returns:
-        BeautifulSoup: l'html della pagina web selezionata.
-    """
     try:
         result = requests.get(url, headers=headers)
+        
+        # --- AGGIUNTA PER BYPASSARE LO SCUDO ANTI-BOT DI ANIMEWORLD ---
+        if result.status_code == 202:
+            match = re.search(r'(SecurityAW-\w+)=(.*) ;', result.text)
+            if match:
+                cookies = {match.group(1): match.group(2)}
+                result = requests.get(url, headers=headers, cookies=cookies)
+        # --------------------------------------------------------------
+                
     except requests.exceptions.ConnectionError:
         my_print("Errore di connessione", color="rosso")
         exit()
     
-    if result.status_code != 200:
+    if result.status_code != 200 or "Errore 404" in result.text:
         my_print("Errore: pagina non trovata", color="rosso")
         exit()
     
