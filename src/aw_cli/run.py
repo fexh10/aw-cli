@@ -531,14 +531,18 @@ def main():
             continue
 
         if hist and anime.episode(anime.curr_ep).is_completed():
-            if not anime.episode(anime.curr_ep).has_next():
-                ut.console.print(f"L'episodio {anime.episode(anime.curr_ep).numeric() + 1} di {anime.name} non è ancora stato rilasciato!", style="error")
+            ep_corrente = anime.episode(anime.curr_ep)
+            if not ep_corrente.has_next():
+                provider.episodes(anime)
+
+            if not ep_corrente.has_next():
+                ut.console.print(f"L'episodio {ep_corrente.numeric() + 1} di {anime.name} non è ancora stato rilasciato!", style="error")
                 sleep(1)
                 if len(animelist) == 1:
                     exit()
-                reload = False
                 continue
-            episodes = [anime.episode(anime.curr_ep).next()]
+
+            episodes = [ep_corrente.next()]
         elif latest or hist:
             episodes = [anime.episode(anime.curr_ep)]
         else:
