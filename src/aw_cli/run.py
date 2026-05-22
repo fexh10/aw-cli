@@ -151,14 +151,26 @@ def open_mpv(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
         subprocess.run(f'am start --user 0 -a android.intent.action.VIEW -d "{ep_url}" -n is.xyz.mpv/.MPVActivity', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True, 0
 
-    command = f'''{ut.config_data["player"]["path"]} "{ep_url}" --force-media-title="{ep_name}" --start="{progress}" --fullscreen --keep-open'''
-    result = subprocess.run(command, shell=True, capture_output=True, text=True, check=False)
-    out = result.stdout
+    command = [ut.config_data["player"]["path"], ep_url, f"--force-media-title={ep_name}", f"--start={progress}", "--fullscreen", "--keep-open"]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, check=False)
+    except FileNotFoundError:
+        raise RuntimeError(
+            f"Impossibile avviare MPV player non trovato.\n"
+            f"{" ".join(command[:2])}"
+        )
 
-    res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', out)[-1]
-    progress = (int(res[0]) * 3600) + (int(res[1]) * 60) + int(res[2])
+    res = re.findall(r'(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)', result.stdout)
+    if res:
+        progress = (int(res[-1][0]) * 3600) + (int(res[-1][1]) * 60) + int(res[-1][2])
+        return False, progress
 
-    return int(res[3]) >= complete_limit, progress
+    raise RuntimeError(
+        f"Impossibile leggere l'output di MPV durante la riproduzione di {ep_url}! "
+        f"returncode={result.returncode}\n"
+        f"stdout={result.stdout!r}\n"
+    )
+
 
 def open_vlc(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
     """
