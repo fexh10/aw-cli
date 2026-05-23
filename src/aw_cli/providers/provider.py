@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from curses import error
 from httpx import Client, HTTPError  # , AsyncClient
 from ..anime import Anime
 from .. import utilities as ut
@@ -20,7 +21,7 @@ def error_handler(relink=False):
                     f"Errore {e.__class__.__name__} durante {func.__name__}: {e}",
                     style="error",
                 )
-                return None
+                exit(1)
 
         return wrapper
 
@@ -39,9 +40,9 @@ def update_link(self, callback, anime: Anime, episode: Anime.Episode | None = No
         ut.console.print("Il link dell'anime è stato cambiato", style="warning")
         res: list[Anime] | None = self.search(anime.name)
         if not res:
-            raise LookupError(
-                f"Errore o nessun risultato durante la ricerca di {anime.name} su {self.__class__.__name__}"
-            )
+            ut.console.print(f"Errore o nessun risultato durante la ricerca di {anime.name} su {self.__class__.__name__}", style="error")
+            ut.console.print("Cercarlo manualmente", style="highlight")
+            exit(1)
         anime.ref = res[0].ref
         return callback(self, anime)
 

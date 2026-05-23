@@ -519,12 +519,7 @@ def main():
             remove_from_history(anime)
             continue
 
-        try:
-            provider.info_anime(anime)
-        except LookupError as error:
-            ut.console.print(str(error), style="error")
-            ut.console.print("Cercarlo manualmente", style="highlight")
-            exit()
+        provider.info_anime(anime)
 
         if info:
             ut.console.clear()
