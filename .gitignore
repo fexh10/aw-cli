@@ -88,3 +88,6 @@ pyrightconfig.json
 history.json
 config.toml
 aw-cronologia.csv
+
+# Fixtures for tests
+tests/fixtures/
