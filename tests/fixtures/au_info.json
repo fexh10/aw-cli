@@ -84,8 +84,16 @@
       "episodes_count": 1
     },
     {
-      "id": 1398,
+      "id": 7557,
       "title": "Naruto Movie 2: Dai Gekitotsu! Maboroshi no Chiteiiseki Dattebayo!",
+      "title_eng": "Naruto Movie 02: La leggenda della pietra di Gelel",
+      "type": "Movie",
+      "date": "2005",
+      "episodes_count": 1
+    },
+    {
+      "id": 1398,
+      "title": "Naruto Movie 2: Dai Gekitotsu! Maboroshi no Chiteiiseki Dattebayo! (ITA)",
       "title_eng": "Naruto Movie 02: La leggenda della pietra di Gelel (ITA)",
       "type": "Movie",
       "date": "2005",
@@ -97,6 +105,14 @@
       "title_eng": "Naruto Narutimate Hero 3: Tsuini Gekitotsu! Jounin vs. Genin!! Musabetsu Dairansen Taikai Kaisai!!",
       "type": "OVA",
       "date": "2005",
+      "episodes_count": 1
+    },
+    {
+      "id": 7558,
+      "title": "Naruto Movie 3: Dai Koufun! Mikazuki-jima no Animal Panic Dattebayo!",
+      "title_eng": "Naruto Movie 03: I guardiani del Regno della Luna Crescente",
+      "type": "Movie",
+      "date": "2006",
       "episodes_count": 1
     },
     {
@@ -140,11 +156,27 @@
       "episodes_count": 1
     },
     {
+      "id": 7540,
+      "title": "Naruto: Shippuuden Movie 2 - Kizuna",
+      "title_eng": "Naruto Shippuden Movie 02: Il maestro e il discepolo",
+      "type": "Movie",
+      "date": "2008",
+      "episodes_count": 1
+    },
+    {
       "id": 1401,
       "title": "Naruto: Shippuuden Movie 2 - Kizuna (ITA)",
       "title_eng": "Naruto Shippuden Movie 02: Il maestro e il discepolo (ITA)",
       "type": "Movie",
       "date": "2008",
+      "episodes_count": 1
+    },
+    {
+      "id": 7541,
+      "title": "Naruto: Shippuuden Movie 3 - Hi no Ishi wo Tsugu Mono",
+      "title_eng": "Naruto Shippuden Movie 03: Gli eredi della volont\u00e0 del Fuoco",
+      "type": "Movie",
+      "date": "2009",
       "episodes_count": 1
     },
     {
@@ -209,6 +241,14 @@
       "title_eng": "Naruto x UT",
       "type": "OVA",
       "date": "2011",
+      "episodes_count": 1
+    },
+    {
+      "id": 7568,
+      "title": "Naruto: Shippuuden Movie 6 - Road to Ninja",
+      "title_eng": "Naruto Shippuden Movie 06: La via del Ninja",
+      "type": "Movie",
+      "date": "2012",
       "episodes_count": 1
     },
     {
