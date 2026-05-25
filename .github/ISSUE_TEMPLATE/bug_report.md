@@ -1,3 +1,11 @@
+---
+name: Bug report
+about: Segnala un problema con aw-cli
+title: "[Bug]: "
+labels: bug
+assignees: ""
+---
+
 ## Descrizione del problema
 
 Descrivi chiaramente il problema riscontrato.
