@@ -10,7 +10,7 @@ class TestProviderFactory:
     def test_create_provider_dynamic(self, provider_name):
         """Verifica la creazione dinamica di tutti i provider disponibili."""
         provider = create_provider(provider_name)
-        assert provider.__class__.__name__.lower() == provider_name
+        assert provider.__class__.__name__.lower() == provider_name.replace("-", "")
 
     def test_create_provider_invalid(self):
         """Verifica che venga sollevato un errore per provider non validi."""
