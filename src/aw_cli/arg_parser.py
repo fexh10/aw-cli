@@ -1,6 +1,6 @@
 import sys
 import argparse
-from .utilities import os_name
+from .core.utilities import os_name
 from importlib.metadata import version
 from .update import update
 

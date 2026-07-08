@@ -1,5 +1,6 @@
 # pyright: reportUnusedImport=false
 from .provider import Provider
+from .local import LocalProvider
 
 PROVIDERS_AVAILABLE = {
     "animeunity": ("aw_cli.providers.animeunity", "Animeunity"),

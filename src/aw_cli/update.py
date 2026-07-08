@@ -1,6 +1,6 @@
 import subprocess
 import shutil
-from . import utilities as ut
+from .core import utilities as ut
 
 
 REPO_URL = "git+https://github.com/fexh10/aw-cli.git@branch-name"

@@ -4,7 +4,7 @@ from httpx import AsyncClient
 from rich.progress import Progress, BarColumn, TextColumn, TaskID, DownloadColumn, TransferSpeedColumn
 from . import utilities as ut
 from .anime import Anime
-from .providers import Provider
+from ..providers import Provider
 
 from functools import lru_cache
 

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, mock_open # unittest.mock è nella libreria standard, non è un modulo esterno!
-from aw_cli.history import History
-from aw_cli.anime import Anime, AnimeStatus
+from aw_cli.core.history import History
+from aw_cli.core.anime import Anime, AnimeStatus
 
 @pytest.fixture(autouse=True)
 def mock_utilities(monkeypatch):
@@ -11,7 +11,7 @@ def mock_utilities(monkeypatch):
                 "specials": True
             }
         }
-    monkeypatch.setattr('aw_cli.history.ut', MockUtilities)
+    monkeypatch.setattr('aw_cli.core.history.ut', MockUtilities)
 
 # -- Classe Ausiliaria per simulare side_effect --
 class MockSequencer:

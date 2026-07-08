@@ -2,7 +2,7 @@ import sys
 sys.argv = ['aw-cli']
 
 import pytest
-from aw_cli.anime import Anime
+from aw_cli.core.anime import Anime
 from aw_cli.run import create_ep_menu
 
 @pytest.fixture

@@ -36,12 +36,12 @@ def update_anilist(token: str, anilist_id: int, ep: int, status_list: str, score
         "status": status_list,
         "episode": ep,
     }
-    
+
     if score != 0:
         var["score"] = score
 
     make_anilist_request(token, query, var)
- 
+
 def get_user_id(token: str) -> int:
     """
     Collegamento alle API di AniList per trovare
@@ -104,15 +104,15 @@ def get_anime_private_rating(token, user_id, anime_id: int) -> (float | None):
     response = httpx.post('https://graphql.anilist.co', headers=headers, json={'query': query, 'variables': var})
     if response.status_code != 200:
         return None
-    
+
     return float(response.json()["data"]["MediaList"]["score"])
 
 def make_anilist_request(token: str, query: str, var: dict) -> None:
     """
-    Request alle API di Anilist. 
+    Request alle API di Anilist.
     Se la richiesta non va a buon fine, viene stampato un errore.
 
-    Args: 
+    Args:
         token (str): il token AniList dell'utente.
         query (str): la stringa che contiene la query.
         var (dict): dizionario che contiene le variabili da passare alla query.

@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 from aw_cli.providers.animeworld import Animeworld
-from aw_cli.anime import Anime
+from aw_cli.core.anime import Anime
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 

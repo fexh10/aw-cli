@@ -107,7 +107,7 @@ class Anime:
 
     def episode(self, ep_num: str) -> Anime.Episode:
         """
-        Restituisce il riferimento dell'episodio corrispondente al numero specificato.
+        Restituisce l'episodio corrispondente al numero specificato.
         Args:
             ep_num (str): Il numero dell'episodio.
         Returns:

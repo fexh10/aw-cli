@@ -1,5 +1,5 @@
 from rich.console import Console
-from aw_cli.anime import Anime, AnimeStatus
+from aw_cli.core.anime import Anime, AnimeStatus
 
 def test_anime_rich_protocol():
     """Test that Anime class implements __rich_console__ correctly."""

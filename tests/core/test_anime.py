@@ -1,5 +1,5 @@
 import pytest
-from aw_cli.anime import Anime
+from aw_cli.core.anime import Anime
 import operator
 
 @pytest.fixture

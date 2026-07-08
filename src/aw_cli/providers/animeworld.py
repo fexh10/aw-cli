@@ -2,7 +2,7 @@ from functools import lru_cache
 import re
 from html import unescape
 from urllib.parse import quote_plus
-from ..anime import Anime, AnimeStatus
+from ..core.anime import Anime, AnimeStatus
 from .provider import Provider, HTTPError
 
 

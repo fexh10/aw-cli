@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from curses import error
 from httpx import Client, HTTPError  # , AsyncClient
-from ..anime import Anime
-from .. import utilities as ut
+from ..core.anime import Anime
+from ..core import utilities as ut
 
 
 def error_handler(relink=False):

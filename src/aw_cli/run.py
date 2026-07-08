@@ -1,3 +1,5 @@
+
+from _pytest import assertion
 import re
 import shutil
 import subprocess
@@ -8,16 +10,19 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from typing import Callable
 from rich.prompt import Prompt, FloatPrompt
-from . import (
+from .core import (
     anilist,
     download,
-    providers,
     utilities as ut,
 )
-from .providers.local import LocalProvider
+from .providers import (
+    Provider,
+    LocalProvider,
+    create_provider,
+)
 from .interface import Fzf
-from .history import History
-from .anime import Anime, AnimeStatus
+from .core.history import History
+from .core.anime import Anime, AnimeStatus
 from .arg_parser import (
     args,
     info,
@@ -31,7 +36,7 @@ from .arg_parser import (
 signal(SIGINT, lambda signum, frame: exit())
 
 
-def search_anime(provider: providers.Provider) -> list[Anime]:
+def search_anime(provider: Provider) -> list[Anime]:
     """
     Dato in input un nome di un anime inserito dall'utente, restituisce una lista con gli URL degli anime
     relativi alla ricerca.
@@ -68,20 +73,21 @@ def select_episodes(anime: Anime) -> list[Anime.Episode]:
         anime (Anime): l'anime di cui scegliere gli episodi.
 
     Returns:
-        str: il numero dell'episodio da riprodurre.
+        list[Anime.Episode]: La lista degli oggetti Episode selezionati.
     """
-
     ut.console.clear()
     ut.console.print(anime.name)
     # se contiene solo 1 ep sarà riprodotto automaticamente
     if len(anime.episodes()) == 1:
         return anime._episodes
 
+    choices = list(reversed(anime.episodes()))
+
     if downl:
         res = (
             Fzf()
             .run(
-                list(reversed(anime.episodes())),
+                choices,
                 prompt="Scegli episodi: ",
                 multi=True,
                 filter=True,
@@ -91,7 +97,7 @@ def select_episodes(anime: Anime) -> list[Anime.Episode]:
     else:
         res = (
             Fzf()
-            .run(list(reversed(anime.episodes())), "Scegli un episodio: ")
+            .run(choices, "Scegli un episodio: ")
             .split("\n")
         )
 
@@ -316,7 +322,7 @@ def update_anilist(
 
 
 def watch_episode(
-    anime: Anime, episode: Anime.Episode, provider: providers.Provider
+    anime: Anime, episode: Anime.Episode, provider: Provider
 ) -> None:
     """
     Riproduce l'episodio dell'anime e gestisce gli aggiornamenti di stato.
@@ -617,7 +623,7 @@ def main():
     if offline:
         provider = LocalProvider(download.path(), history.get())
     else:
-        provider = providers.create_provider(ut.config_data["provider"]["source"])
+        provider = create_provider(ut.config_data["provider"]["source"])
 
     if ut.config_data["player"]["type"] == "vlc":
         open_player = open_vlc
@@ -729,10 +735,10 @@ def main():
             menu_actions = create_ep_menu(anime, episode)
 
             res = menu_actions[Fzf().run(list(menu_actions.keys()))]()
-            if res == "break":
+            if isinstance(res, Anime.Episode):
+                episode = res
+            elif res == "break":
                 break
-            episode = res
-
         reload = True
 
 

@@ -2,7 +2,7 @@ import re
 import json
 from html import unescape
 from functools import cached_property
-from ..anime import Anime, AnimeStatus
+from ..core.anime import Anime, AnimeStatus
 from .provider import Provider, HTTPError
 
 class Animeunity(Provider):
