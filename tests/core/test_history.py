@@ -4,14 +4,13 @@ from aw_cli.core.history import History
 from aw_cli.core.anime import Anime, AnimeStatus
 
 @pytest.fixture(autouse=True)
-def mock_utilities(monkeypatch):
-    class MockUtilities:
-        config_data = {
-            "general": {
-                "specials": True
-            }
+def mock_config(monkeypatch):
+    mock_config_data = {
+        "general": {
+            "specials": True
         }
-    monkeypatch.setattr('aw_cli.core.history.ut', MockUtilities)
+    }
+    monkeypatch.setattr('aw_cli.core.history.config.data', mock_config_data)
 
 # -- Classe Ausiliaria per simulare side_effect --
 class MockSequencer:

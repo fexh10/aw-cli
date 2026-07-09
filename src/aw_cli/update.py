@@ -1,6 +1,6 @@
 import subprocess
 import shutil
-from .core import utilities as ut
+from .interface import console
 
 
 REPO_URL = "git+https://github.com/fexh10/aw-cli.git@branch-name"
@@ -48,7 +48,7 @@ def update(branch: str) -> None:
     """
     tool = check_installation_method()
     if not tool:
-        ut.console.print("Non è stato possibile trovare un metodo di installazione valido per aggiornare aw-cli", style="error")
+        console.print("Non è stato possibile trovare un metodo di installazione valido per aggiornare aw-cli", style="error")
         return
 
     command = TOOLS[tool]["install_git"] if branch else TOOLS[tool]["update"]

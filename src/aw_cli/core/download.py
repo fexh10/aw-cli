@@ -2,7 +2,8 @@ import asyncio
 from pathlib import Path
 from httpx import AsyncClient
 from rich.progress import Progress, BarColumn, TextColumn, TaskID, DownloadColumn, TransferSpeedColumn
-from . import utilities as ut
+from ..interface import console
+from .config import config
 from .env import env
 from .anime import Anime
 from ..providers import Provider
@@ -75,7 +76,7 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                 progress.console.print(f"[error]Errore download Ep. {ep.num}: {e}[/]")
 
     async def _download_all():
-        concurrent_downloads = ut.config_data["general"].get("parallel-downloads", 3)
+        concurrent_downloads = config.data["general"].get("parallel-downloads", 3)
         semaphore = asyncio.Semaphore(concurrent_downloads)
         ordered_eps = sorted(episodes, key=lambda e: e.numeric())
 
@@ -86,7 +87,7 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
             DownloadColumn(),
             "•",
             TransferSpeedColumn(),
-            console=ut.console,
+            console=console,
         ) as progress:
             tasks = []
             for ep in ordered_eps:

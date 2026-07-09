@@ -1,18 +1,17 @@
 import re
 import subprocess
-from pathlib import Path
-from .utilities import config_data
-from .env import env
-from typing import Callable
+from .config import config
 
 def open_player(ep_url: str, ep_name: str, progress: int, syncplay: bool) -> tuple[bool, int]:
     """
     Decide ed avvia il player corretto in base alle condizioni e alla configurazione.
     """
-    if env.is_android:
+    player_type = config.data["player"].get("type")
+
+    if player_type == "android":
         return android_player(ep_url, ep_name, progress)
 
-    if syncplay and "syncplay" in config_data:
+    if syncplay and config.data.get("syncplay", {}).get("path"):
         return open_syncplay(ep_url, ep_name, progress)
 
     return open_mpv(ep_url, ep_name, progress)
@@ -54,12 +53,12 @@ def open_syncplay(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
         int: il progresso dell'episodio.
     """
 
-    player_path = config_data["player"]["path"]
+    player_path = config.player_path
     player_arg = f'--player-path "{player_path}"'
     args = f'''--force-media-title="{ep_name}" --start="{progress}" --fullscreen --keep-open'''
 
     try:
-        command = f'''{config_data["syncplay"]["path"]} {player_arg} -d --language it "{ep_url}" -- {args}'''
+        command = f'''{config.syncplay_path} {player_arg} -d --language it "{ep_url}" -- {args}'''
         result = subprocess.run(
             command, shell=True, capture_output=True, text=True, errors="replace", check=False
         )
@@ -80,7 +79,7 @@ def open_syncplay(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
     progress = progress_match[-1] if progress_match else 0
 
     return (
-        progress * 100 // duration >= config_data["player"]["complete_limit"] if duration > 0 else False,
+        progress * 100 // duration >= config.data["player"]["complete_limit"] if duration > 0 else False,
         progress,
     )
 
@@ -100,7 +99,7 @@ def open_mpv(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
     """
 
     command = [
-        config_data["player"]["path"],
+        config.player_path,
         ep_url,
         f"--force-media-title={ep_name}",
         f"--start={progress}",
@@ -112,7 +111,7 @@ def open_mpv(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
     if res := re.findall(r"(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)", result.stdout):
         last = res[-1]
         return (
-            int(last[3]) >= config_data["player"]["complete_limit"],
+            int(last[3]) >= config.data["player"]["complete_limit"],
             ((int(last[0]) * 3600) + (int(last[1]) * 60) + int(last[2])),
         )
 

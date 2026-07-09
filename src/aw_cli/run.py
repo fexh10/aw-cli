@@ -13,8 +13,11 @@ from rich.prompt import Prompt, FloatPrompt
 from .core import (
     anilist,
     download,
-    utilities as ut,
 )
+from .core.config import config
+from .cli.setup_config import setup_config
+import toml
+from .interface import console
 from .core.env import env
 from .providers import (
     Provider,
@@ -54,14 +57,14 @@ def search_anime(provider: Provider) -> list[Anime]:
         if len(result) != 0:
             return result
 
-    ut.console.clear()
+    console.clear()
     while True:
-        query = Prompt.ask("Cerca un anime", console=ut.console)
+        query = Prompt.ask("Cerca un anime", console=console)
         if res := check_search(query):
             return res
-        ut.console.print("La ricerca non ha prodotto risultati", style="error")
+        console.print("La ricerca non ha prodotto risultati", style="error")
         sleep(1)
-        ut.console.clear()
+        console.clear()
 
 
 def select_episodes(anime: Anime) -> list[Anime.Episode]:
@@ -77,8 +80,8 @@ def select_episodes(anime: Anime) -> list[Anime.Episode]:
     Returns:
         list[Anime.Episode]: La lista degli oggetti Episode selezionati.
     """
-    ut.console.clear()
-    ut.console.print(anime.name)
+    console.clear()
+    console.print(anime.name)
     # se contiene solo 1 ep sarà riprodotto automaticamente
     if len(anime.episodes()) == 1:
         return anime._episodes
@@ -125,7 +128,7 @@ def update_anilist(
     """
 
     if anime.anilist_id == 0:
-        ut.console.print(
+        console.print(
             "Impossibile aggiornare AniList: id anime non trovato!", style="error"
         )
         return
@@ -142,23 +145,23 @@ def update_anilist(
 
         # chiedo di votare
         # chiedo di votare
-        if ut.config_data["anilist"]["rating"]:
+        if config.data["anilist"]["rating"]:
             prompt_text = "Inserisci un voto per l'anime" + (
                 f" (voto corrente: {anilist_rating})" if anilist_rating else ""
             )
             while True:
                 try:
-                    rating = FloatPrompt.ask(prompt_text, console=ut.console)
+                    rating = FloatPrompt.ask(prompt_text, console=console)
                     if rating < 0:
                         raise ValueError
                     break
                 except ValueError:
-                    ut.console.print("Seleziona una risposta valida!", style="error")
+                    console.print("Seleziona una risposta valida!", style="error")
 
         # chiedo di mettere tra i preferiti
-        if ut.config_data["anilist"]["favorite"] and status_list == "COMPLETED":
-            ut.console.clear()
-            ut.console.print(
+        if config.data["anilist"]["favorite"] and status_list == "COMPLETED":
+            console.clear()
+            console.print(
                 f"Riproduco {anime.name} Ep. {anime.last_ep}", style="info"
             )
             favorite = (
@@ -168,7 +171,7 @@ def update_anilist(
     Thread(
         target=anilist.update_anilist,
         args=(
-            ut.config_data["anilist"]["token"],
+            config.data["anilist"]["token"],
             anime.anilist_id,
             episode.numeric(),
             status_list,
@@ -192,12 +195,12 @@ def watch_episode(
         provider (Provider): il provider da cui prendere il link dell'episodio.
     """
     anilist_rating = None
-    if not (offline or private) and "anilist" in ut.config_data:
+    if not (offline or private) and "anilist" in config.data:
         executor = ThreadPoolExecutor(max_workers=1)
         anilist_rating = executor.submit(
             anilist.get_anime_private_rating,
-            ut.config_data["anilist"]["token"],
-            ut.config_data["anilist"]["user_id"],
+            config.data["anilist"]["token"],
+            config.data["anilist"]["user_id"],
             anime.anilist_id,
         )
 
@@ -209,8 +212,8 @@ def watch_episode(
     else:
         ep_url = provider.episode_link(anime, episode)
 
-    ut.console.clear()
-    ut.console.print(f"Riproduco {episode}...", style="info")
+    console.clear()
+    console.print(f"Riproduco {episode}...", style="info")
     completed, progress = open_player(ep_url, str(episode), episode.progress, args.syncpl)
 
     if not private:
@@ -223,120 +226,6 @@ def watch_episode(
 
         anime.curr_ep = episode.num
         history.update(anime, episode)
-
-
-def setup_config() -> None:
-    """
-    Crea un file di configurazione chiamato "config.toml"
-    nella stessa directory dello script.
-    Le informazioni riportate saranno scelte dall'utente.
-    Sarà possibile scegliere il Player predefinito,
-    se collegare il proprio profilo AniList e
-    se inserire il path di syncplay.
-    """
-    ut.config_data.clear()
-
-    # player predefinito
-    ut.console.clear()
-    ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
-
-    ut.config_data["player"]["type"] = Fzf().run(
-        ["vlc", "mpv"], "Scegli il player predefinito: "
-    )
-    if env.supports_syncplay:
-        path = shutil.which(ut.config_data["player"]["type"])
-        if path is None:
-            ut.console.print(
-                f"Player {ut.config_data['player']['type']} non trovato!", style="error"
-            )
-            ut.config_data["player"]["path"] = Prompt.ask(
-                f"Inserisci il path di {ut.config_data['player']['type']} manualmente se è installato",
-                console=ut.console,
-            )
-        else:
-            ut.config_data["player"]["path"] = path
-        ut.console.clear()
-        ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
-
-    ut.config_data["general"]["specials"] = (
-        Fzf().run(["sì", "no"], "Mostrare gli episodi speciali? ") == "sì"
-    )
-
-    # provider preferito
-    ut.config_data["provider"]["source"] = Fzf().run(
-        ["animeunity", "animeworld"], "Scegli il provider: "
-    )
-
-    # anilist
-    if (
-        Fzf().run(["sì", "no"], "Aggiornare automaticamente la watchlist con AniList? ")
-        == "sì"
-    ):
-        link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
-        env.open_url(link)
-
-        # inserimento token
-        ut.console.clear()
-        ut.config_data["anilist"]["token"] = Prompt.ask(
-            f"Inserire il token di AniList ({link})", console=ut.console
-        )
-
-        # prendo l'id dell'utente tramite query
-        with ThreadPoolExecutor() as executor:
-            (
-                ut.config_data["anilist"]["rating"],
-                ut.config_data["anilist"]["favorite"],
-                ut.config_data["anilist"]["drop"],
-            ) = False, False, False
-            future = executor.submit(
-                anilist.get_user_id, ut.config_data["anilist"]["token"]
-            )
-            ut.console.clear()
-            ut.console.print("AW-CLI - CONFIGURAZIONE", style="info")
-            if Fzf().run(["sì", "no"], "Votare l'anime una volta completato? ") == "sì":
-                ut.config_data["anilist"]["rating"] = True
-
-            if (
-                Fzf().run(
-                    ["sì", "no"],
-                    "Chiedere se mettere l'anime tra i preferiti una volta completato? ",
-                )
-                == "sì"
-            ):
-                ut.config_data["anilist"]["favorite"] = True
-
-            if (
-                Fzf().run(
-                    ["sì", "no"],
-                    "Chiedere se droppare l'anime una volta rimosso dalla cronologia? ",
-                )
-                == "sì"
-            ):
-                ut.config_data["anilist"]["drop"] = True
-
-            ut.config_data["anilist"]["user_id"] = future.result()
-
-    # syncplay
-    if env.supports_syncplay:
-        syncplay_path = shutil.which("syncplay")
-        if syncplay_path is None:
-            ut.console.print("Syncplay non trovato!", style="error")
-            syncplay = Prompt.ask(
-                "Inserisci il path di Syncplay (premere INVIO se non lo si desidera utilizzare)",
-                console=ut.console,
-            ).replace("Program Files (x86)", "Progra~2")
-            if syncplay != "":
-                ut.config_data["syncplay"]["path"] = syncplay
-        else:
-            ut.config_data["syncplay"]["path"] = syncplay_path
-
-    # style
-    ut.config_data["style"] = ut.DEFAULT_STYLE
-
-    # creo il file
-    config = Path(__file__).parent / "config.toml"
-    with open(config, "w") as f:
-        ut.toml.dump(ut.config_data, f)
 
 
 def list_anime_names(animelist: list[Anime]) -> list[str]:
@@ -396,26 +285,26 @@ def remove_from_history(anime: Anime) -> None:
         return
 
     if (
-        "anilist" in ut.config_data
-        and ut.config_data["anilist"]["drop"]
+        "anilist" in config.data
+        and config.data["anilist"]["drop"]
         and Fzf().run(["sì", "no"], f"Droppare {anime.name} su AniList? ") == "sì"
     ):
         if anime.anilist_id == 0:
-            ut.console.print(
+            console.print(
                 "Impossibile droppare su AniList: id anime non trovato!", style="error"
             )
             sleep(1)
         else:
             rating = anilist.get_anime_private_rating(
-                ut.config_data["anilist"]["token"],
-                ut.config_data["anilist"]["user_id"],
+                config.data["anilist"]["token"],
+                config.data["anilist"]["user_id"],
                 anime.anilist_id,
             )
             update_anilist(anime, anime.episode(anime.curr_ep), rating, drop=True)
 
     history.remove(anime)
 
-    ut.console.clear()
+    console.clear()
     if Fzf().run(["esci", "continua"]) == "esci":
         exit()
 
@@ -460,13 +349,13 @@ def main():
     if args.start_config or not (Path(__file__).parent / "config.toml").exists():
         setup_config()
 
-    ut.get_config()
+    config.load()
     history = History.read(str(Path(__file__).parent))
 
     if offline:
         provider = LocalProvider(download.path(), history.get())
     else:
-        provider = create_provider(ut.config_data["provider"]["source"])
+        provider = create_provider(config.data["provider"]["source"])
 
     fzf = Fzf()
     reload = True
@@ -484,7 +373,7 @@ def main():
 
             if not animelist:
                 message = "Cronologia vuota!" if hist else "Nessun anime trovato!"
-                ut.console.print(message, style="error")
+                console.print(message, style="error")
                 exit()
 
         if hist and history.has_ongoing() and args.history != "r" and not offline:
@@ -496,7 +385,7 @@ def main():
 
             Thread(target=background_reload, daemon=True).start()
 
-        ut.console.clear()
+        console.clear()
         prompt = "Scegli un anime: " if args.history != "r" else "Rimuovi un anime: "
         selected_anime = fzf.run(list_anime_names(animelist), prompt)
         selected = int(selected_anime.split("  ")[0]) - 1
@@ -509,8 +398,8 @@ def main():
         provider.info_anime(anime)
 
         if info:
-            ut.console.clear()
-            ut.console.print(anime)
+            console.clear()
+            console.print(anime)
             # stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
             if Fzf().run(["indietro", "guardare"]) == "indietro":
                 continue
@@ -519,7 +408,7 @@ def main():
             provider.episodes(anime)
 
         if len(anime.episodes()) == 0:
-            ut.console.print(
+            console.print(
                 "Eh, volevi! L'anime non è ancora stato rilasciato", style="error"
             )
             sleep(1)
@@ -532,7 +421,7 @@ def main():
                 provider.episodes(anime)
 
             if not ep_corrente.has_next():
-                ut.console.print(
+                console.print(
                     f"L'episodio {ep_corrente.numeric() + 1} di {anime.name} non è ancora stato rilasciato!",
                     style="error",
                 )
