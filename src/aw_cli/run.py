@@ -2,26 +2,24 @@ from pathlib import Path
 from signal import signal, SIGINT
 from .core.config import config
 from .cli.setup_config import setup_config
-from .cli.menus import (
-    ask_select_anime,
-    ask_show_info,
-)
+from .cli.menus import ask_select_anime
 
 from .cli.handlers import (
-    handle_remove_from_history,
     handle_watch_session,
     handle_get_anime_list,
-    handle_resolve_episodes,
-    handle_download,
     handle_background_reload,
     handle_background_fetch,
+    handle_anime_removal,
+    handle_show_info_flow,
+    handle_episode_resolution,
+    handle_download_flow,
 )
 
 from .providers import (
     LocalProvider,
     create_provider,
 )
-from .interface import Fzf, console
+from .interface import Fzf
 from .core.history import history
 from .arg_parser import (
     args,
@@ -54,46 +52,29 @@ def main():
     while True:
         if reload:
             animelist = handle_get_anime_list(provider, hist, latest, offline, args.latest)
-            if not animelist:
-                message = "Cronologia vuota!" if hist else "Nessun anime trovato!"
-                console.print(message, style="error")
-                exit()
 
-        if hist and history.has_ongoing() and args.history != "r" and not offline:
-            handle_background_reload(provider, fzf)
+        handle_background_reload(provider, fzf, hist, offline, args.history)
 
         anime = ask_select_anime(animelist, hist, latest, args.history == "r")
 
-        if args.history == "r":
-            handle_remove_from_history(anime)
+        if handle_anime_removal(anime, args.history):
             continue
 
         provider.info_anime(anime)
 
-        if info and ask_show_info(anime) == "indietro":
+        if handle_show_info_flow(anime, info):
             continue
 
-        episodes, reload_list = handle_resolve_episodes(anime, provider, hist, latest, downl)
-        if not episodes:
-            if not reload_list:
-                reload = False
-            else:
-                if len(animelist) == 1:
-                    exit()
+        episodes, reload = handle_episode_resolution(anime, provider, hist, latest, downl, animelist)
+        if episodes is None:
             continue
 
         episode = episodes[0]
 
-        if downl:
-            answer = handle_download(anime, episodes, provider)
-            if answer == "esci":
-                exit()
-            if answer == "indietro":
-                continue
+        if handle_download_flow(anime, episodes, provider, downl):
+            continue
 
-        needs_fetch = not anime.has_all_episodes()
-        if needs_fetch and not offline:
-            handle_background_fetch(provider, anime)
+        handle_background_fetch(provider, anime, offline)
 
         handle_watch_session(anime, episode, provider, offline, private, args.syncpl)
 

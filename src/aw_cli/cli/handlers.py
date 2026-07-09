@@ -13,6 +13,7 @@ from .menus import (
     ask_select_episodes,
     ask_post_download,
     list_anime_names,
+    ask_show_info,
 )
 from ..interface import Fzf
 from ..core import anilist
@@ -202,13 +203,19 @@ def handle_get_anime_list(
 ) -> list[Anime]:
     """Recupera la lista di anime appropriata in base ai parametri e alla modalità."""
     if offline:
-        return provider.search("")
+        animelist = provider.search("")
     elif hist:
-        return history.get()
+        animelist = history.get()
     elif latest:
-        return provider.latest(latest_filter)
+        animelist = provider.latest(latest_filter)
     else:
-        return handle_search(provider)
+        animelist = handle_search(provider)
+
+    if not animelist:
+        message = "Cronologia vuota!" if hist else "Nessun anime trovato!"
+        console.print(message, style="error")
+        exit()
+    return animelist
 
 
 def handle_resolve_episodes(
@@ -270,8 +277,11 @@ def handle_download(anime: Anime, episodes: list[Anime.Episode], provider: Provi
     return ask_post_download(anime, episode)
 
 
-def handle_background_reload(provider: Provider, fzf: Fzf) -> None:
-    """Ricarica in background le ultime release per aggiornare la lista animelist in fzf."""
+def handle_background_reload(provider: Provider, fzf: Fzf, hist: bool, offline: bool, history_flag: str | None) -> None:
+    """Ricarica in background le ultime release per aggiornare la lista animelist in fzf se necessario."""
+    if not (hist and history.has_ongoing() and history_flag != "r" and not offline):
+        return
+
     def background_reload():
         history.reload(provider.latest())
         animelist_updated = history.get()
@@ -280,9 +290,62 @@ def handle_background_reload(provider: Provider, fzf: Fzf) -> None:
     Thread(target=background_reload, daemon=True).start()
 
 
-def handle_background_fetch(provider: Provider, anime: Anime) -> None:
-    """Avvia il fetch in background di tutti gli episodi per l'anime selezionato."""
-    Thread(target=provider.episodes, args=(anime,), daemon=True).start()
+def handle_background_fetch(provider: Provider, anime: Anime, offline: bool) -> None:
+    """Avvia il fetch in background di tutti gli episodi per l'anime selezionato se necessario."""
+    needs_fetch = not anime.has_all_episodes()
+    if needs_fetch and not offline:
+        Thread(target=provider.episodes, args=(anime,), daemon=True).start()
+
+
+def handle_anime_removal(anime: Anime, history_flag: str | None) -> bool:
+    """Se richiesto dai flag, rimuove l'anime dalla cronologia e ritorna True per indicare che si deve ricominciare il ciclo."""
+    if history_flag == "r":
+        handle_remove_from_history(anime)
+        return True
+    return False
+
+
+def handle_show_info_flow(anime: Anime, info_enabled: bool) -> bool:
+    """Mostra le informazioni dell'anime se abilitato e ritorna True se l'utente sceglie di tornare indietro."""
+    if info_enabled and ask_show_info(anime) == "indietro":
+        return True
+    return False
+
+
+def handle_episode_resolution(
+    anime: Anime,
+    provider: Provider,
+    hist: bool,
+    latest: bool,
+    downl: bool,
+    animelist: list[Anime]
+) -> tuple[list[Anime.Episode] | None, bool]:
+    """
+    Risolve gli episodi dell'anime. In caso di errore o mancato rilascio, decide se
+    ricaricare la lista anime, uscire dal programma o semplicemente continuare,
+    ritornando (episodes, reload_flag).
+    """
+    episodes, reload_list = handle_resolve_episodes(anime, provider, hist, latest, downl)
+    if not episodes:
+        if reload_list and len(animelist) == 1:
+            exit()
+        return None, reload_list
+    return episodes, True
+
+
+def handle_download_flow(
+    anime: Anime,
+    episodes: list[Anime.Episode],
+    provider: Provider,
+    download_enabled: bool
+) -> bool:
+    """Gestisce il flusso di download se abilitato. Ritorna True se l'utente vuole tornare indietro."""
+    if not download_enabled:
+        return False
+    answer = handle_download(anime, episodes, provider)
+    if answer == "esci":
+        exit()
+    return answer == "indietro"
 
 
 
