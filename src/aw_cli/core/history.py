@@ -33,6 +33,14 @@ class History:
 
         return cls(str(history_path), anime_log)
 
+    def load(self, path: str) -> None:
+        """
+        Carica i dati della cronologia in place nel singleton riutilizzando read().
+        """
+        loaded = self.read(path)
+        self._anime_log = loaded._anime_log
+        self._path = loaded._path
+
     def get(self) -> list[Anime]:
         """
         Prende i dati dalla cronologia.
@@ -148,3 +156,6 @@ def legacy() -> list[Anime]:
         animes.append(anime)
 
     return animes
+
+
+history = History()

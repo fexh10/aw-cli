@@ -1,26 +1,21 @@
 
-from _pytest import assertion
-import re
-import shutil
-import subprocess
 from time import sleep
 from pathlib import Path
 from signal import signal, SIGINT
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from typing import Callable
-from rich.prompt import Prompt, FloatPrompt
+from rich.prompt import FloatPrompt
 from .core import (
     anilist,
     download,
 )
 from .core.config import config
 from .cli.setup_config import setup_config
-import toml
+from .cli.menus import ask_search_query, ask_select_anime, ask_select_episodes, ask_show_info, list_anime_names
 from .interface import console
 from .core.env import env
-from .core.config import config
-from .cli.setup_config import setup_config
+
 from .providers import (
     Provider,
     LocalProvider,
@@ -28,7 +23,7 @@ from .providers import (
 )
 from .interface import Fzf, console
 from .core.player import open_player
-from .core.history import History
+from .core.history import history
 from .core.anime import Anime, AnimeStatus
 from .arg_parser import (
     args,
@@ -61,7 +56,7 @@ def search_anime(provider: Provider) -> list[Anime]:
 
     console.clear()
     while True:
-        query = Prompt.ask("Cerca un anime", console=console)
+        query = ask_search_query()
         if res := check_search(query):
             return res
         console.print("La ricerca non ha prodotto risultati", style="error")
@@ -89,25 +84,7 @@ def select_episodes(anime: Anime) -> list[Anime.Episode]:
         return anime._episodes
 
     choices = list(reversed(anime.episodes()))
-
-    if downl:
-        res = (
-            Fzf()
-            .run(
-                choices,
-                prompt="Scegli episodi: ",
-                multi=True,
-                filter=True,
-            )
-            .split("\n")
-        )
-    else:
-        res = (
-            Fzf()
-            .run(choices, "Scegli un episodio: ")
-            .split("\n")
-        )
-
+    res = ask_select_episodes(anime.name, choices, downl)
     return [anime.episode(num) for num in res]
 
 def update_anilist(
@@ -230,39 +207,7 @@ def watch_episode(
         history.update(anime, episode)
 
 
-def list_anime_names(animelist: list[Anime]) -> list[str]:
-    """
-    Genera una lista di stringhe formattate con i
-    nomi degli anime presenti nella lista desiderata.
 
-    Args:
-        animelist (list[Anime]): Una lista Anime.
-
-    Return:
-        list[str]: lista di stringhe formattate.
-    """
-
-    names = []
-    for i, a in reversed(list(enumerate(animelist))):
-        style_name = "success"
-        if (
-            hist
-            and a.curr_ep == a.last_ep
-            and (not a.has_episode(a.curr_ep) or a.episode(a.curr_ep).is_completed())
-        ):
-            style_name = "error"
-
-        name = f"[{style_name}]{i + 1}  [/]"
-
-        if hist:
-            name += f"{a.name} [Ep {a.curr_ep}/{a.info['Episodi']}]"
-        elif latest:
-            name += f"{a.name} [Ep {a.curr_ep}]"
-        else:
-            name += f"{a.name}"
-        names.append(name)
-
-    return names
 
 
 def remove_from_history(anime: Anime) -> None:
@@ -352,7 +297,7 @@ def main():
         setup_config()
 
     config.load()
-    history = History.read(str(Path(__file__).parent))
+    history.load(str(Path(__file__).parent))
 
     if offline:
         provider = LocalProvider(config.download_path, history.get())
@@ -387,11 +332,7 @@ def main():
 
             Thread(target=background_reload, daemon=True).start()
 
-        console.clear()
-        prompt = "Scegli un anime: " if args.history != "r" else "Rimuovi un anime: "
-        selected_anime = fzf.run(list_anime_names(animelist), prompt)
-        selected = int(selected_anime.split("  ")[0]) - 1
-        anime = animelist[selected]
+        anime = ask_select_anime(animelist, hist, latest, args.history == "r")
 
         if args.history == "r":
             remove_from_history(anime)
@@ -399,12 +340,8 @@ def main():
 
         provider.info_anime(anime)
 
-        if info:
-            console.clear()
-            console.print(anime)
-            # stampo piccolo menu per scegliere se guardare l'anime o tornare indietro
-            if Fzf().run(["indietro", "guardare"]) == "indietro":
-                continue
+        if info and ask_show_info(anime) == "indietro":
+            continue
 
         if len(anime.episodes()) == 0:
             provider.episodes(anime)
@@ -471,7 +408,7 @@ def main():
         reload = True
 
 
-history = History()
+
 
 if __name__ == "__main__":
     main()
