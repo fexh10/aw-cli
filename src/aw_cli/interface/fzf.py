@@ -5,6 +5,9 @@ import socket
 import json
 import argparse
 import urllib.request
+from rich.text import Text
+from .console import console
+from ..core.config import config
 
 
 class Fzf:
@@ -21,6 +24,28 @@ class Fzf:
 
     def __init__(self):
         self._port: int = 0
+        self.elements: list[str] = []
+        self.rendered_elements: list[str] = []
+
+    def _render_elements(self, elements: list[str]) -> list[str]:
+        rendered = []
+        for e in elements:
+            with console.capture() as capture:
+                console.print(e, end="")
+            rendered.append(capture.get())
+        return rendered
+
+    def _ansi_to_plain(self, selected_ansi: str) -> str:
+        selected_lines = selected_ansi.split("\n")
+        result_lines = []
+        for line in selected_lines:
+            try:
+                idx = self.rendered_elements.index(line)
+                original_el = self.elements[idx]
+                result_lines.append(Text.from_markup(original_el).plain)
+            except ValueError:
+                result_lines.append(Text.from_ansi(line).plain)
+        return "\n".join(result_lines)
 
     def run(
         self,
@@ -38,16 +63,24 @@ class Fzf:
             multi:    se True abilita la selezione multipla (Ctrl+A = toggle all).
             filter:   se True abilita il filtro per range (formato: inizio-fine).
         """
+        # Converte il prompt usando lo stile "prompt" configurato
+        with console.capture() as capture:
+            console.print(f"[prompt]{prompt}[/]", end="")
+        ansi_prompt = capture.get()
+
+        self.elements = elements
+        self.rendered_elements = self._render_elements(elements)
+
         self._port = self._find_free_port()
         cmd = self._build_cmd(
-            elements=elements, prompt=prompt, multi=multi, filter=filter
+            elements=self.rendered_elements, prompt=ansi_prompt, multi=multi, filter=filter
         )
 
         try:
             while True:
                 process = subprocess.run(
                     cmd,
-                    input="\n".join(elements),
+                    input="\n".join(self.rendered_elements),
                     text=True,
                     stdout=subprocess.PIPE,
                     stderr=None,
@@ -56,8 +89,9 @@ class Fzf:
                 if process.returncode == 130:
                     exit()
 
-                if process.stdout.strip():
-                    return process.stdout.strip()
+                selected_ansi = process.stdout.strip()
+                if selected_ansi:
+                    return self._ansi_to_plain(selected_ansi)
         except KeyboardInterrupt:
             exit()
 
@@ -68,8 +102,10 @@ class Fzf:
         Args:
             new_elements: nuove voci con cui aggiornare la lista di fzf.
         """
+        self.elements = new_elements
+        self.rendered_elements = self._render_elements(new_elements)
 
-        escaped = "\n".join(e.replace("'", "'\\''") for e in new_elements)
+        escaped = "\n".join(e.replace("'", "'\\''") for e in self.rendered_elements)
         action = f"reload(printf '{escaped}')"
 
         req = urllib.request.Request(
@@ -130,7 +166,39 @@ class Fzf:
                 "--header=Range: inizio-fine. crtl+A seleziona tutto, tab/shift+tab selezione singola",
             ]
 
+        cmd += self._get_color_args()
+
         return cmd
+
+    def _get_color_args(self) -> list[str]:
+        from rich.style import Style
+        styles = config.data.get("style", {})
+        mapping = {
+            "general": ["fg", "fg+"],
+            "prompt": ["prompt"],
+        }
+
+        color_options = []
+        for key, fzf_keys in mapping.items():
+            if style_str := styles.get(key):
+                try:
+                    style = Style.parse(style_str)
+                    if style.color:
+                        color = str(style.color.number) if style.color.number is not None else style.color.name.replace("_", "-")
+                        if style.bold:
+                            color += ":bold"
+                        for fzf_key in fzf_keys:
+                            color_options.append(f"{fzf_key}:{color}")
+                except Exception:
+                    pass
+
+        return ["--color", ",".join(color_options)] if color_options else []
+
+
+def _strip_ansi(text: str) -> str:
+    """Rimuove le sequenze di escape ANSI da una stringa."""
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)
 
 
 def _filter_episodes(query: str, episodes_raw: str) -> None:
@@ -155,16 +223,19 @@ def _filter_episodes(query: str, episodes_raw: str) -> None:
         print("\n".join(episodes))
         return
 
-    if "-" in query:
-        parts = query.split("-", 1)
+    query_clean = _strip_ansi(query)
+
+    if "-" in query_clean:
+        parts = query_clean.split("-", 1)
         try:
             lo = float(parts[0]) if parts[0] else None
             hi = float(parts[1]) if parts[1] else None
 
             for e in episodes:
+                e_clean = _strip_ansi(e)
                 e_lo, e_hi = None, None
-                if "-" in e:
-                    e_parts = e.split("-", 1)
+                if "-" in e_clean:
+                    e_parts = e_clean.split("-", 1)
                     try:
                         e_lo = float(e_parts[0]) if e_parts[0] else None
                         e_hi = float(e_parts[1]) if e_parts[1] else None
@@ -172,7 +243,7 @@ def _filter_episodes(query: str, episodes_raw: str) -> None:
                         continue
                 else:
                     try:
-                        e_lo = e_hi = float(e)
+                        e_lo = e_hi = float(e_clean)
                     except ValueError:
                         continue
 
@@ -192,11 +263,12 @@ def _filter_episodes(query: str, episodes_raw: str) -> None:
             pass
     else:
         for e in episodes:
+            e_clean = _strip_ansi(e)
             try:
-                if re.search(query, e):
+                if re.search(query_clean, e_clean):
                     print(e)
             except re.error:
-                if query in e:
+                if query_clean in e_clean:
                     print(e)
 
 

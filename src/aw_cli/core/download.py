@@ -8,29 +8,25 @@ from .env import env
 from .anime import Anime
 from ..providers import Provider
 
-from functools import lru_cache
-
-@lru_cache
-def path(create: bool = True) -> Path:
+def get_anime_dir(anime: Anime, create: bool = True) -> Path:
     """
-    Restituisce il percorso di download dell'anime, a seconda del sistema operativo in uso.
-    Se create è True (valore predefinito) e il percorso non esiste, viene creato.
-
-    Args:
-        create (bool, optional): se impostato a True, crea il percorso se non esiste. Valore predefinito: True.
-
-    Returns:
-        Path: il percorso di download dell'anime.
+    Restituisce la cartella di download specifica per l'anime,
+    sanitizzando il nome per i vincoli del filesystem.
     """
-
-    if env.is_android:
-        path = Path("/sdcard/Movies/Anime")
-    else:
-        path = Path.home() / "Videos/Anime"
-
+    sanitized_name = env.sanitize_filename(anime.name)
+    anime_dir = config.download_path / sanitized_name
     if create:
-        path.mkdir(parents=True, exist_ok=True)
-    return path
+        anime_dir.mkdir(parents=True, exist_ok=True)
+    return anime_dir
+
+def get_episode_path(anime: Anime, ep: Anime.Episode, create: bool = True) -> Path:
+    """
+    Restituisce il percorso completo sul filesystem del file dell'episodio,
+    sanitizzando sia la cartella dell'anime che il nome del file .mp4.
+    """
+    anime_dir = get_anime_dir(anime, create=create)
+    sanitized_filename = env.sanitize_filename(f"{ep}.mp4")
+    return anime_dir / sanitized_filename
 
 def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) -> None:
     """
@@ -43,16 +39,16 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
     """
     async def download_worker(ep: Anime.Episode, task_id: TaskID, progress: Progress, sem: asyncio.Semaphore):
         async with sem:
-            filename = path() / anime.name / f"{ep}.mp4"
+            filename = get_episode_path(anime, ep)
             if filename.exists():
-                progress.update(task_id, completed=100, total=100, description=f"[green]Ep. {ep.num} (Esistente)")
+                progress.update(task_id, completed=100, total=100, description=f"[success]Ep. {ep.num} (Esistente)")
                 return
 
             filename.parent.mkdir(parents=True, exist_ok=True)
             try:
                 url = provider.episode_link(anime, ep)
             except Exception as e:
-                progress.console.print(f"[red]Errore link Ep. {ep.num}: {e}")
+                progress.console.print(f"[error]Errore link Ep. {ep.num}: {e}")
                 return
 
             try:

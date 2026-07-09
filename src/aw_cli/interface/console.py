@@ -7,6 +7,5 @@ from ..core.config import config
 console = Console(
     theme=Theme(config.data["style"]),
     highlight=False,
-    force_terminal=True,
-    style=config.data["style"].get("general")
+    force_terminal=True
 )

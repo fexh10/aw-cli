@@ -16,10 +16,13 @@ def test_console_theme_updates_with_config():
 
         # Verifichiamo che il tema della console si sia effettivamente aggiornato
         style_in_theme = console.get_style("error")
+        assert style_in_theme.color is not None
         assert style_in_theme.color.name == "blue"
 
-        # Verifichiamo lo stile generale di default della console
-        assert console.style == "green"
+        # Verifichiamo lo stile generale di default della console nel tema
+        general_style = console.get_style("general")
+        assert general_style.color is not None
+        assert general_style.color.name == "green"
 
     finally:
         # Ripristiniamo lo stile iniziale

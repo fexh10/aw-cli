@@ -19,12 +19,14 @@ from .cli.setup_config import setup_config
 import toml
 from .interface import console
 from .core.env import env
+from .core.config import config
+from .cli.setup_config import setup_config
 from .providers import (
     Provider,
     LocalProvider,
     create_provider,
 )
-from .interface import Fzf
+from .interface import Fzf, console
 from .core.player import open_player
 from .core.history import History
 from .core.anime import Anime, AnimeStatus
@@ -205,10 +207,10 @@ def watch_episode(
         )
 
     # se il video è già stato scaricato lo riproduco invece di farlo in streaming
-    path = f"{download.path(create=False)}/{anime.name}/{episode}.mp4"
+    local_file = download.get_episode_path(anime, episode, create=False)
 
-    if Path(path).exists():
-        ep_url = path if env.is_android else "file://" + path
+    if local_file.exists():
+        ep_url = str(local_file) if env.is_android else "file://" + str(local_file)
     else:
         ep_url = provider.episode_link(anime, episode)
 
@@ -242,15 +244,15 @@ def list_anime_names(animelist: list[Anime]) -> list[str]:
 
     names = []
     for i, a in reversed(list(enumerate(animelist))):
-        colour = 2  # 2 verde, 1 rosso
+        style_name = "success"
         if (
             hist
             and a.curr_ep == a.last_ep
             and (not a.has_episode(a.curr_ep) or a.episode(a.curr_ep).is_completed())
         ):
-            colour = 1
+            style_name = "error"
 
-        name = f"\033[0;3{colour}m{i + 1}  \033[0;37m"
+        name = f"[{style_name}]{i + 1}  [/]"
 
         if hist:
             name += f"{a.name} [Ep {a.curr_ep}/{a.info['Episodi']}]"
@@ -346,14 +348,14 @@ def main():
     global history
 
     # se il file di configurazione non esiste viene chiesto all'utente di fare il setup
-    if args.start_config or not (Path(__file__).parent / "config.toml").exists():
+    if args.start_config or not config.path.exists():
         setup_config()
 
     config.load()
     history = History.read(str(Path(__file__).parent))
 
     if offline:
-        provider = LocalProvider(download.path(), history.get())
+        provider = LocalProvider(config.download_path, history.get())
     else:
         provider = create_provider(config.data["provider"]["source"])
 
