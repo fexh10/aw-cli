@@ -1,14 +1,15 @@
 import re
 import subprocess
 from pathlib import Path
-from .utilities import config_data, os_name
+from .utilities import config_data
+from .env import env
 from typing import Callable
 
 def open_player(ep_url: str, ep_name: str, progress: int, syncplay: bool) -> tuple[bool, int]:
     """
     Decide ed avvia il player corretto in base alle condizioni e alla configurazione.
     """
-    if os_name == "Android":
+    if env.is_android:
         return android_player(ep_url, ep_name, progress)
 
     if syncplay and "syncplay" in config_data:

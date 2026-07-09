@@ -1,9 +1,9 @@
 import toml
-import subprocess
 from pathlib import Path
 from rich.console import Console
 from rich.theme import Theme
 from collections import defaultdict
+from .env import env
 
 config_data = defaultdict(dict)
 
@@ -19,38 +19,7 @@ DEFAULT_STYLE = {
 
 console = Console(theme=Theme(DEFAULT_STYLE), highlight=False)
 
-# controllo il tipo del dispositivo
-def get_os() -> str:
-    result = subprocess.run(["uname", "-a"], capture_output=True, text=True, check=False)
-    out = result.stdout.strip().split()
-    os_name = out[0]
-    if os_name == "Linux":
-        if "Android" == out[-1]:
-            os_name = "Android"
-        elif "WSL" in out[2]:
-            os_name = "WSL"
-    return os_name
 
-os_name = get_os()
-
-def sanitize_filename(filename: str) -> str:
-    """
-    Sanitizza il nome del file rimuovendo i caratteri non validi.
-
-    Args:
-        filename (str): il nome del file da sanitizzare.
-
-    Returns:
-        str: il nome del file sanitizzato.
-    """
-    if os_name != "Android":
-        return filename
-
-    forbidden_char = '"*/:<>?\\|'
-    replace_char = '”⁎∕꞉‹›︖＼⏐'
-    for a, b in zip(forbidden_char, replace_char):
-        filename = filename.replace(a, b)
-    return filename
 
 def get_config() -> None:
     """
@@ -81,8 +50,8 @@ def get_config() -> None:
     global console
     console = Console(theme=Theme(config_data["style"]), highlight=False)
 
-    if os_name == "WSL":
-        config_data["player"]["path"] = f'''"$(wslpath '{config_data["player"]["path"]}')"'''
+    if env.is_wsl:
+        config_data["player"]["path"] = env.wrap_path_for_wsl(config_data["player"]["path"])
         if "syncplay" in config_data:
             config_data["syncplay"]["path"] = f"/mnt/c/Windows/System32/cmd.exe /C '{config_data['syncplay']['path']}'"
 

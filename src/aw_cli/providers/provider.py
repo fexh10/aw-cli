@@ -3,6 +3,7 @@ from curses import error
 from httpx import Client, HTTPError  # , AsyncClient
 from ..core.anime import Anime
 from ..core import utilities as ut
+from ..core.env import env
 
 
 def error_handler(relink=False):
@@ -88,7 +89,7 @@ class Provider(ABC):
         ut.console.print("Ricerco...", style="warning")
         res = self._search(input)
         for anime in res:
-            anime.name = ut.sanitize_filename(anime.name)
+            anime.name = env.sanitize_filename(anime.name)
         return res
 
     @abstractmethod

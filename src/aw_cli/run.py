@@ -15,6 +15,7 @@ from .core import (
     download,
     utilities as ut,
 )
+from .core.env import env
 from .providers import (
     Provider,
     LocalProvider,
@@ -204,7 +205,7 @@ def watch_episode(
     path = f"{download.path(create=False)}/{anime.name}/{episode}.mp4"
 
     if Path(path).exists():
-        ep_url = path if ut.os_name == "Android" else "file://" + path
+        ep_url = path if env.is_android else "file://" + path
     else:
         ep_url = provider.episode_link(anime, episode)
 
@@ -242,7 +243,7 @@ def setup_config() -> None:
     ut.config_data["player"]["type"] = Fzf().run(
         ["vlc", "mpv"], "Scegli il player predefinito: "
     )
-    if ut.os_name != "Android":
+    if env.supports_syncplay:
         path = shutil.which(ut.config_data["player"]["type"])
         if path is None:
             ut.console.print(
@@ -272,20 +273,7 @@ def setup_config() -> None:
         == "sì"
     ):
         link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
-        if ut.os_name == "Darwin":
-            subprocess.run(
-                f"open '{link}'",
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        else:
-            subprocess.run(
-                f"xdg-open '{link}'",
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
+        env.open_url(link)
 
         # inserimento token
         ut.console.clear()
@@ -329,7 +317,7 @@ def setup_config() -> None:
             ut.config_data["anilist"]["user_id"] = future.result()
 
     # syncplay
-    if ut.os_name != "Android":
+    if env.supports_syncplay:
         syncplay_path = shutil.which("syncplay")
         if syncplay_path is None:
             ut.console.print("Syncplay non trovato!", style="error")

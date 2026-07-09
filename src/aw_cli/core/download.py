@@ -3,6 +3,7 @@ from pathlib import Path
 from httpx import AsyncClient
 from rich.progress import Progress, BarColumn, TextColumn, TaskID, DownloadColumn, TransferSpeedColumn
 from . import utilities as ut
+from .env import env
 from .anime import Anime
 from ..providers import Provider
 
@@ -21,7 +22,7 @@ def path(create: bool = True) -> Path:
         Path: il percorso di download dell'anime.
     """
 
-    if (ut.os_name == "Android"):
+    if env.is_android:
         path = Path("/sdcard/Movies/Anime")
     else:
         path = Path.home() / "Videos/Anime"

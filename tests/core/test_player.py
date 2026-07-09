@@ -17,7 +17,7 @@ def mock_config(monkeypatch):
     return config
 
 def test_open_player_android(monkeypatch):
-    monkeypatch.setattr(player, "os_name", "Android")
+    monkeypatch.setattr(player.env, "os_name", "Android")
     mock_android = MagicMock(return_value=(True, 0))
     monkeypatch.setattr(player, "android_player", mock_android)
 
@@ -25,7 +25,7 @@ def test_open_player_android(monkeypatch):
     mock_android.assert_called_once_with("http://example.com/video.mp4", "Test Episode", 100)
 
 def test_open_player_syncplay(monkeypatch, mock_config):
-    monkeypatch.setattr(player, "os_name", "Linux")
+    monkeypatch.setattr(player.env, "os_name", "Linux")
     mock_syncplay = MagicMock(return_value=(True, 0))
     monkeypatch.setattr(player, "open_syncplay", mock_syncplay)
 
@@ -33,7 +33,7 @@ def test_open_player_syncplay(monkeypatch, mock_config):
     mock_syncplay.assert_called_once_with("http://example.com/video.mp4", "Test Episode", 100)
 
 def test_open_player_mpv(monkeypatch, mock_config):
-    monkeypatch.setattr(player, "os_name", "Linux")
+    monkeypatch.setattr(player.env, "os_name", "Linux")
     mock_mpv = MagicMock(return_value=(True, 0))
     monkeypatch.setattr(player, "open_mpv", mock_mpv)
 
@@ -55,7 +55,7 @@ def test_android_player(monkeypatch):
     assert "http://example.com/video.mp4" in args[0]
 
 def test_open_mpv_linux_success(monkeypatch, mock_config):
-    monkeypatch.setattr(player, "os_name", "Linux")
+    monkeypatch.setattr(player.env, "os_name", "Linux")
 
     mock_result = MagicMock()
     mock_result.returncode = 0
@@ -79,7 +79,7 @@ def test_open_mpv_linux_success(monkeypatch, mock_config):
     )
 
 def test_open_mpv_linux_complete(monkeypatch, mock_config):
-    monkeypatch.setattr(player, "os_name", "Linux")
+    monkeypatch.setattr(player.env, "os_name", "Linux")
 
     mock_result = MagicMock()
     mock_result.returncode = 0
@@ -96,7 +96,7 @@ def test_open_mpv_linux_complete(monkeypatch, mock_config):
     assert progress == 1080
 
 def test_open_mpv_linux_failure(monkeypatch, mock_config):
-    monkeypatch.setattr(player, "os_name", "Linux")
+    monkeypatch.setattr(player.env, "os_name", "Linux")
 
     mock_result = MagicMock()
     mock_result.returncode = 1
@@ -111,7 +111,7 @@ def test_open_mpv_linux_failure(monkeypatch, mock_config):
     assert "Impossibile leggere l'output di MPV" in str(exc_info.value)
 
 def test_open_syncplay_success(monkeypatch, mock_config):
-    monkeypatch.setattr(player, "os_name", "Linux")
+    monkeypatch.setattr(player.env, "os_name", "Linux")
 
     mock_result = MagicMock()
     mock_result.returncode = 0
@@ -134,7 +134,7 @@ def test_open_syncplay_success(monkeypatch, mock_config):
     assert "--force-media-title=\"Test Episode\"" in args[0]
 
 def test_open_syncplay_failure(monkeypatch, mock_config):
-    monkeypatch.setattr(player, "os_name", "Linux")
+    monkeypatch.setattr(player.env, "os_name", "Linux")
 
     mock_result = MagicMock()
     mock_result.returncode = 1
