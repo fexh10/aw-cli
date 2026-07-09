@@ -21,6 +21,7 @@ from .providers import (
     create_provider,
 )
 from .interface import Fzf
+from .core.player import open_player
 from .core.history import History
 from .core.anime import Anime, AnimeStatus
 from .arg_parser import (
@@ -102,151 +103,6 @@ def select_episodes(anime: Anime) -> list[Anime.Episode]:
         )
 
     return [anime.episode(num) for num in res]
-
-
-def open_syncplay(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
-    """
-    Avvia Syncplay.
-
-    Args:
-        ep_url (str): l'URL dell'episodio da riprodurre.
-        ep_name (str): il nome dell'episodio.
-        progress (int): il progresso dell'episodio.
-
-    Returns:
-        bool: True se l'episodio è stato riprodotto completamente, altrimenti False.
-        int: il progresso dell'episodio.
-    """
-
-    if "syncplay" not in ut.config_data:
-        ut.console.print(
-            "Aggiornare il path di syncplay nella configurazione tramite: aw-cli -a",
-            style="error",
-        )
-        exit()
-
-    args = f'''--force-media-title="{ep_name}" --start="{progress}" --fullscreen --keep-open'''
-    if ut.config_data.get("player", {}).get("type") == "vlc":
-        args = f'''--meta-title "{ep_name}" --start-time="{progress}" --fullscreen'''
-
-    try:
-        command = f'''{ut.config_data["syncplay"]["path"]} -d --language it "{ep_url}" -- {args}'''
-        result = subprocess.run(
-            command, shell=True, capture_output=True, text=True, check=False
-        )
-        out = result.stdout
-    except UnicodeDecodeError:
-        out = ""
-
-    duration_match = re.findall(r'duration(?:-change)?"?: (\d+)\.?[\d]*', out)
-    progress_match = re.findall(r'pos(?:ition"?)?:? (\d+).?\d+', out)
-    if not duration_match:
-        ut.console.print(
-            "Errore, impossibile leggere l'output di Syncplay!", style="error"
-        )
-        return False, 0
-
-    duration = max(map(int, duration_match))
-    progress_match = list(filter(lambda x: x > 0, map(int, progress_match)))
-    progress = progress_match[-1] if progress_match else 0
-
-    return (
-        progress * 100 // duration >= complete_limit if duration > 0 else False,
-        progress,
-    )
-
-
-def open_mpv(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
-    """
-    Apre MPV per riprodurre il video.
-
-    Args:
-        ep_url (str): il link del video o il percorso del file.
-        ep_name (str): il nome del video.
-        progress (int): il progresso dell'episodio.
-
-    Returns:
-        bool: True se l'episodio è stato riprodotto completamente, altrimenti False.
-        int: il progresso dell'episodio.
-    """
-
-    if ut.os_name == "Android":
-        subprocess.run(
-            f'am start --user 0 -a android.intent.action.VIEW -d "{ep_url}" -n is.xyz.mpv/.MPVActivity',
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        return True, 0
-
-    command = [
-        ut.config_data["player"]["path"],
-        ep_url,
-        f"--force-media-title={ep_name}",
-        f"--start={progress}",
-        "--fullscreen",
-        "--keep-open",
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
-
-    if res := re.findall(r"(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)", result.stdout):
-        last = res[-1]
-        return (
-            int(last[3]) >= complete_limit,
-            ((int(last[0]) * 3600) + (int(last[1]) * 60) + int(last[2])),
-        )
-
-    raise RuntimeError(
-        f"Impossibile leggere l'output di MPV durante la riproduzione di {ep_url}! "
-        f"returncode={result.returncode}\n"
-        f"stdout={result.stdout!r}\n"
-    )
-
-
-def open_vlc(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
-    """
-    Apre VLC per riprodurre il video.
-
-    Args:
-        ep_url (str): il link del video o il percorso del file.
-        ep_name (str): il nome del video.
-        progress (int): il progresso dell'episodio.
-
-    Returns:
-        bool: True se l'episodio è stato riprodotto completamente, altrimenti False.
-        int: il progresso dell'episodio.
-    """
-
-    if ut.os_name == "Android":
-        subprocess.run(
-            f'am start --user 0 -a android.intent.action.VIEW -d "{ep_url}" -n org.videolan.vlc/.StartActivity -e "title" "{ep_name}"',
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        return True, 0
-
-    subprocess.run(
-        f'{ut.config_data["player"]["path"]} "{ep_url}" --meta-title "{ep_name}" --start-time="{progress}" --fullscreen',
-        shell=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-    # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
-    progress = 0
-    vlc_config_path = Path.home() / ".config/vlc/vlc-qt-interface.conf"  # Linux
-    if vlc_config_path.exists():
-        with open(vlc_config_path, "r") as file:
-            config = [line.strip() for line in file.readlines()]
-            index = config.index("[RecentsMRL]")
-            urls = config[index + 1].split("=")[1].split(", ")
-            positions = config[index + 2].split("=")[1].split(", ")
-        progress = int(positions[urls.index(ep_url)]) // 1000 if ep_url in urls else 0
-
-    # Non informazioni sulla durata: suppongo che sia completato
-    return True, progress
-
 
 def update_anilist(
     anime: Anime,
@@ -354,7 +210,7 @@ def watch_episode(
 
     ut.console.clear()
     ut.console.print(f"Riproduco {episode}...", style="info")
-    completed, progress = open_player(ep_url, str(episode), episode.progress)
+    completed, progress = open_player(ep_url, str(episode), episode.progress, args.syncpl)
 
     if not private:
         episode.set_progress(progress)
@@ -610,7 +466,6 @@ def create_ep_menu(
 
 
 def main():
-    global open_player
     global history
 
     # se il file di configurazione non esiste viene chiesto all'utente di fare il setup
@@ -624,11 +479,6 @@ def main():
         provider = LocalProvider(download.path(), history.get())
     else:
         provider = create_provider(ut.config_data["provider"]["source"])
-
-    if ut.config_data["player"]["type"] == "vlc":
-        open_player = open_vlc
-    if ut.os_name != "Android" and args.syncpl:
-        open_player = open_syncplay
 
     fzf = Fzf()
     reload = True
@@ -743,8 +593,6 @@ def main():
 
 
 history = History()
-open_player = open_mpv
-complete_limit = 90
 
 if __name__ == "__main__":
     main()

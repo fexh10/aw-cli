@@ -62,10 +62,13 @@ def get_config() -> None:
     """
     global config_data
 
-    config_path = Path(__file__).parent / "config.toml"
+    config_path = Path(__file__).parent.parent / "config.toml"
 
     with open(config_path, 'r') as f:
-        config_data = toml.load(f)
+        data = toml.load(f)
+
+    config_data.clear()
+    config_data.update(data)
 
     # Merge with default styles if missing
     if "style" not in config_data:
@@ -85,3 +88,5 @@ def get_config() -> None:
 
     if "specials" not in config_data["general"]:
         config_data["general"]["specials"] = False
+    if "complete_limit" not in config_data["player"]:
+        config_data["player"]["complete_limit"] = 90
