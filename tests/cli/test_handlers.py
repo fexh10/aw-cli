@@ -83,3 +83,34 @@ def test_handle_resolve_episodes(episodes_list, hist, latest, expected_res, expe
         res, reload_list = handle_resolve_episodes(anime, provider, hist=hist, latest=latest, downl=False)
         assert res == expected_res
         assert reload_list == expected_reload
+
+
+# Tests for CliApp
+def test_cliapp_init():
+    from aw_cli.run import CliApp
+    with patch("aw_cli.run.Fzf") as mock_fzf:
+        app = CliApp()
+        assert app.provider is None
+        assert app.reload is True
+        assert app.animelist == []
+        mock_fzf.assert_called_once()
+
+
+def test_cliapp_setup():
+    from aw_cli.run import CliApp
+    app = CliApp()
+    with patch("aw_cli.run.config") as mock_config, \
+         patch("aw_cli.run.history") as mock_history, \
+         patch("aw_cli.run.create_provider") as mock_create_provider, \
+         patch("aw_cli.run.args") as mock_args:
+
+        mock_config.path.exists.return_value = True
+        mock_args.start_config = False
+        mock_args.action = "search"
+        mock_config.data = {"provider": {"source": "animeworld"}}
+
+        app.setup()
+
+        mock_config.load.assert_called_once()
+        mock_history.load.assert_called_once()
+        mock_create_provider.assert_called_once_with("animeworld")

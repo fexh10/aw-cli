@@ -4,62 +4,22 @@ from .core.env import env
 from importlib.metadata import version
 from .update import update
 
-class Update(argparse.Action):
+class UpdateAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         update(str(values) if values else "")
         parser.exit()
 
-# args
-downl = False
-latest = False
-offline = False
-hist = False
-info = False
-private = False
-
-# args
+# Parser principale
 parser = argparse.ArgumentParser(
     "aw-cli",
     description="Guarda anime dal terminale e molto altro!",
-    add_help=False
+    add_help=True
 )
 
-info_group = parser.add_argument_group("Informazioni")
-options_group = parser.add_argument_group("Opzioni")
-config_group = parser.add_argument_group("Configurazione")
+# Parent parser con le opzioni comuni ereditabili dai subcomandi
+parent_parser = argparse.ArgumentParser(add_help=False)
 
-info_group.add_argument(
-    '-h',
-    '--help',
-    action='help',
-    help="mostra questo messaggio"
-)
-
-info_group.add_argument(
-    '-v',
-    '--versione',
-    action='version',
-    version=version("aw-cli"), help="stampa la versione del programma"
-)
-
-options_group.add_argument(
-    '-c',
-    '--cronologia',
-    nargs='?',
-    choices=['r'], dest='history',
-    help='continua a guardare un anime dalla cronologia. \'r\' per rimuovere un anime (opzionale)'
-)
-
-options_group.add_argument(
-    '-l',
-    '--lista',
-    nargs='?',
-    choices=['a', 's', 'd', 't'],
-    dest='latest',
-    help="lista degli ultimi anime usciti. Filtri: a = all, s = sub, d = dub, t = tendenze. Default 'a'"
-)
-
-options_group.add_argument(
+parent_parser.add_argument(
     '-i',
     '--info',
     action='store_true',
@@ -67,8 +27,24 @@ options_group.add_argument(
     help='visualizza le informazioni e la trama di un anime'
 )
 
+parent_parser.add_argument(
+    '-d',
+    '--download',
+    action='store_true',
+    dest='download',
+    help='scarica gli episodi che preferisci'
+)
+
+parent_parser.add_argument(
+    '-p',
+    '--privato',
+    action='store_true',
+    dest='private',
+    help='guarda un episodio senza che si aggiorni la cronologia o AniList'
+)
+
 if env.supports_syncplay:
-    options_group.add_argument(
+    parent_parser.add_argument(
         '-s',
         '--syncplay',
         action='store_true',
@@ -76,39 +52,25 @@ if env.supports_syncplay:
         help='usa syncplay per guardare un anime insieme ai tuoi amici'
     )
 
-options_group.add_argument(
-    '-d',
-    '--download',
-    action='store_true',
-    dest='download', help='scarica gli episodi che preferisci'
+# Opzioni generali del parser principale (non ereditate)
+parser.add_argument(
+    '-v',
+    '--versione',
+    action='version',
+    version=version("aw-cli"),
+    help="stampa la versione del programma"
 )
 
-options_group.add_argument(
-    '-o',
-    '--offline',
-    action='store_true',
-    dest='offline',
-    help='apri gli episodi scaricati precedentemente direttamente dal terminale'
-)
-
-options_group.add_argument(
-    '-p',
-    '--privato',
-    action='store_true',
-    dest='private',
-    help="guarda un episodio senza che si aggiorni la cronologia o AniList"
-)
-
-options_group.add_argument(
+parser.add_argument(
     '-u',
     '--update',
     nargs='?',
-    action=Update,
+    action=UpdateAction,
     type=str,
     help='aggiorna il programma',
 )
 
-config_group.add_argument(
+parser.add_argument(
     '-a',
     '--configurazione',
     action='store_true',
@@ -116,23 +78,60 @@ config_group.add_argument(
     help='avvia il menu di configurazione'
 )
 
-args = parser.parse_args()
+# Configurazione dei Subcomandi
+subparsers = parser.add_subparsers(dest='command', help='Comandi disponibili')
 
-if args.offline:
-    offline = True
-    hist = True
-elif args.history == 'r':
-        hist = True
-else:
-    if args.info:
-        info = True
-    if args.download:
-        downl = True
-    if args.latest or '-l' in sys.argv:
-        if args.latest is None:
-            args.latest = 'a'
-        latest = True
-    if args.private:
-        private = True
-    if '-c' in sys.argv:
-        hist = True
+# Default/Fallback action per il parser principale se nessun comando viene specificato
+parser.set_defaults(action='search')
+
+# Comando cerca
+parser_search = subparsers.add_parser(
+    'cerca',
+    aliases=['s', 'search'],
+    parents=[parent_parser],
+    help='Cerca un anime online (default)'
+)
+parser_search.set_defaults(action='search')
+
+# Comando cronologia
+parser_hist = subparsers.add_parser(
+    'cronologia',
+    aliases=['c', 'history'],
+    parents=[parent_parser],
+    help='Visualizza la cronologia degli anime'
+)
+parser_hist.add_argument(
+    '-r',
+    '--rimuovi',
+    action='store_true',
+    dest='remove',
+    help='Rimuovi un anime dalla cronologia'
+)
+parser_hist.set_defaults(action='history')
+
+# Comando lista
+parser_latest = subparsers.add_parser(
+    'lista',
+    aliases=['l', 'latest'],
+    parents=[parent_parser],
+    help='Visualizza gli ultimi anime rilasciati'
+)
+parser_latest.add_argument(
+    'filter',
+    nargs='?',
+    choices=['a', 's', 'd', 't'],
+    default='a',
+    help="Filtro per ultime release: a = all, s = sub, d = dub, t = tendenze. Default 'a'"
+)
+parser_latest.set_defaults(action='latest')
+
+# Comando offline
+parser_offline = subparsers.add_parser(
+    'offline',
+    aliases=['o'],
+    parents=[parent_parser],
+    help='Apri gli episodi scaricati precedentemente offline'
+)
+parser_offline.set_defaults(action='offline')
+
+args = parser.parse_args()
