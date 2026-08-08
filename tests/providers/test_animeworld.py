@@ -1,3 +1,4 @@
+import re
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -74,10 +75,13 @@ class TestAnimeworld:
         aw.Client.get.return_value = mock_response
 
         video_url = aw._episode_link(anime, episode)
-        assert (
-            video_url
-            == "https://srv23-abbaia.sweetpixel.org/DDL/ANIME/Naruto/Naruto_Ep_001_SUB_ITA.mp4"
-        )
+        # Il sottodominio del CDN (es. "srv23-masafi") ruota nel tempo e le
+        # fixtures si rigenerano dal vivo: verifichiamo la struttura stabile
+        # dell'URL (dominio + path) senza fissare l'host volatile.
+        assert re.fullmatch(
+            r"https://[\w.-]+\.sweetpixel\.org/DDL/ANIME/Naruto/Naruto_Ep_001_SUB_ITA\.mp4",
+            video_url,
+        ), f"URL video inatteso: {video_url}"
 
 
     def test_animeworld_info_anime(self, aw):
