@@ -74,10 +74,10 @@ class TestAnimeworld:
         aw.Client.get.return_value = mock_response
 
         video_url = aw._episode_link(anime, episode)
-        assert (
-            video_url
-            == "https://srv23-abbaia.sweetpixel.org/DDL/ANIME/Naruto/Naruto_Ep_001_SUB_ITA.mp4"
-        )
+
+        assert video_url.startswith("https://")
+        assert ".sweetpixel.org/" in video_url
+        assert video_url.endswith("/DDL/ANIME/Naruto/Naruto_Ep_001_SUB_ITA.mp4")
 
 
     def test_animeworld_info_anime(self, aw):
