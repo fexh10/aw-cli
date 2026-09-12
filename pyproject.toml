@@ -7,6 +7,7 @@ license = "GPL-3.0"
 requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.28.1",
+    "pip>=26.2.0",
     "pip-system-certs>=5.2",
     "pydantic>=2.12.5",
     "regex>=2025.9.18",
