@@ -1,4 +1,5 @@
 import asyncio
+import re
 from pathlib import Path
 from httpx import AsyncClient
 from rich.progress import Progress, BarColumn, TextColumn, TaskID, DownloadColumn, TransferSpeedColumn
@@ -17,6 +18,45 @@ DEFAULT_CONNECTIONS = 4
 # Dimensione dei blocchi letti dallo stream. 1 MB riduce drasticamente
 # l'overhead rispetto a letture da 1 KB su file di centinaia di MB.
 CHUNK_SIZE = 1024 * 1024
+
+def _segment_ranges(total: int, connections: int) -> list[tuple[int, int]]:
+    """
+    Divide un download in intervalli byte inclusivi, evitando segmenti vuoti.
+    """
+    if total <= 0 or connections <= 0:
+        return []
+
+    connections = min(connections, total)
+    base_size, remainder = divmod(total, connections)
+    ranges = []
+    start = 0
+    for i in range(connections):
+        size = base_size + (1 if i < remainder else 0)
+        end = start + size - 1
+        ranges.append((start, end))
+        start = end + 1
+    return ranges
+
+def _valid_partial_response(response, start: int, end: int, total: int) -> bool:
+    """
+    Verifica che il server abbia rispettato il Range richiesto.
+    """
+    if response.status_code != 206:
+        return False
+
+    content_range = response.headers.get("content-range", "")
+    match = re.fullmatch(r"bytes (\d+)-(\d+)/(\d+|\*)", content_range)
+    if not match:
+        return False
+
+    actual_start = int(match.group(1))
+    actual_end = int(match.group(2))
+    actual_total = match.group(3)
+    return (
+        actual_start == start
+        and actual_end == end
+        and (actual_total == "*" or int(actual_total) == total)
+    )
 
 @lru_cache
 def path(create: bool = True) -> Path:
@@ -70,6 +110,7 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
             async def single_stream(client: AsyncClient) -> None:
                 """Scarica l'episodio con un'unica connessione (fallback)."""
                 async with client.stream("GET", url, headers=headers) as response:
+                    response.raise_for_status()
                     total = int(response.headers.get('content-length', 0))
                     progress.update(task_id, total=total or None)
                     with open(temp_filename, "wb") as f:
@@ -81,6 +122,10 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                 """Scarica l'intervallo di byte [start, end] e lo scrive alla sua posizione nel file."""
                 seg_headers = {**headers, "Range": f"bytes={start}-{end}"}
                 async with client.stream("GET", url, headers=seg_headers) as response:
+                    if not _valid_partial_response(response, start, end, total):
+                        raise ValueError(
+                            f"Risposta Range non valida per bytes={start}-{end}"
+                        )
                     with open(temp_filename, "r+b") as f:
                         f.seek(start)
                         async for chunk in response.aiter_bytes(CHUNK_SIZE):
@@ -93,6 +138,7 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                     accept_ranges = False
                     try:
                         head = await client.head(url, headers=headers)
+                        head.raise_for_status()
                         total = int(head.headers.get('content-length', 0))
                         accept_ranges = head.headers.get('accept-ranges', '').lower() == 'bytes'
                     except Exception:
@@ -104,12 +150,10 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                         progress.update(task_id, total=total)
                         with open(temp_filename, "wb") as f:
                             f.truncate(total)
-                        segment_size = total // connections
-                        segments = []
-                        for i in range(connections):
-                            start = i * segment_size
-                            end = total - 1 if i == connections - 1 else start + segment_size - 1
-                            segments.append(download_segment(client, start, end))
+                        segments = [
+                            download_segment(client, start, end)
+                            for start, end in _segment_ranges(total, connections)
+                        ]
                         await asyncio.gather(*segments)
                     else:
                         # Server senza supporto ai range (o dimensione ignota): fallback.
