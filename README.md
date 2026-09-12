@@ -3,7 +3,7 @@
 
 Guarda anime dal terminale e molto altro!
 
- Gli anime vengono presi da [Animeworld](https://www.animeworld.ac/) e [Animeunity](https://www.animeunity.so/)
+  Gli anime vengono presi da [Animeworld](https://www.animeworld.ac/), [Animeunity](https://www.animeunity.so/) e [AnimeSaturn](https://www.animesaturn.net/)
 
 </h3>
 
@@ -74,7 +74,7 @@ uv tool install aw-cli
 
 ## Problemi noti
 
-- Se è impossibile avviare `aw-cli`, è possibile che non si abbia la cartella degli script Python aggiunta al path. <br /> 
+- Se è impossibile avviare `aw-cli`, è possibile che non si abbia la cartella degli script Python aggiunta al path. <br />
 
   <details> <summary><b>Linux/Windows WSL</b></summary>
   Aggiungere la seguente linea al file di profilo (.bashrc, .zshrc, o altro):
@@ -93,7 +93,7 @@ uv tool install aw-cli
   export PATH=$PATH:$HOME/Library/Python/3.x/bin
   ```
   Sostituire `3.x` con la propria versione di Python. <br>
-  Riavviare il terminale o eseguire `source ~/.bashrc`. 
+  Riavviare il terminale o eseguire `source ~/.bashrc`.
   </details>
 
   <details> <summary><b>Windows Legacy</b></summary>
@@ -103,7 +103,7 @@ uv tool install aw-cli
   setx PATH "%PATH%;%APPDATA%\Local\Programs\Python\Python3x\Scripts
   ```
   Sostituire `3.x` con la propria versione di Python. <br/>
-  Se necessario, riavviare il sistema. 
+  Se necessario, riavviare il sistema.
   </details>
 
 - Se il programma si avvia ma appare "Errore di connessione", potrebbe essere un problema relativo ai certificati SSL. Scaricare il certificato `SSL.com TLS Transit ECC CA R2` al seguente [link](https://ssl.com/repo/certs/SSL.com-TLS-T-ECC-R2.pem) ed eseguire il comando:
@@ -136,7 +136,7 @@ Opzioni:
                         aggiorna il programma
 
 Configurazione:
-  -a, --configurazione  avvia il menu di configurazione                                                    
+  -a, --configurazione  avvia il menu di configurazione
 ```
 
 ## Crediti

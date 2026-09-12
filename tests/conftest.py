@@ -5,6 +5,7 @@ import pytest
 from pathlib import Path
 from aw_cli.providers.animeworld import Animeworld
 from aw_cli.providers.animeunity import Animeunity
+from aw_cli.providers.animesaturn import Animesaturn
 
 # Le fixtures sono considerate deprecate/scadute dopo 7 giorni
 DEPRECATION_PERIOD_SECONDS = 7 * 24 * 60 * 60  # 7 giorni
@@ -64,6 +65,20 @@ def update_fixtures():
     response_au_info = au.Client.get(f"{au.BASE_URL}/info_api/1469/")
     (fixtures_dir / "au_info.json").write_text(json.dumps(response_au_info.json(), indent=2), encoding="utf-8")
 
+    respectful_sleep()
+
+    as_ = Animesaturn()
+    as_pages = {
+        "as_search.html": (f"{as_.BASE_URL}/filter", {"key": "naruto"}),
+        "as_anime.html": (f"{as_.BASE_URL}/anime/naruto-iN621", None),
+        "as_watch.html": (f"{as_.BASE_URL}/anime/naruto-iN621/ep-1", None),
+        "as_latest.xml": (f"{as_.BASE_URL}/rss/episodes", None),
+    }
+    for filename, (url, params) in as_pages.items():
+        print(f"Scaricando {filename} per AnimeSaturn...")
+        (fixtures_dir / filename).write_text(as_._get_html(url, params=params), encoding="utf-8")
+        respectful_sleep()
+
     print("✓ Tutte le fixtures salvate con successo nella cartella:", fixtures_dir.resolve())
 
 
@@ -88,6 +103,10 @@ def ensure_fixtures(request):
         "au_search.json",
         "au_latest.html",
         "au_info.json",
+        "as_search.html",
+        "as_anime.html",
+        "as_watch.html",
+        "as_latest.xml",
     ]
 
     missing = False

@@ -401,7 +401,7 @@ def setup_config() -> None:
 
     # provider preferito
     ut.config_data["provider"]["source"] = Fzf().run(
-        ["animeunity", "animeworld"], "Scegli il provider: "
+      list(providers.PROVIDERS_AVAILABLE.keys()), "Scegli il provider: "
     )
 
     # anilist
@@ -729,7 +729,7 @@ def main():
             menu_actions = create_ep_menu(anime, episode)
 
             res = menu_actions[Fzf().run(list(menu_actions.keys()))]()
-            if res == "break":
+            if isinstance(res, str):
                 break
             episode = res
 

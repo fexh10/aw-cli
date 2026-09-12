@@ -5,6 +5,7 @@ PROVIDERS_AVAILABLE = {
     "animeunity": ("aw_cli.providers.animeunity", "Animeunity"),
     "animeworld": ("aw_cli.providers.animeworld", "Animeworld"),
     # "animeworld-api": ("aw_cli.providers.animeworld_api", "AnimeWorldAPI"),
+    "animesaturn": ("aw_cli.providers.animesaturn", "Animesaturn"),
 }
 
 def create_provider(name: str) -> Provider:

@@ -6,6 +6,7 @@ from rich.progress import Progress, BarColumn, TextColumn, TaskID, DownloadColum
 from . import utilities as ut
 from .anime import Anime
 from .providers import Provider
+from . import streams
 
 from functools import lru_cache
 
@@ -101,6 +102,10 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                 url = provider.episode_link(anime, ep)
             except Exception as e:
                 progress.console.print(f"[red]Errore link Ep. {ep.num}: {e}")
+                return
+
+            if streams.is_stream(url):
+                await streams.download_stream(url, filename, provider.Client.headers, progress, task_id, ep.num)
                 return
 
             headers = provider.Client.headers
