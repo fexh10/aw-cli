@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import httpx
 from rich.progress import Progress
 
-from aw_cli import download
+from aw_cli import download, download_hls as hls
 
 
 def response(status_code: int, content_range: str = ""):
@@ -57,18 +57,18 @@ def test_valid_partial_response_rejects_wrong_content_range():
 
 
 def test_is_hls_recognizes_vixcloud_playlist_without_extension():
-    assert download.is_hls("https://vixcloud.cc/playlist/987?token=x&expires=123")
-    assert download.is_hls("https://cdn.example.org/master.m3u8?token=x")
-    assert download.is_hls("https://cdn.example.org/video", "application/vnd.apple.mpegurl; charset=utf-8")
-    assert not download.is_hls("https://cdn.example.org/video.mp4")
+    assert hls.is_hls("https://vixcloud.cc/playlist/987?token=x&expires=123")
+    assert hls.is_hls("https://cdn.example.org/master.m3u8?token=x")
+    assert hls.is_hls("https://cdn.example.org/video", "application/vnd.apple.mpegurl; charset=utf-8")
+    assert not hls.is_hls("https://cdn.example.org/video.mp4")
 
 
 def test_hls_progress_shows_green_bytes_and_estimated_total():
-    assert download._seconds("00:01:30.50") == 90.5
-    assert download._estimated_size(1_200_000, 90, 120) == 1_600_000
+    assert hls.seconds("00:01:30.50") == 90.5
+    assert hls.estimated_size(1_200_000, 90, 120) == 1_600_000
     with Progress() as progress:
         task_id = progress.add_task("Ep. 1", total=None, hls=True, phase="preparazione HLS…")
-        column = download.EpisodeAmountColumn()
+        column = hls.EpisodeAmountColumn()
         task = progress.tasks[task_id]
         assert column.render(task).plain == "preparazione HLS…"
 
@@ -77,7 +77,7 @@ def test_hls_progress_shows_green_bytes_and_estimated_total():
         display = column.render(task)
         assert display.plain == "1.2 MB / ~1.6 MB"
         assert display.style == "green"
-        assert download.EpisodeSpeedColumn().render(task).plain == "1.5 MB/s"
+        assert hls.EpisodeSpeedColumn().render(task).plain == "1.5 MB/s"
 
         progress.update(task_id, size=1_650_000, total_size=1_650_000)
         assert column.render(task).plain == "1.6 MB / 1.6 MB"
@@ -123,7 +123,7 @@ def test_vixcloud_hls_downloads_segments_in_parallel(tmp_path, monkeypatch):
         (tmp_path / "episode.mp4.temp").write_bytes(b"mp4")
         return FakeProcess()
 
-    monkeypatch.setattr(download.asyncio, "create_subprocess_exec", fake_ffmpeg)
+    monkeypatch.setattr(hls.asyncio, "create_subprocess_exec", fake_ffmpeg)
 
     async def run():
         # MockTransport gestisce tutte le richieste in memoria: il test non usa
@@ -131,7 +131,7 @@ def test_vixcloud_hls_downloads_segments_in_parallel(tmp_path, monkeypatch):
         async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
             progress = Progress(disable=True)
             task_id = progress.add_task("Ep. 1", total=None, hls=True)
-            await download._download_vixcloud_hls(
+            await hls.download_vixcloud(
                 "https://vixcloud.cc/playlist/1", client, {},
                 tmp_path / "episode.mp4.temp", 4, progress, task_id,
             )
