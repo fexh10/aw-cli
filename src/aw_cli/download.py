@@ -1,11 +1,21 @@
 import asyncio
 import re
+import shutil
+from urllib.parse import urlsplit
 from pathlib import Path
 from httpx import AsyncClient
-from rich.progress import Progress, BarColumn, TextColumn, TaskID, DownloadColumn, TransferSpeedColumn
+from rich.progress import Progress, BarColumn, TextColumn, TaskID
 from . import utilities as ut
 from .anime import Anime
 from .providers import Provider
+from .download_hls import (
+    EpisodeAmountColumn,
+    EpisodeSpeedColumn,
+    UnsupportedHLSPlaylist,
+    download_vixcloud,
+    download_with_ffmpeg,
+    is_hls,
+)
 
 from functools import lru_cache
 
@@ -93,15 +103,19 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
         async with sem:
             filename = path() / anime.name / f"{ep}.mp4"
             if filename.exists():
-                progress.update(task_id, completed=100, total=100, description=f"[green]Ep. {ep.num} (Esistente)")
+                progress.update(task_id, completed=100, total=100, phase="già presente", description=f"[green]Ep. {ep.num} (Esistente)")
                 return
 
             filename.parent.mkdir(parents=True, exist_ok=True)
             try:
-                url = provider.episode_link(anime, ep)
+                # Il provider usa richieste HTTP sincrone: non bloccare gli altri episodi.
+                url = await asyncio.to_thread(provider.episode_link, anime, ep)
             except Exception as e:
+                progress.update(task_id, phase="errore", description=f"[error]Ep. {ep.num} (Errore)[/]")
+                progress.stop_task(task_id)
                 progress.console.print(f"[red]Errore link Ep. {ep.num}: {e}")
                 return
+            progress.update(task_id, phase="connessione…")
 
             headers = provider.Client.headers
             temp_filename = filename.with_name(f"{filename.name}.temp")
@@ -136,18 +150,38 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                 async with AsyncClient(timeout=30.0, follow_redirects=True) as client:
                     total = 0
                     accept_ranges = False
-                    try:
-                        head = await client.head(url, headers=headers)
-                        head.raise_for_status()
-                        total = int(head.headers.get('content-length', 0))
-                        accept_ranges = head.headers.get('accept-ranges', '').lower() == 'bytes'
-                    except Exception:
-                        pass
+                    content_type = ""
+                    known_hls = is_hls(url)
+                    if not known_hls:
+                        try:
+                            head = await client.head(url, headers=headers)
+                            head.raise_for_status()
+                            total = int(head.headers.get('content-length', 0))
+                            accept_ranges = head.headers.get('accept-ranges', '').lower() == 'bytes'
+                            content_type = head.headers.get('content-type', '')
+                        except Exception:
+                            pass
 
-                    if connections > 1 and accept_ranges and total > 0:
+                    if known_hls or is_hls(url, content_type):
+                        if shutil.which("ffmpeg") is None:
+                            raise RuntimeError("ffmpeg non trovato nel PATH: necessario per scaricare stream HLS")
+                        progress.update(task_id, hls=True, size=0, phase="preparazione HLS…")
+                        parallel = urlsplit(url).hostname in {"vixcloud.cc", "www.vixcloud.cc"}
+                        if parallel:
+                            try:
+                                await download_vixcloud(
+                                    url, client, headers, temp_filename, connections, progress, task_id
+                                )
+                            except UnsupportedHLSPlaylist:
+                                parallel = False
+                        if not parallel:
+                            await download_with_ffmpeg(
+                                url, headers, temp_filename, progress, task_id
+                            )
+                    elif connections > 1 and accept_ranges and total > 0:
                         # Download segmentato: più connessioni in parallelo sullo stesso
                         # file, per aggirare i limiti di banda per-connessione dei CDN.
-                        progress.update(task_id, total=total)
+                        progress.update(task_id, total=total, phase=None)
                         with open(temp_filename, "wb") as f:
                             f.truncate(total)
                         segments = [
@@ -157,11 +191,14 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                         await asyncio.gather(*segments)
                     else:
                         # Server senza supporto ai range (o dimensione ignota): fallback.
+                        progress.update(task_id, phase=None)
                         await single_stream(client)
 
                 temp_filename.rename(filename)
                 progress.update(task_id, description=f"[success]Ep. {ep.num} (Completato)[/]")
             except Exception as e:
+                progress.update(task_id, phase="errore", description=f"[error]Ep. {ep.num} (Errore)[/]")
+                progress.stop_task(task_id)
                 progress.console.print(f"[error]Errore download Ep. {ep.num}: {e}[/]")
 
     async def _download_all():
@@ -173,14 +210,14 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
             TextColumn("[info]{task.description}[/]", style="info"),
             BarColumn(bar_width=None),
             "•",
-            DownloadColumn(),
+            EpisodeAmountColumn(),
             "•",
-            TransferSpeedColumn(),
+            EpisodeSpeedColumn(),
             console=ut.console,
         ) as progress:
             tasks = []
             for ep in ordered_eps:
-                task_id = progress.add_task(str(ep), total=None, start=True)
+                task_id = progress.add_task(str(ep), total=None, start=True, phase="recupero link…")
                 tasks.append(asyncio.create_task(download_worker(ep, task_id, progress, semaphore)))
 
             await asyncio.gather(*tasks)

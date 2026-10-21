@@ -3,7 +3,7 @@
 
 Guarda anime dal terminale e molto altro!
 
- Gli anime vengono presi da [Animeworld](https://www.animeworld.ac/) e [Animeunity](https://www.animeunity.so/)
+ Gli anime vengono presi da [Animeworld](https://www.animeworld.ac/) e [Animeunity](https://www.animeunity.co/)
 
 </h3>
 
@@ -24,6 +24,7 @@ https://github.com/fexh10/aw-cli/assets/90156014/88e1c2e2-bb7f-4002-8784-26f7086
 ## Installazione
 
 Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html).
+Per scaricare episodi dal provider AnimeUnity è necessario avere `ffmpeg` installato e disponibile nel `PATH`.
 
 È richiesta l'installazione di [fzf](https://github.com/junegunn/fzf?tab=readme-ov-file#installation).
 
