@@ -24,9 +24,7 @@ https://github.com/fexh10/aw-cli/assets/90156014/88e1c2e2-bb7f-4002-8784-26f7086
 ## Installazione
 
 Lo script funziona sia con [MPV](https://mpv.io/installation/) che con [VLC](https://www.videolan.org/vlc/index.it.html).
-Per scaricare episodi distribuiti come stream HLS è necessario avere `ffmpeg` nel `PATH`.
-Per VixCloud, i segmenti HLS vengono scaricati in parallelo (4 connessioni per episodio per impostazione predefinita); `ffmpeg` li assembla in MP4. Il download usa temporaneamente spazio per i segmenti e per il file finale.
-Durante il download HLS, il totale in byte indicato con `~` è una stima ricavata dai segmenti ricevuti; diventa esatto al termine.
+Per scaricare episodi dal provider AnimeUnity è necessario avere `ffmpeg` installato e disponibile nel `PATH`.
 
 È richiesta l'installazione di [fzf](https://github.com/junegunn/fzf?tab=readme-ov-file#installation).
 
