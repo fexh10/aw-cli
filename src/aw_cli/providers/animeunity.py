@@ -2,21 +2,20 @@ import re
 import json
 from html import unescape
 from functools import cached_property
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from ..anime import Anime, AnimeStatus
 from .provider import Provider, HTTPError
 
 class Animeunity(Provider):
     """
-    Classe che gestisce il collegamento con Animeworld.
+    Classe che gestisce il collegamento con AnimeUnity.
 
     Attributes:
-        _url (str): l'url del sito di Animeworld.
-        _headers (dict): gli headers da utilizzare per le richieste HTTP.
-        _cookies (dict): i cookies da utilizzare per le richieste HTTP.
-        _visited (dict): le pagine già visitate.
+        BASE_URL (str): l'URL del sito di AnimeUnity.
+        Client: client HTTP usato per le richieste.
     """
     def __init__(self, client=None):
-        super().__init__("https://www.animeunity.so", client=client)
+        super().__init__("https://www.animeunity.co", client=client)
 
     @cached_property
     def _session(self) -> str:
@@ -102,12 +101,41 @@ class Animeunity(Provider):
         video_response = self.Client.get(iframe_src)
         video_response.raise_for_status()
 
-        # Usa una regex per estrarre il link video MP4 dallo script
-        match = re.search(r"window.downloadUrl\s*=\s*'([^']*)", video_response.text)
-        if not match:
-            raise ValueError("Link video non trovato nella pagina")
-        src_mp4 = match.group(1)
-        return src_mp4
+        page = video_response.text
+        direct = re.search(r"window\.downloadUrl\s*=\s*(['\"])(.*?)\1", page, re.DOTALL)
+        if direct and direct.group(2).strip():
+            return direct.group(2).strip()
+
+        playlist = re.search(r"window\.masterPlaylist\s*=\s*\{", page)
+        if not playlist:
+            raise ValueError("Link video e playlist HLS non trovati nella pagina")
+
+        player_data = page[playlist.end():]
+        params = re.search(r"\bparams\s*:\s*\{([^}]*)\}", player_data)
+        url = re.search(r"\burl\s*:\s*(['\"])(.*?)\1", player_data)
+        if not params or not url or not url.group(2).strip():
+            raise ValueError("Playlist HLS incompleta nella pagina")
+
+        def parameter(name: str) -> str | None:
+            match = re.search(rf"(?:['\"]?{name}['\"]?)\s*:\s*(['\"])(.*?)\1", params.group(1))
+            return match.group(2) if match else None
+
+        token, expires = parameter("token"), parameter("expires")
+        if not token or not expires:
+            raise ValueError("Token o scadenza della playlist HLS mancanti")
+
+        parts = urlsplit(url.group(2).strip())
+        if parts.scheme not in {"http", "https"} or not parts.netloc:
+            raise ValueError("URL della playlist HLS non valido")
+
+        query = dict(parse_qsl(parts.query, keep_blank_values=True))
+        query.update(token=token, expires=expires)
+        asn = parameter("asn")
+        if asn:
+            query["asn"] = asn
+        if re.search(r"window\.canPlayFHD\s*=\s*true\b", page):
+            query["h"] = "1"
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
     def _info_anime(self, anime: Anime):
         if not anime.ref.isdigit():

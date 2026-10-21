@@ -2,6 +2,7 @@ import json
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+from urllib.parse import parse_qs, urlsplit
 from aw_cli.providers.animeunity import Animeunity
 from aw_cli.anime import Anime
 
@@ -28,6 +29,7 @@ class TestAnimeunity:
             animes = au._search("naruto")
             assert len(animes) > 0, "Nessun anime trovato nella fixture per la ricerca"
             assert animes[0].name != ""
+            assert mock_client.post.call_args.kwargs["url"] == "https://www.animeunity.co/livesearch"
 
     def test_animeunity_latest(self, au):
         html = (FIXTURES_DIR / "au_latest.html").read_text(encoding="utf-8")
@@ -73,6 +75,44 @@ class TestAnimeunity:
             # First call is to embed-url/12345
             args, _ = mock_client.get.call_args_list[0]
             assert "embed-url/12345" in args[0]
+
+    @pytest.mark.parametrize("fhd, expected_h", [(True, ["1"]), (False, None)])
+    def test_animeunity_hls_when_download_url_is_empty(self, au, fhd, expected_h):
+        anime = Anime("Naruto", "1469")
+        episode = Anime.Episode(anime, "1", ref="12345")
+        page = """
+            window.downloadUrl = '';
+            window.masterPlaylist = {
+                params: {'token': 'a+b/=', 'expires': '123456', 'asn': ''},
+                url: 'https://vixcloud.cc/playlist/987?existing=yes',
+            };
+        """ + f"window.canPlayFHD = {str(fhd).lower()};"
+
+        with patch.object(au, "Client") as mock_client:
+            mock_client.get.side_effect = [
+                MagicMock(text="https://vixcloud.cc/embed/987"),
+                MagicMock(text=page),
+            ]
+            link = au._episode_link(anime, episode)
+
+        parts = urlsplit(link)
+        assert parts.path == "/playlist/987"
+        query = parse_qs(parts.query)
+        assert query["token"] == ["a+b/="]
+        assert query["expires"] == ["123456"]
+        assert query["existing"] == ["yes"]
+        assert query.get("h") == expected_h
+
+    def test_animeunity_empty_video_link_has_clear_error(self, au):
+        anime = Anime("Naruto", "1469")
+        episode = Anime.Episode(anime, "1", ref="12345")
+        with patch.object(au, "Client") as mock_client:
+            mock_client.get.side_effect = [
+                MagicMock(text="https://vixcloud.cc/embed/987"),
+                MagicMock(text="window.downloadUrl = '';"),
+            ]
+            with pytest.raises(ValueError, match="playlist HLS non trovati"):
+                au._episode_link(anime, episode)
 
 
     def test_animeunity_info_anime(self, au):
