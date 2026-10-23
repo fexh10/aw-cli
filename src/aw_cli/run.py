@@ -181,7 +181,7 @@ def open_mpv(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
         "--fullscreen",
         "--keep-open",
     ]
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", check=False)
 
     if res := re.findall(r"(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)", result.stdout):
         last = res[-1]
@@ -413,6 +413,13 @@ def setup_config() -> None:
         if ut.os_name == "Darwin":
             subprocess.run(
                 f"open '{link}'",
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        elif ut.os_name == "Windows":
+            subprocess.run(
+                f'start "" "{link}"',
                 shell=True,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,

@@ -4,7 +4,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.theme import Theme
 from collections import defaultdict
-
+import platform
 config_data = defaultdict(dict)
 
 DEFAULT_STYLE = {
@@ -21,6 +21,8 @@ console = Console(theme=Theme(DEFAULT_STYLE), highlight=False)
 
 # controllo il tipo del dispositivo
 def get_os() -> str:
+    if platform.system() == "Windows":
+        return "Windows"
     result = subprocess.run(["uname", "-a"], capture_output=True, text=True, check=False)
     out = result.stdout.strip().split()
     os_name = out[0]

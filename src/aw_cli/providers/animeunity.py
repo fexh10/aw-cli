@@ -87,7 +87,9 @@ class Animeunity(Provider):
                 }
             )
             response.raise_for_status()
-            episodes.update({str(episode['number']): str(episode['id']) for episode in response.json()['episodes']})
+            data = response.json()
+            episodes_found = data.get('episodes', [])
+            episodes.update({str(episode['number']): str(episode['id']) for episode in episodes_found})
             start_range = end_range + 1
         return episodes
 

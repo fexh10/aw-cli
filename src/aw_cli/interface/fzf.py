@@ -51,6 +51,7 @@ class Fzf:
                     text=True,
                     stdout=subprocess.PIPE,
                     stderr=None,
+                    encoding="utf-8"
                 )
 
                 if process.returncode == 130:
