@@ -74,7 +74,9 @@ class Animeunity(Provider):
     def _episodes(self, anime: Anime) -> dict[str, str]:
         episodes = {}
         start_range = 0
-        episode_count = max(int(anime.last_ep), int(anime.info["Episodi"]) if anime.info["Episodi"].isdigit() else 0) # potenzialmente non numerico
+        last_ep_num = int(anime.last_ep) if str(anime.last_ep).isdigit() else 0
+        info_ep_num = int(anime.info["Episodi"]) if anime.info.get("Episodi", "").isdigit() else 0
+        episode_count = max(last_ep_num, info_ep_num) # potenzialmente non numerico
         # Fetch episodes in chunks
         while start_range <= episode_count:
             end_range = min(start_range + 119, episode_count)
@@ -96,15 +98,20 @@ class Animeunity(Provider):
         response = self.Client.get(embed_url)
         response.raise_for_status()
         iframe_src = response.text.strip()
+        iframe_parts = urlsplit(iframe_src)
+        if iframe_parts.scheme in {"http", "https"} and iframe_parts.netloc:
+            video_response = self.Client.get(iframe_src)
+            video_response.raise_for_status()
+            page = video_response.text
+        else:
+            page = iframe_src
 
-        # Fetch the video page
-        video_response = self.Client.get(iframe_src)
-        video_response.raise_for_status()
-
-        page = video_response.text
         direct = re.search(r"window\.downloadUrl\s*=\s*(['\"])(.*?)\1", page, re.DOTALL)
         if direct and direct.group(2).strip():
-            return direct.group(2).strip()
+            direct_url = direct.group(2).strip()
+            direct_parts = urlsplit(direct_url)
+            if direct_parts.scheme in {"http", "https"} and direct_parts.netloc:
+                return direct_url
 
         playlist = re.search(r"window\.masterPlaylist\s*=\s*\{", page)
         if not playlist:
@@ -159,7 +166,7 @@ class Animeunity(Provider):
 
     def _parse_info(self, data: dict) -> tuple[str, str, int, AnimeStatus, dict[str, str]]:
         title = data['title_eng'] or data['title'] or data['title_it']
-        last_ep = str(data['real_episodes_count']) if 'real_episodes_count' in data else "0"
+        last_ep = str(data['real_episodes_count']) if data.get('real_episodes_count') is not None else "0"
         anilist_id = data['anilist_id']
         match data['status']:
             case "In Corso":

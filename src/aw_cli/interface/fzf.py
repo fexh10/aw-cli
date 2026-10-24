@@ -1,10 +1,13 @@
+import os
 import subprocess
 import sys
 import re
 import socket
 import json
 import argparse
+import tempfile
 import urllib.request
+from .. import utilities as ut
 
 
 class Fzf:
@@ -21,6 +24,20 @@ class Fzf:
 
     def __init__(self):
         self._port: int = 0
+        self._temp_files: list[str] = []
+        self._win_reload: bool = sys.platform == "win32"
+
+    def _cleanup_temp_files(self) -> None:
+        temp_files = getattr(self, "_temp_files", None)
+        if not temp_files:
+            return
+        for path in temp_files:
+            try:
+                if os.path.exists(path):
+                    os.remove(path)
+            except OSError:
+                pass
+        temp_files.clear()
 
     def run(
         self,
@@ -42,6 +59,9 @@ class Fzf:
         cmd = self._build_cmd(
             elements=elements, prompt=prompt, multi=multi, filter=filter
         )
+        fzf_bin = ut.find_binary("fzf")
+        if fzf_bin and cmd and cmd[0] == "fzf":
+            cmd[0] = fzf_bin
 
         try:
             while True:
@@ -49,6 +69,8 @@ class Fzf:
                     cmd,
                     input="\n".join(elements),
                     text=True,
+                    encoding="utf-8",
+                    errors="replace",
                     stdout=subprocess.PIPE,
                     stderr=None,
                 )
@@ -60,6 +82,8 @@ class Fzf:
                     return process.stdout.strip()
         except KeyboardInterrupt:
             exit()
+        finally:
+            self._cleanup_temp_files()
 
     def reload(self, new_elements: list[str]) -> None:
         """
@@ -68,13 +92,21 @@ class Fzf:
         Args:
             new_elements: nuove voci con cui aggiornare la lista di fzf.
         """
-
-        escaped = "\n".join(e.replace("'", "'\\''") for e in new_elements)
-        action = f"reload(printf '{escaped}')"
+        if getattr(self, "_win_reload", False):
+            with tempfile.NamedTemporaryFile("w", delete=False, encoding="utf-8") as f:
+                f.write("\n".join(new_elements))
+                temp_name = f.name
+            if not hasattr(self, "_temp_files"):
+                self._temp_files = []
+            self._temp_files.append(temp_name)
+            action = f'reload(type "{temp_name}")'
+        else:
+            escaped = "\n".join(e.replace("'", "'\\''") for e in new_elements)
+            action = f"reload(printf '{escaped}')"
 
         req = urllib.request.Request(
             f"http://localhost:{self._port}",
-            data=action.encode(),
+            data=action.encode("utf-8"),
             method="POST",
         )
         req.add_header("Content-Type", "text/plain")
@@ -88,11 +120,11 @@ class Fzf:
     @staticmethod
     def _find_free_port() -> int:
         """
-        Restituisce una porta TCP libera assegnata dal sistema operativo.
+        Restituisce una porta TCP libera assegnata dal sistema operativo su 127.0.0.1.
         Usare questa porta per --listen evita conflitti e TIME_WAIT tra riavvii di fzf.
         """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(("", 0))
+            s.bind(("127.0.0.1", 0))
             return s.getsockname()[1]
 
     def _build_cmd(
@@ -122,7 +154,16 @@ class Fzf:
             cmd += ["--multi", "--bind", "ctrl-a:toggle-all"]
 
         if filter:
-            reload_cmd = f"{sys.executable} -m aw_cli.interface.fzf --filter {{q}} --episodes '{json.dumps(elements)}'"
+            if sys.platform == "win32":
+                with tempfile.NamedTemporaryFile("w", delete=False, encoding="utf-8") as f:
+                    json.dump(elements, f)
+                    ep_file = f.name
+                if not hasattr(self, "_temp_files"):
+                    self._temp_files = []
+                self._temp_files.append(ep_file)
+                reload_cmd = f'"{sys.executable}" -m aw_cli.interface.fzf --filter {{q}} --episodes-file "{ep_file}" --episodes \'{json.dumps(elements)}\''
+            else:
+                reload_cmd = f"{sys.executable} -m aw_cli.interface.fzf --filter {{q}} --episodes '{json.dumps(elements)}'"
             cmd += [
                 "--phony",
                 "--bind",
@@ -201,13 +242,29 @@ def _filter_episodes(query: str, episodes_raw: str) -> None:
 
 
 if __name__ == "__main__":
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--filter", type=str, default="", help="Query per filtrare gli episodi"
     )
     parser.add_argument(
-        "--episodes", type=str, required=True, help="Lista episodi JSON"
+        "--episodes", type=str, default="", help="Lista episodi JSON"
     )
-    args = parser.parse_args()
+    parser.add_argument(
+        "--episodes-file", type=str, default="", help="File JSON con lista episodi"
+    )
+    args, _ = parser.parse_known_args()
 
-    _filter_episodes(args.filter, args.episodes)
+    episodes_raw = args.episodes
+    if args.episodes_file:
+        try:
+            with open(args.episodes_file, "r", encoding="utf-8") as f:
+                episodes_raw = f.read()
+        except OSError:
+            pass
+
+    _filter_episodes(args.filter, episodes_raw)

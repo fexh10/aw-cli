@@ -86,8 +86,12 @@ pyrightconfig.json
 
 ### Aw-cli
 history.json
+history.json.tmp
 config.toml
+portable.txt
 aw-cronologia.csv
+*.temp
+*.tmp
 
 # Fixtures for tests
 tests/fixtures/

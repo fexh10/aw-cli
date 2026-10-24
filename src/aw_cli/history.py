@@ -1,7 +1,10 @@
 import json
+import threading
 from pathlib import Path
 from . import utilities as ut
 from .anime import Anime, AnimeStatus
+
+_SAVE_LOCK = threading.Lock()
 
 class History:
 
@@ -28,8 +31,8 @@ class History:
         try:
             with open(history_path, encoding='utf-8') as file:
                 anime_log = [Anime.from_dict(entry) for entry in json.load(file)]
-        except FileNotFoundError:
-            anime_log = legacy()
+        except (FileNotFoundError, json.JSONDecodeError):
+            anime_log = legacy(path)
 
         return cls(str(history_path), anime_log)
 
@@ -100,24 +103,26 @@ class History:
 
     def save(self) -> None:
         """
-        Salva la cronologia su un file JSON.
+        Salva la cronologia su un file JSON in modo thread-safe.
         """
-        with open(self._path, 'w', encoding='utf-8') as file:
-            json.dump(
-                [anime.to_dict() for anime in self._anime_log],
-                file,
-                ensure_ascii=False,
-                indent=4
-            )
+        with _SAVE_LOCK:
+            with open(self._path, 'w', encoding='utf-8') as file:
+                json.dump(
+                    [anime.to_dict() for anime in self._anime_log],
+                    file,
+                    ensure_ascii=False,
+                    indent=4
+                )
 
-def legacy() -> list[Anime]:
+def legacy(base_dir: str = "") -> list[Anime]:
     """
     Legge i dati dalla vecchia cronologia in csv
     """
     import csv
     legacy = []
+    csv_path = (Path(base_dir) / "aw-cronologia.csv") if base_dir else (Path(__file__).parent / "aw-cronologia.csv")
     try:
-        with open(Path(__file__).parent / "aw-cronologia.csv", encoding='utf-8') as file:
+        with open(csv_path, encoding='utf-8') as file:
             legacy = [riga for riga in csv.reader(file)]
     except FileNotFoundError:
         pass

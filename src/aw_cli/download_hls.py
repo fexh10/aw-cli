@@ -12,6 +12,7 @@ from httpx import AsyncClient
 from rich.filesize import decimal
 from rich.progress import DownloadColumn, Progress, ProgressColumn, TaskID, TransferSpeedColumn
 from rich.text import Text
+from . import utilities as ut
 
 CHUNK_SIZE = 1024 * 1024
 HLS_CONTENT_TYPES = {
@@ -218,8 +219,9 @@ async def download_vixcloud(
             phase=None,
             description="[info]Assemblaggio MP4…[/]",
         )
+        ffmpeg_bin = ut.find_binary("ffmpeg") or "ffmpeg"
         command = [
-            "ffmpeg", "-nostdin", "-loglevel", "error", "-y",
+            ffmpeg_bin, "-nostdin", "-loglevel", "error", "-y",
             "-protocol_whitelist", "file,crypto", "-allowed_extensions", "ALL",
             "-i", str(local_manifest), "-c", "copy", "-f", "mp4", str(filename),
         ]
@@ -238,8 +240,9 @@ async def download_with_ffmpeg(
     task_id: TaskID,
 ) -> None:
     """Gestisce con ffmpeg le playlist HLS non supportate dal percorso parallelo."""
+    ffmpeg_bin = ut.find_binary("ffmpeg") or "ffmpeg"
     command = [
-        "ffmpeg", "-nostdin", "-nostats", "-loglevel", "info",
+        ffmpeg_bin, "-nostdin", "-nostats", "-loglevel", "info",
         "-stats_period", "0.5", "-progress", "pipe:1", "-y",
     ]
     if user_agent := headers.get("User-Agent"):

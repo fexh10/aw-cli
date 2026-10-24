@@ -101,11 +101,16 @@ def get_anime_private_rating(token, user_id, anime_id: int) -> (float | None):
         'Content-Type': 'application/json', 'Accept': 'application/json'
     }
 
-    response = httpx.post('https://graphql.anilist.co', headers=headers, json={'query': query, 'variables': var})
-    if response.status_code != 200:
+    try:
+        response = httpx.post('https://graphql.anilist.co', headers=headers, json={'query': query, 'variables': var}, timeout=10)
+        if response.status_code != 200:
+            return None
+        media_list = response.json().get("data", {}).get("MediaList")
+        if not media_list or media_list.get("score") is None:
+            return None
+        return float(media_list["score"])
+    except Exception:
         return None
-    
-    return float(response.json()["data"]["MediaList"]["score"])
 
 def make_anilist_request(token: str, query: str, var: dict) -> None:
     """

@@ -1,6 +1,20 @@
+import os
+import sys
 import re
 import shutil
 import subprocess
+import webbrowser
+
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stdin, "reconfigure"):
+            sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 from time import sleep
 from pathlib import Path
 from signal import signal, SIGINT
@@ -119,17 +133,31 @@ def open_syncplay(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
         )
         exit()
 
-    args = f'''--force-media-title="{ep_name}" --start="{progress}" --fullscreen --keep-open'''
+    player_args = [
+        f"--force-media-title={ep_name}",
+        f"--start={progress}",
+        "--fullscreen",
+        "--keep-open",
+    ]
     if ut.config_data.get("player", {}).get("type") == "vlc":
-        args = f'''--meta-title "{ep_name}" --start-time="{progress}" --fullscreen'''
+        player_args = ["--meta-title", ep_name, f"--start-time={progress}", "--fullscreen"]
 
     try:
-        command = f'''{ut.config_data["syncplay"]["path"]} -d --language it "{ep_url}" -- {args}'''
+        command = [
+            ut.config_data["syncplay"]["path"],
+            "-d",
+            "--language",
+            "it",
+            "--",
+            ep_url,
+            "--",
+            *player_args,
+        ]
         result = subprocess.run(
-            command, shell=True, capture_output=True, text=True, check=False
+            command, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False
         )
         out = result.stdout
-    except UnicodeDecodeError:
+    except (UnicodeDecodeError, OSError):
         out = ""
 
     duration_match = re.findall(r'duration(?:-change)?"?: (\d+)\.?[\d]*', out)
@@ -173,15 +201,26 @@ def open_mpv(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
         )
         return True, 0
 
+    player_path = ut.config_data["player"].get("path", "")
+    if not player_path or not Path(player_path).exists():
+        found = ut.find_binary("mpv")
+        if found:
+            player_path = found
+    if sys.platform == "win32" and player_path.lower().endswith("mpv.exe"):
+        com_candidate = Path(player_path).with_suffix(".com")
+        if com_candidate.exists():
+            player_path = str(com_candidate)
+
     command = [
-        ut.config_data["player"]["path"],
-        ep_url,
+        player_path,
         f"--force-media-title={ep_name}",
         f"--start={progress}",
         "--fullscreen",
         "--keep-open",
+        "--",
+        ep_url,
     ]
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False)
 
     if res := re.findall(r"(\d+):(\d+):(\d+) / [\d:]+ \((\d+)%\)", result.stdout):
         last = res[-1]
@@ -190,11 +229,7 @@ def open_mpv(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
             ((int(last[0]) * 3600) + (int(last[1]) * 60) + int(last[2])),
         )
 
-    raise RuntimeError(
-        f"Impossibile leggere l'output di MPV durante la riproduzione di {ep_url}! "
-        f"returncode={result.returncode}\n"
-        f"stdout={result.stdout!r}\n"
-    )
+    return False, 0
 
 
 def open_vlc(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
@@ -220,23 +255,43 @@ def open_vlc(ep_url: str, ep_name: str, progress: int) -> tuple[bool, int]:
         )
         return True, 0
 
+    player_path = ut.config_data["player"].get("path", "")
+    if not player_path or not Path(player_path).exists():
+        found = ut.find_binary("vlc")
+        if found:
+            player_path = found
+
     subprocess.run(
-        f'{ut.config_data["player"]["path"]} "{ep_url}" --meta-title "{ep_name}" --start-time="{progress}" --fullscreen',
-        shell=True,
+        [
+            player_path,
+            f"--meta-title={ep_name}",
+            f"--start-time={progress}",
+            "--fullscreen",
+            "--",
+            ep_url,
+        ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        check=False,
     )
 
     # se il file di configurazione di VLC esiste, prendo la posizione dell'ultimo episodio riprodotto
     progress = 0
     vlc_config_path = Path.home() / ".config/vlc/vlc-qt-interface.conf"  # Linux
+    if sys.platform == "win32":
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            vlc_config_path = Path(appdata) / "vlc" / "vlc-qt-interface.ini"
     if vlc_config_path.exists():
-        with open(vlc_config_path, "r") as file:
-            config = [line.strip() for line in file.readlines()]
-            index = config.index("[RecentsMRL]")
-            urls = config[index + 1].split("=")[1].split(", ")
-            positions = config[index + 2].split("=")[1].split(", ")
-        progress = int(positions[urls.index(ep_url)]) // 1000 if ep_url in urls else 0
+        try:
+            with open(vlc_config_path, "r", encoding="utf-8", errors="replace") as file:
+                config = [line.strip() for line in file.readlines()]
+                index = config.index("[RecentsMRL]")
+                urls = config[index + 1].split("=")[1].split(", ")
+                positions = config[index + 2].split("=")[1].split(", ")
+            progress = int(positions[urls.index(ep_url)]) // 1000 if ep_url in urls else 0
+        except Exception:
+            progress = 0
 
     # Non informazioni sulla durata: suppongo che sia completato
     return True, progress
@@ -339,10 +394,10 @@ def watch_episode(
         )
 
     # se il video è già stato scaricato lo riproduco invece di farlo in streaming
-    path = f"{download.path(create=False)}/{anime.name}/{episode}.mp4"
+    local_file = download.path(create=False) / anime.name / f"{episode}.mp4"
 
-    if Path(path).exists():
-        ep_url = path if ut.os_name == "Android" else "file://" + path
+    if local_file.exists():
+        ep_url = str(local_file) if ut.os_name in ("Android", "Windows") else "file://" + str(local_file)
     else:
         ep_url = provider.episode_link(anime, episode)
 
@@ -365,11 +420,9 @@ def watch_episode(
 def setup_config() -> None:
     """
     Crea un file di configurazione chiamato "config.toml"
-    nella stessa directory dello script.
-    Le informazioni riportate saranno scelte dall'utente.
-    Sarà possibile scegliere il Player predefinito,
-    se collegare il proprio profilo AniList e
-    se inserire il path di syncplay.
+    nella directory utente (o nella directory configurata).
+    Permette di scegliere Player predefinito, Provider, Disco/Cartella di download
+    (inclusi dischi secondari), AniList e Syncplay.
     """
     ut.config_data.clear()
 
@@ -381,7 +434,7 @@ def setup_config() -> None:
         ["vlc", "mpv"], "Scegli il player predefinito: "
     )
     if ut.os_name != "Android":
-        path = shutil.which(ut.config_data["player"]["type"])
+        path = ut.find_binary(ut.config_data["player"]["type"])
         if path is None:
             ut.console.print(
                 f"Player {ut.config_data['player']['type']} non trovato!", style="error"
@@ -404,26 +457,44 @@ def setup_config() -> None:
         ["animeunity", "animeworld"], "Scegli il provider: "
     )
 
+    # scelta disco / cartella di download (supporto dischi secondari)
+    if ut.os_name != "Android":
+        default_dl = str(Path.home() / "Videos" / "Anime")
+        dl_options = [f"Predefinito ({default_dl})"]
+        option_to_path = {dl_options[0]: default_dl}
+
+        for drive_root, free_gb in ut.get_available_drives():
+            drive_dl = str(Path(drive_root) / "Anime")
+            if Path(drive_root).anchor.upper() != Path.home().anchor.upper():
+                label = f"Disco secondario {drive_root} ({drive_dl}) [{free_gb} GB liberi]"
+            else:
+                label = f"Disco {drive_root} ({drive_dl}) [{free_gb} GB liberi]"
+            dl_options.append(label)
+            option_to_path[label] = drive_dl
+
+        custom_label = "Percorso personalizzato..."
+        dl_options.append(custom_label)
+
+        chosen_dl = Fzf().run(dl_options, "Scegli il disco/cartella per i download: ")
+        if chosen_dl == custom_label:
+            custom_dir = Prompt.ask(
+                "Inserisci il percorso completo per i download (es. D:\\Anime)",
+                default=default_dl,
+                console=ut.console,
+            ).strip()
+            ut.config_data["general"]["download-path"] = custom_dir or default_dl
+        else:
+            ut.config_data["general"]["download-path"] = option_to_path.get(
+                chosen_dl, default_dl
+            )
+
     # anilist
     if (
         Fzf().run(["sì", "no"], "Aggiornare automaticamente la watchlist con AniList? ")
         == "sì"
     ):
         link = "https://anilist.co/api/v2/oauth/authorize?client_id=11388&response_type=token"
-        if ut.os_name == "Darwin":
-            subprocess.run(
-                f"open '{link}'",
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        else:
-            subprocess.run(
-                f"xdg-open '{link}'",
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
+        webbrowser.open(link)
 
         # inserimento token
         ut.console.clear()
@@ -468,7 +539,7 @@ def setup_config() -> None:
 
     # syncplay
     if ut.os_name != "Android":
-        syncplay_path = shutil.which("syncplay")
+        syncplay_path = ut.find_binary("syncplay")
         if syncplay_path is None:
             ut.console.print("Syncplay non trovato!", style="error")
             syncplay = Prompt.ask(
@@ -483,9 +554,9 @@ def setup_config() -> None:
     # style
     ut.config_data["style"] = ut.DEFAULT_STYLE
 
-    # creo il file
-    config = Path(__file__).parent / "config.toml"
-    with open(config, "w") as f:
+    # creo il file nella directory dati utente
+    config = ut.get_config_path()
+    with open(config, "w", encoding="utf-8") as f:
         ut.toml.dump(ut.config_data, f)
 
 
@@ -608,11 +679,11 @@ def main():
     global history
 
     # se il file di configurazione non esiste viene chiesto all'utente di fare il setup
-    if args.start_config or not (Path(__file__).parent / "config.toml").exists():
+    if args.start_config or not ut.get_config_path().exists():
         setup_config()
 
     ut.get_config()
-    history = History.read(str(Path(__file__).parent))
+    history = History.read(str(ut.get_data_dir()))
 
     if offline:
         provider = LocalProvider(download.path(), history.get())
