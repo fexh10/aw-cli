@@ -33,7 +33,7 @@ Rispetto alla versione upstream (che su Windows richiedeva WSL), questa reposito
 #### Metodo 1: Installer automatico interattivo (supporta anche dischi secondari)
 Clona la repository ed esegui lo script PowerShell:
 ```powershell
-git clone https://github.com/Carloj005/aw-cli.git
+git clone https://github.com/fexh10/aw-cli.git
 cd aw-cli
 powershell -ExecutionPolicy Bypass -File .\install-windows.ps1
 ```

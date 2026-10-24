@@ -3,7 +3,7 @@ import shutil
 from . import utilities as ut
 
 
-REPO_URL = "git+https://github.com/Carloj005/aw-cli.git@branch-name"
+REPO_URL = "git+https://github.com/fexh10/aw-cli.git@branch-name"
 
 # Configurazione minimalista dei comandi per ogni tool
 TOOLS = {
