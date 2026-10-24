@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from curses import error
 from httpx import Client, HTTPError  # , AsyncClient
 from ..anime import Anime
 from .. import utilities as ut
@@ -114,6 +113,7 @@ class Provider(ABC):
 
         grouped_animes: dict[str, list[Anime]] = {}
         for anime in animes:
+            anime.name = ut.sanitize_filename(anime.name)
             grouped_animes.setdefault(anime.name, []).append(anime)
 
         for group in grouped_animes.values():

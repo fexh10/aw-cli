@@ -160,7 +160,10 @@ class Animeworld(Provider):
         source_match = re.search(r'<source src="([^"]+)"', response.text)
         if not source_match:
             raise ValueError("Errore nel parsing della pagina dell'episodio")
-        return source_match.group(1)
+        src_url = source_match.group(1).strip()
+        if not re.match(r"^https?://", src_url):
+            raise ValueError("URL del video non valido")
+        return src_url
 
     def _info_anime(self, anime: Anime):
         html = self._get_html(anime.ref)

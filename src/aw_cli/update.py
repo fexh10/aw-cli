@@ -3,7 +3,7 @@ import shutil
 from . import utilities as ut
 
 
-REPO_URL = "git+https://github.com/fexh10/aw-cli.git@branch-name"
+REPO_URL = "git+https://github.com/Carloj005/aw-cli.git@branch-name"
 
 # Configurazione minimalista dei comandi per ogni tool
 TOOLS = {
@@ -35,7 +35,7 @@ def check_installation_method() -> str | None:
     for tool_name, commands in TOOLS.items():
         if shutil.which(tool_name):
             result = subprocess.run(commands["list"], capture_output=True)
-            if result.returncode == 0 and "aw-cli" in result.stdout.decode():
+            if result.returncode == 0 and "aw-cli" in result.stdout.decode("utf-8", errors="replace"):
                 return tool_name
     return None
 
@@ -46,6 +46,20 @@ def update(branch: str) -> None:
     Args:
         branch (str): il branch da cui aggiornare lo script. Se la stringa è vuota, aggiorna all'ultima versione stabile.
     """
+    if not branch:
+        try:
+            import httpx
+            from importlib.metadata import version
+            current_ver = version("aw-cli")
+            resp = httpx.get("https://pypi.org/pypi/aw-cli/json", timeout=10)
+            if resp.status_code == 200:
+                latest_ver = resp.json().get("info", {}).get("version", "")
+                if latest_ver == current_ver:
+                    ut.console.print(f"aw-cli è già aggiornato all'ultima versione ({current_ver})!", style="success")
+                    return
+        except Exception:
+            pass
+
     tool = check_installation_method()
     if not tool:
         ut.console.print("Non è stato possibile trovare un metodo di installazione valido per aggiornare aw-cli", style="error")

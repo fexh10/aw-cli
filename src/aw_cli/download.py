@@ -1,3 +1,4 @@
+import os
 import asyncio
 import re
 import shutil
@@ -68,10 +69,10 @@ def _valid_partial_response(response, start: int, end: int, total: int) -> bool:
         and (actual_total == "*" or int(actual_total) == total)
     )
 
-@lru_cache
 def path(create: bool = True) -> Path:
     """
-    Restituisce il percorso di download dell'anime, a seconda del sistema operativo in uso.
+    Restituisce il percorso di download dell'anime, supportando dischi secondari
+    tramite l'opzione 'download-path' in config.toml o la variabile AW_CLI_DOWNLOAD_DIR.
     Se create è True (valore predefinito) e il percorso non esiste, viene creato.
 
     Args:
@@ -80,15 +81,17 @@ def path(create: bool = True) -> Path:
     Returns:
         Path: il percorso di download dell'anime.
     """
-
-    if (ut.os_name == "Android"):
-        path = Path("/sdcard/Movies/Anime")
+    custom_path = ut.config_data.get("general", {}).get("download-path", "") or os.environ.get("AW_CLI_DOWNLOAD_DIR", "")
+    if custom_path:
+        dl_path = Path(custom_path).expanduser()
+    elif ut.os_name == "Android":
+        dl_path = Path("/sdcard/Movies/Anime")
     else:
-        path = Path.home() / "Videos/Anime"
+        dl_path = Path.home() / "Videos/Anime"
 
     if create:
-        path.mkdir(parents=True, exist_ok=True)
-    return path
+        dl_path.mkdir(parents=True, exist_ok=True)
+    return dl_path
 
 def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) -> None:
     """
@@ -163,7 +166,7 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                             pass
 
                     if known_hls or is_hls(url, content_type):
-                        if shutil.which("ffmpeg") is None:
+                        if ut.find_binary("ffmpeg") is None:
                             raise RuntimeError("ffmpeg non trovato nel PATH: necessario per scaricare stream HLS")
                         progress.update(task_id, hls=True, size=0, phase="preparazione HLS…")
                         parallel = urlsplit(url).hostname in {"vixcloud.cc", "www.vixcloud.cc"}
@@ -194,7 +197,10 @@ def episodes(anime: Anime, episodes: list[Anime.Episode], provider: Provider) ->
                         progress.update(task_id, phase=None)
                         await single_stream(client)
 
-                temp_filename.rename(filename)
+                try:
+                    temp_filename.replace(filename)
+                except OSError:
+                    shutil.move(str(temp_filename), str(filename))
                 progress.update(task_id, description=f"[success]Ep. {ep.num} (Completato)[/]")
             except Exception as e:
                 progress.update(task_id, phase="errore", description=f"[error]Ep. {ep.num} (Errore)[/]")
